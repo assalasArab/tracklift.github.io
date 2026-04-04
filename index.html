@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>TrackLift</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <div class="loading-text" data-i18n="loading">chargement</div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="auth-screen" class="screen auth-screen">
+    <div class="auth-box">
+      <div class="brand">TrackLift</div>
+      <div class="auth-subtitle" data-i18n="authSubtitle">training performance progress</div>
+
+      <div id="auth-error" class="auth-error hidden"></div>
+
+      <button id="google-signin-btn" class="btn-google">
+        <svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        <span data-i18n="signInWithGoogle">se connecter avec Google</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="app-screen" class="screen app-screen hidden">
+    <header class="topbar">
+      <div class="topbar-brand">TrackLift</div>
+      <div class="topbar-right">
+        <span id="sync-badge" class="sync-badge">local</span>
+        <button id="profile-btn" class="avatar-btn" title="profil" data-i18n-title="profile">t</button>
+      </div>
+    </header>
+    
+    <!-- Language Modal -->
+    <div id="modal-language" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 data-i18n="chooseLanguageTitle">Choisir la langue</h2>
+        </div>
+        <div class="modal-body">
+          <button id="lang-fr" class="btn btn-primary" style="width: 100%; margin-bottom: 10px;">🇫🇷 Français</button>
+          <button id="lang-en" class="btn btn-primary" style="width: 100%;">🇬🇧 English</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="drawer-overlay" class="drawer-overlay hidden"></div>
+    <aside id="profile-drawer" class="profile-drawer">
+      <div class="drawer-header">
+        <h2 data-i18n="profile">profil</h2>
+        <button id="drawer-close-btn" class="icon-btn">x</button>
+      </div>
+      <div class="drawer-profile-info">
+        <div id="drawer-avatar" class="drawer-avatar">t</div>
+        <div id="drawer-name" class="drawer-name"></div>
+        <div id="drawer-email" class="drawer-email"></div>
+        <div id="drawer-since" class="drawer-since"></div>
+      </div>
+      <nav class="drawer-menu">
+        <button id="drawer-progress-btn" class="drawer-menu-item" data-i18n="progress">progression</button>
+        <button id="drawer-about-btn" class="drawer-menu-item" data-i18n="about">a propos</button>
+        <button id="drawer-language-btn" class="drawer-menu-item" data-i18n="language">langue</button>
+        <button id="drawer-logout-btn" class="drawer-menu-item drawer-menu-danger" data-i18n="disconnect">deconnexion</button>
+      </nav>
+      <div id="drawer-about-section" class="drawer-about-section hidden">
+        <div class="drawer-about-tabs">
+          <button class="drawer-tab active" data-about-tab="current" data-i18n="currentStats">stats actuelles</button>
+          <button class="drawer-tab" data-about-tab="radar" data-i18n="muscleRadar">radar musculaire</button>
+        </div>
+        <div id="about-tab-current" class="about-panel">
+          <div id="about-current-stats" class="grid stats-grid mb-12"></div>
+          <div id="about-top-exercises"></div>
+        </div>
+        <div id="about-tab-radar" class="about-panel hidden">
+          <div class="radar-card">
+            <canvas id="radar-chart" width="300" height="300"></canvas>
+          </div>
+          <div id="radar-legend" class="radar-legend"></div>
+          <div id="radar-overall" class="radar-overall"></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="view-home" class="view active">
+        <div class="page-head">
+          <h1 id="home-title" class="page-title">bonjour</h1>
+          <p class="page-subtitle" data-i18n="homeSubtitle">pret a lancer une nouvelle seance</p>
+        </div>
+
+        <div class="card hero-card">
+          <div>
+            <div class="hero-title" data-i18n="newSession">nouvelle seance</div>
+            <div class="hero-subtitle" data-i18n="guideModeSubtitle">mode guide step by step</div>
+          </div>
+          <button id="open-launcher-btn" class="btn btn-primary" data-i18n="startWorkout">demarrer</button>
+        </div>
+
+        <div class="grid stats-grid" id="stats-grid"></div>
+
+        <div class="section-row">
+          <h2 class="section-title" data-i18n="previousSessions">seances precedentes</h2>
+          <div class="section-actions">
+            <button id="open-weight-btn" class="btn btn-ghost btn-sm" data-i18n="weight">poids</button>
+            <button id="export-btn" class="btn btn-ghost btn-sm" data-i18n="export">export</button>
+          </div>
+        </div>
+        <div id="recent-sessions-list"></div>
+      </section>
+
+      <section id="view-programs" class="view">
+        <div class="page-head">
+          <h1 class="page-title" data-i18n="programs">programmes</h1>
+          <p class="page-subtitle" data-i18n="organizeWorkouts">organise tes entrainements</p>
+        </div>
+        <div class="section-actions mb-12">
+          <button id="create-program-btn" class="btn btn-primary btn-sm" data-i18n="newProgram">nouveau programme</button>
+        </div>
+        <div id="programs-list"></div>
+      </section>
+
+      <section id="view-program-detail" class="view">
+        <div class="page-head">
+          <button id="back-programs-btn" class="btn btn-ghost btn-sm mb-12" data-i18n="backButton">← retour</button>
+          <h1 id="detail-program-title" class="page-title">programme</h1>
+          <p id="detail-program-desc" class="page-subtitle"></p>
+        </div>
+        <div class="section-actions mb-12">
+          <button id="add-prog-session-btn" class="btn btn-primary btn-sm" data-i18n="addSession">+ nouvelle seance</button>
+          <button id="delete-program-btn" class="btn btn-danger btn-sm" data-i18n="deleteProgram">supprimer</button>
+        </div>
+        <div id="prog-sessions-list"></div>
+      </section>
+
+      <section id="view-exercises" class="view">
+        <div class="page-head">
+          <h1 class="page-title" data-i18n="exercises">exercices</h1>
+          <p class="page-subtitle" data-i18n="exerciseDatabaseSubtitle">base classee par type et muscle focus</p>
+        </div>
+
+        <div class="card mb-12">
+          <label class="label" for="exercise-search" data-i18n="search">recherche</label>
+          <input id="exercise-search" class="input" type="text" placeholder="rechercher un exercice" data-i18n-placeholder="searchExercisePlaceholder">
+        </div>
+
+        <div class="filters card mb-12">
+          <div class="filter-col">
+            <label class="label" for="filter-type" data-i18n="type">type</label>
+            <select id="filter-type" class="input">
+              <option value="" data-i18n="all">tous</option>
+              <option value="push" data-i18n="type.push">push</option>
+              <option value="pull" data-i18n="type.pull">pull</option>
+              <option value="legs" data-i18n="type.legs">legs</option>
+              <option value="full" data-i18n="type.full">full</option>
+              <option value="other" data-i18n="type.other">other</option>
+            </select>
+          </div>
+          <div class="filter-col">
+            <label class="label" for="filter-muscle" data-i18n="muscleFocus">muscle focus</label>
+            <select id="filter-muscle" class="input">
+              <option value="" data-i18n="all">tous</option>
+            </select>
+          </div>
+          <div class="filter-col">
+            <label class="label" for="filter-portion" data-i18n="musclePortion">partie musculaire</label>
+            <select id="filter-portion" class="input">
+              <option value="" data-i18n="allFeminine">toutes</option>
+            </select>
+          </div>
+          <div class="filter-col">
+            <label class="label" for="filter-contraction" data-i18n="contractionProfile">profil</label>
+            <select id="filter-contraction" class="input">
+              <option value="" data-i18n="all">tous</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="exercise-list"></div>
+      </section>
+
+      <section id="view-progress" class="view">
+        <div class="page-head">
+          <div class="progress-head-row">
+            <div>
+              <h1 class="page-title" data-i18n="progress">progression</h1>
+              <p class="page-subtitle" data-i18n="progressionSubtitle">tes courbes d'evolution</p>
+            </div>
+            <button id="progress-back-btn" class="btn btn-ghost btn-sm" data-i18n="backButton">← retour</button>
+          </div>
+        </div>
+
+        <div class="card mb-12">
+          <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="bodyWeight">poids corporel</h2>
+          <canvas id="chart-weight" height="200"></canvas>
+        </div>
+
+        <div class="card mb-12">
+          <label class="label" data-i18n="trackExercise">suivre un exercice</label>
+          <input id="progress-exercise-search" class="input" type="text" placeholder="rechercher un exercice..." data-i18n-placeholder="searchExercisePlaceholder">
+        </div>
+
+        <div id="progress-exercise-chips" class="exercise-chips"></div>
+
+        <div class="card mb-12">
+          <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="maxWeightBySession">charge maximale par seance</h2>
+          <canvas id="chart-exercise" height="220"></canvas>
+        </div>
+        <div class="card mb-12">
+          <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="totalVolume">volume total</h2>
+          <p class="small-meta mb-12" data-i18n="totalVolumeFormula">series × reps × charge</p>
+          <canvas id="chart-volume" height="220"></canvas>
+        </div>
+        <div id="exercise-stats-card" class="grid stats-grid"></div>
+      </section>
+
+      <section id="view-workout" class="view">
+        <div class="guided-layout">
+          <div class="guided-top">
+            <div>
+              <div id="guided-session-name" class="guided-session-name">seance</div>
+              <div id="guided-progress" class="guided-progress">exercice 1 sur 1</div>
+            </div>
+            <button id="stop-workout-btn" class="btn btn-danger btn-sm" data-i18n="stop">stop</button>
+          </div>
+
+          <div class="guided-card card">
+            <div class="guided-badges">
+              <span id="guided-type-badge" class="badge">push</span>
+              <span id="guided-muscle-badge" class="badge badge-secondary">pectoraux</span>
+            </div>
+            <h2 id="guided-exercise-name" class="guided-exercise-name">developpe couche</h2>
+            <p id="guided-exercise-tip" class="guided-exercise-tip"></p>
+
+            <div class="guided-meta-row">
+              <div class="meta-box">
+                <div class="meta-label" data-i18n="set">serie</div>
+                <div id="guided-set-progress" class="meta-value">1 sur 4</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label" data-i18n="rest">repos</div>
+                <div id="rest-time-value" class="meta-value">90s</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label" data-i18n="targetReps">objectif reps</div>
+                <div id="guided-target-reps" class="meta-value">10</div>
+              </div>
+            </div>
+
+            <div class="guided-inputs">
+              <div>
+                <label class="label" for="guided-reps-input" data-i18n="fillReps">reps a remplir</label>
+                <input id="guided-reps-input" class="input input-big" type="number" min="0" step="1">
+              </div>
+              <div>
+                <label class="label" for="guided-weight-input" data-i18n="fillWeight">poids a remplir</label>
+                <input id="guided-weight-input" class="input input-big" type="number" min="0" step="0.5">
+              </div>
+            </div>
+
+            <div class="guided-actions">
+              <button id="next-btn" class="btn btn-primary btn-grow" data-i18n="next">next</button>
+              <button id="skip-open-btn" class="btn btn-ghost" data-i18n="skip">skip</button>
+            </div>
+
+            <div class="guided-actions secondary-actions">
+              <button id="similar-btn" class="btn btn-surface btn-grow" data-i18n="similarExercises">exo similaire</button>
+              <button id="details-btn" class="btn btn-surface btn-grow" data-i18n="knowMore">savoir plus</button>
+            </div>
+
+            <div id="rest-bar" class="rest-bar hidden">
+              <div>
+                <div class="meta-label" data-i18n="restTimer">chrono repos</div>
+                <div id="rest-countdown" class="rest-countdown">01:30</div>
+              </div>
+              <div class="section-actions">
+                <button id="rest-skip-btn" class="btn btn-ghost btn-sm" data-i18n="skipRest">skip repos</button>
+                <button id="rest-add-btn" class="btn btn-ghost btn-sm" data-i18n="addThirtySeconds">plus 30s</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav bottom-nav-3">
+      <button class="nav-btn active" data-view="home" data-i18n="home">accueil</button>
+      <button class="nav-btn" data-view="programs" data-i18n="programs">programmes</button>
+      <button class="nav-btn" data-view="exercises" data-i18n="exercises">exercices</button>
+    </nav>
+  </div>
+
+  <div id="modal-launcher" class="modal hidden">
+     <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="newSession">nouvelle seance</h3>
+        <button class="icon-btn" data-close="modal-launcher">x</button>
+      </div>
+      <div class="tab-row">
+        <button class="launcher-tab active" data-launcher-tab="free" data-i18n="free">libre</button>
+        <button class="launcher-tab" data-launcher-tab="program" data-i18n="program">programme</button>
+        <button class="launcher-tab" data-launcher-tab="recent" data-i18n="recent">recente</button>
+      </div>
+      <div id="launcher-free" class="launcher-panel">
+        <label class="label" for="free-session-name" data-i18n="name">nom</label>
+        <input id="free-session-name" class="input" type="text" placeholder="ex push du lundi" data-i18n-placeholder="freeSessionNamePlaceholder">
+        <label class="label" for="free-session-type" data-i18n="type">type</label>
+        <select id="free-session-type" class="input">
+          <option value="push" data-i18n="type.push">push</option>
+          <option value="pull" data-i18n="type.pull">pull</option>
+          <option value="legs" data-i18n="type.legs">legs</option>
+          <option value="full" data-i18n="type.full">full</option>
+          <option value="other" data-i18n="type.other">other</option>
+        </select>
+        <div class="section-actions mt-12">
+          <button id="launch-free-btn" class="btn btn-primary btn-block" data-i18n="startWorkout">demarrer</button>
+        </div>
+      </div>
+      <div id="launcher-program" class="launcher-panel hidden">
+        <label class="label" for="program-select" data-i18n="programName">programme</label>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <select id="program-select" class="input" style="flex:1;"></select>
+          <button id="launcher-add-program-btn" class="btn btn-ghost btn-sm" title="nouveau programme" data-i18n-title="newProgram">+</button>
+        </div>
+        <label class="label" for="program-session-select" data-i18n="session">seance</label>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <select id="program-session-select" class="input" style="flex:1;"></select>
+          <button id="launcher-add-session-btn" class="btn btn-ghost btn-sm" title="nouvelle seance" data-i18n-title="addSession">+</button>
+        </div>
+        <div class="section-actions mt-12">
+          <button id="launch-program-btn" class="btn btn-primary btn-block" data-i18n="startWorkout">demarrer</button>
+        </div>
+      </div>
+      <div id="launcher-recent" class="launcher-panel hidden">
+        <div id="recent-launch-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-create-program" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="createProgram">nouveau programme</h3>
+        <button class="icon-btn" data-close="modal-create-program">x</button>
+      </div>
+      <label class="label" for="program-name-input" data-i18n="name">nom</label>
+      <input id="program-name-input" class="input" type="text" placeholder="ex ppl force" data-i18n-placeholder="programNamePlaceholder">
+      <label class="label" for="program-desc-input" data-i18n="programDescription">description</label>
+      <input id="program-desc-input" class="input" type="text" placeholder="ex programme hybride" data-i18n-placeholder="programDescriptionPlaceholder">
+      <div class="section-actions mt-12">
+        <button id="save-program-btn" class="btn btn-primary btn-block" data-i18n="create">creer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-add-prog-session" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="newSession">nouvelle seance</h3>
+        <button class="icon-btn" data-close="modal-add-prog-session">x</button>
+      </div>
+      <label class="label" for="prog-sess-name" data-i18n="name">nom</label>
+      <input id="prog-sess-name" class="input" type="text" placeholder="ex push A" data-i18n-placeholder="programSessionNamePlaceholder">
+      
+      <label class="label mt-12" for="prog-sess-type" data-i18n="type">type</label>
+      <select id="prog-sess-type" class="input">
+        <option value="push" data-i18n="type.push">push</option>
+        <option value="pull" data-i18n="type.pull">pull</option>
+        <option value="legs" data-i18n="type.legs">legs</option>
+        <option value="full" data-i18n="type.full">full</option>
+        <option value="other" data-i18n="type.other">other</option>
+      </select>
+      
+      <div class="section-actions mt-12">
+        <button id="save-prog-session-btn" class="btn btn-primary btn-block" data-i18n="addToProgram">ajouter au programme</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-weight" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="weight">poids</h3>
+        <button class="icon-btn" data-close="modal-weight">x</button>
+      </div>
+      <label class="label" for="weight-input" data-i18n="weightToday">poids du jour</label>
+      <input id="weight-input" class="input" type="number" min="20" max="300" step="0.1" placeholder="80.5">
+      <div class="section-actions mt-12">
+        <button id="save-weight-btn" class="btn btn-primary btn-block" data-i18n="save">enregistrer</button>
+      </div>
+      <div id="weight-history" class="mt-12"></div>
+    </div>
+  </div>
+
+  <div id="modal-skip" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="skip">skip</h3>
+        <button class="icon-btn" data-close="modal-skip">x</button>
+      </div>
+      <button id="skip-set-btn" class="btn btn-surface btn-block mb-12" data-i18n="skipSet">skip serie</button>
+      <button id="skip-exercise-btn" class="btn btn-surface btn-block" data-i18n="skipExercise">skip exercice</button>
+    </div>
+  </div>
+
+  <div id="modal-similar" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="similarExercises">exos similaires</h3>
+        <button class="icon-btn" data-close="modal-similar">x</button>
+      </div>
+      <div id="similar-list"></div>
+    </div>
+  </div>
+
+  <div id="modal-details" class="modal hidden">
+    <div class="modal-card large-modal">
+      <div class="modal-head">
+        <h3 data-i18n="exerciseSheet">fiche exercice</h3>
+        <button class="icon-btn" data-close="modal-details">x</button>
+      </div>
+      <div id="exercise-details"></div>
+    </div>
+  </div>
+
+  <div id="modal-stop" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="stopWorkoutTitle">stop entrainement</h3>
+        <button class="icon-btn" data-close="modal-stop">x</button>
+      </div>
+      <p class="confirm-text" data-i18n="confirmStopWorkout">veux tu vraiment stopper la seance en cours</p>
+      <div class="section-actions">
+        <button id="confirm-stop-btn" class="btn btn-danger btn-grow" data-i18n="stop">stop</button>
+        <button class="btn btn-ghost btn-grow" data-close="modal-stop" data-i18n="cancel">annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+  <div id="modal-manage-exercises" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="sessionExercises">exercices de la seance</h3>
+        <button class="icon-btn" data-close="modal-manage-exercises">x</button>
+      </div>
+      <input id="search-manage-exercises" class="input mb-12" type="text" placeholder="rechercher un exercice..." data-i18n-placeholder="searchExercisePlaceholderLong">
+      <div id="manage-exercises-list" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+        </div>
+      <div class="section-actions mt-12">
+        <button class="btn btn-primary btn-block" data-close="modal-manage-exercises" data-i18n="finish">terminer</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

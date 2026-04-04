@@ -1,0 +1,465 @@
+export const translations = {
+  fr: {
+    appTitle: "TrackLift",
+    loading: "chargement",
+    syncLocal: "local",
+    syncCloud: "cloud",
+    language: "langue",
+    logout: "deconnexion",
+    chooseLanguageTitle: "Choisir la langue",
+    signInWithGoogle: "se connecter avec Google",
+    authSubtitle: "training performance progress",
+    authError: "Erreur d'authentification",
+    loadErrorPrefix: "erreur de chargement",
+
+    home: "accueil",
+    programs: "programmes",
+    exercises: "exercices",
+    progress: "progression",
+
+    homeGreeting: "bonjour {name}",
+    athlete: "athlete",
+    homeSubtitle: "pret a lancer une nouvelle seance",
+    newSession: "nouvelle seance",
+    guideModeSubtitle: "mode guide pas a pas",
+    startWorkout: "demarrer",
+    previousSessions: "seances precedentes",
+    noPreviousSessions: "aucune seance precedente",
+    replay: "rejouer",
+    sessionsLabel: "seances",
+    weightLabel: "poids",
+    programsLabel: "programmes",
+    exercisesLabel: "exercices",
+    validatedSetsCount: "{count} series validees",
+    sessionsCount: "{count} seances",
+
+    organizeWorkouts: "organise tes entrainements",
+    newProgram: "nouveau programme",
+    noProgramsYet: "aucun programme pour le moment",
+    nameRequired: "nom obligatoire",
+    programCreated: "programme cree",
+    programDeleted: "programme supprime",
+    deleteProgram: "supprimer",
+    deleteProgramConfirm: "supprimer definitivement ce programme ?",
+    backButton: "retour",
+    addSession: "+ nouvelle seance",
+    noSessionsYet: "aucune seance. ajoutes-en une !",
+    configuredExercisesCount: "{count} exos configures",
+    manageExercises: "+ exos",
+    play: "play",
+    sessionCreatedAddExercises: "seance creee - ajoute des exercices",
+    addExercisesFirst: "ajoute d'abord des exercices a cette seance avec le bouton + exos",
+
+    exerciseDatabaseSubtitle: "base classee par type et groupe musculaire",
+    search: "recherche",
+    searchExercisePlaceholder: "rechercher un exercice",
+    searchExercisePlaceholderLong: "rechercher un exercice...",
+    freeSessionNamePlaceholder: "ex push du lundi",
+    programNamePlaceholder: "ex ppl force",
+    programDescriptionPlaceholder: "ex programme hybride",
+    programSessionNamePlaceholder: "ex push A",
+    type: "type",
+    muscle: "muscle",
+    muscleFocus: "muscle focus",
+    musclePortion: "partie musculaire",
+    contractionProfile: "profil",
+    all: "tous",
+    allFeminine: "toutes",
+    noCompatibleExercise: "aucun exo compatible",
+    details: "details",
+    noSimilarExercises: "aucun exo similaire trouve",
+
+    progressionSubtitle: "tes courbes d'evolution",
+    bodyWeight: "poids corporel",
+    trackExercise: "suivre un exercice",
+    selectExercisePlaceholder: "choisir un exercice",
+    maxWeightBySession: "charge maximale par seance",
+    totalVolume: "volume total",
+    totalVolumeFormula: "series x reps x charge",
+    noDataForExercise: "Aucune donnee pour cet exercice",
+    recordPr: "Record (PR)",
+    sessionsStat: "Seances",
+
+    stop: "stop",
+    exerciseProgress: "exercice {current} sur {total}",
+    set: "serie",
+    rest: "repos",
+    targetReps: "objectif reps",
+    fillReps: "reps a remplir",
+    fillWeight: "poids a remplir",
+    next: "next",
+    skip: "skip",
+    similarExercises: "exos similaires",
+    knowMore: "savoir plus",
+    restTimer: "chrono repos",
+    skipRest: "skip repos",
+    addThirtySeconds: "plus 30s",
+    setProgress: "{current} sur {total}",
+    exerciseFallback: "exercice",
+    setSkipped: "serie skippee",
+    exerciseSkipped: "exercice skippe",
+    restFinished: "repos termine",
+    exerciseReplaced: "exo remplace",
+    sessionStopped: "seance stoppee",
+    sessionSaved: "seance enregistree",
+
+    free: "libre",
+    program: "programme",
+    recent: "recente",
+    name: "nom",
+    programName: "programme",
+    session: "seance",
+    createProgram: "nouveau programme",
+    programDescription: "description",
+    create: "creer",
+    save: "enregistrer",
+    addToProgram: "ajouter au programme",
+    select: "selectionner",
+    chooseProgramFirst: "choisis d'abord un programme",
+    chooseProgram: "choisis un programme",
+    noProgrammedSession: "aucune seance (ou exo) programmee",
+    freeSessionFallback: "seance libre",
+    noRecentSessions: "aucune seance recente",
+    finish: "terminer",
+
+    weight: "poids",
+    weightToday: "poids du jour",
+    invalidWeight: "poids invalide",
+    weightSaved: "poids enregistre",
+    export: "export",
+    exportDownloaded: "export telecharge",
+    localDataMigrated: "donnees locales migrees vers le cloud",
+
+    skipSet: "skip serie",
+    skipExercise: "skip exercice",
+    choose: "choisir",
+    exerciseSheet: "fiche exercice",
+    stopWorkoutTitle: "stop entrainement",
+    confirmStopWorkout: "veux tu vraiment stopper la seance en cours",
+    cancel: "annuler",
+    sessionExercises: "exercices de la seance",
+    add: "ajouter",
+    remove: "retirer",
+
+    description: "description",
+    tips: "conseils",
+    startMovement: "debut du mouvement",
+    endMovement: "fin du mouvement",
+    secondaryMuscles: "muscles secondaires",
+    similar: "similaires",
+
+    languageActivated: "Francais active",
+    profile: "profil",
+    about: "a propos",
+    disconnect: "deconnexion",
+    memberSince: "membre depuis",
+    currentStats: "stats actuelles",
+    muscleRadar: "radar musculaire",
+    topExercises: "top exercices",
+    totalVolumeStat: "volume total",
+    overallRank: "rang global",
+    sessionsCompleted: "seances completees",
+    muscleGroupScore: "score par muscle"
+  },
+  en: {
+    appTitle: "TrackLift",
+    loading: "loading",
+    syncLocal: "local",
+    syncCloud: "cloud",
+    language: "language",
+    logout: "logout",
+    chooseLanguageTitle: "Choose language",
+    signInWithGoogle: "sign in with Google",
+    authSubtitle: "training performance progress",
+    authError: "Authentication error",
+    loadErrorPrefix: "loading error",
+
+    home: "home",
+    programs: "programs",
+    exercises: "exercises",
+    progress: "progress",
+
+    homeGreeting: "hello {name}",
+    athlete: "athlete",
+    homeSubtitle: "ready to start a new session",
+    newSession: "new session",
+    guideModeSubtitle: "guided step-by-step mode",
+    startWorkout: "start",
+    previousSessions: "previous sessions",
+    noPreviousSessions: "no previous session",
+    replay: "repeat",
+    sessionsLabel: "sessions",
+    weightLabel: "weight",
+    programsLabel: "programs",
+    exercisesLabel: "exercises",
+    validatedSetsCount: "{count} validated sets",
+    sessionsCount: "{count} sessions",
+
+    organizeWorkouts: "organize your workouts",
+    newProgram: "new program",
+    noProgramsYet: "no program yet",
+    nameRequired: "name is required",
+    programCreated: "program created",
+    programDeleted: "program deleted",
+    deleteProgram: "delete",
+    deleteProgramConfirm: "delete this program permanently?",
+    backButton: "back",
+    addSession: "+ new session",
+    noSessionsYet: "no session yet. add one!",
+    configuredExercisesCount: "{count} configured exercises",
+    manageExercises: "+ exercises",
+    play: "play",
+    sessionCreatedAddExercises: "session created - add exercises",
+    addExercisesFirst: "add exercises to this session first with the + exercises button",
+
+    exerciseDatabaseSubtitle: "database sorted by type and muscle group",
+    search: "search",
+    searchExercisePlaceholder: "search for an exercise",
+    searchExercisePlaceholderLong: "search for an exercise...",
+    freeSessionNamePlaceholder: "e.g. monday push",
+    programNamePlaceholder: "e.g. power PPL",
+    programDescriptionPlaceholder: "e.g. hybrid program",
+    programSessionNamePlaceholder: "e.g. push A",
+    type: "type",
+    muscle: "muscle",
+    muscleFocus: "muscle focus",
+    musclePortion: "muscle area",
+    contractionProfile: "profile",
+    all: "all",
+    allFeminine: "all",
+    noCompatibleExercise: "no compatible exercise",
+    details: "details",
+    noSimilarExercises: "no similar exercise found",
+
+    progressionSubtitle: "your progress charts",
+    bodyWeight: "body weight",
+    trackExercise: "track an exercise",
+    selectExercisePlaceholder: "choose an exercise",
+    maxWeightBySession: "max weight per session",
+    totalVolume: "total volume",
+    totalVolumeFormula: "sets x reps x load",
+    noDataForExercise: "No data for this exercise",
+    recordPr: "Record (PR)",
+    sessionsStat: "Sessions",
+
+    stop: "stop",
+    exerciseProgress: "exercise {current} of {total}",
+    set: "set",
+    rest: "rest",
+    targetReps: "target reps",
+    fillReps: "enter reps",
+    fillWeight: "enter weight",
+    next: "next",
+    skip: "skip",
+    similarExercises: "similar exercises",
+    knowMore: "learn more",
+    restTimer: "rest timer",
+    skipRest: "skip rest",
+    addThirtySeconds: "add 30s",
+    setProgress: "{current} of {total}",
+    exerciseFallback: "exercise",
+    setSkipped: "set skipped",
+    exerciseSkipped: "exercise skipped",
+    restFinished: "rest finished",
+    exerciseReplaced: "exercise replaced",
+    sessionStopped: "session stopped",
+    sessionSaved: "session saved",
+
+    free: "free",
+    program: "program",
+    recent: "recent",
+    name: "name",
+    programName: "program",
+    session: "session",
+    createProgram: "new program",
+    programDescription: "description",
+    create: "create",
+    save: "save",
+    addToProgram: "add to program",
+    select: "select",
+    chooseProgramFirst: "choose a program first",
+    chooseProgram: "choose a program",
+    noProgrammedSession: "no programmed session (or no exercises)",
+    freeSessionFallback: "free session",
+    noRecentSessions: "no recent session",
+    finish: "finish",
+
+    weight: "weight",
+    weightToday: "today's weight",
+    invalidWeight: "invalid weight",
+    weightSaved: "weight saved",
+    export: "export",
+    exportDownloaded: "export downloaded",
+    localDataMigrated: "local data migrated to cloud",
+
+    skipSet: "skip set",
+    skipExercise: "skip exercise",
+    choose: "choose",
+    exerciseSheet: "exercise details",
+    stopWorkoutTitle: "stop workout",
+    confirmStopWorkout: "do you really want to stop the current session?",
+    cancel: "cancel",
+    sessionExercises: "session exercises",
+    add: "add",
+    remove: "remove",
+
+    description: "description",
+    tips: "tips",
+    startMovement: "start position",
+    endMovement: "end position",
+    secondaryMuscles: "secondary muscles",
+    similar: "similar",
+
+    languageActivated: "English enabled",
+    profile: "profile",
+    about: "about",
+    disconnect: "disconnect",
+    memberSince: "member since",
+    currentStats: "current stats",
+    muscleRadar: "muscle radar",
+    topExercises: "top exercises",
+    totalVolumeStat: "total volume",
+    overallRank: "overall rank",
+    sessionsCompleted: "sessions completed",
+    muscleGroupScore: "score by muscle"
+  }
+};
+
+const valueTranslations = {
+  type: {
+    push: { fr: "push", en: "push" },
+    pull: { fr: "pull", en: "pull" },
+    legs: { fr: "legs", en: "legs" },
+    full: { fr: "complet", en: "full body" },
+    other: { fr: "autre", en: "other" }
+  },
+  muscle_focus: {
+    abdominaux: { fr: "abdominaux", en: "abs" },
+    abducteurs: { fr: "abducteurs", en: "abductors" },
+    adducteurs: { fr: "adducteurs", en: "adductors" },
+    avant_bras: { fr: "avant-bras", en: "forearms" },
+    bas_dos: { fr: "bas du dos", en: "lower back" },
+    biceps: { fr: "biceps", en: "biceps" },
+    cou: { fr: "cou", en: "neck" },
+    dos: { fr: "dos", en: "back" },
+    epaules: { fr: "epaules", en: "shoulders" },
+    fessiers: { fr: "fessiers", en: "glutes" },
+    ischio_jambiers: { fr: "ischio-jambiers", en: "hamstrings" },
+    mollets: { fr: "mollets", en: "calves" },
+    pectoraux: { fr: "pectoraux", en: "chest" },
+    quadriceps: { fr: "quadriceps", en: "quadriceps" },
+    trapeces: { fr: "trapezes", en: "traps" },
+    triceps: { fr: "triceps", en: "triceps" }
+  },
+  muscle_portion: {
+    anterieur: { fr: "anterieur", en: "front" },
+    bas: { fr: "bas", en: "lower" },
+    brachial: { fr: "brachial", en: "brachialis" },
+    "chef court": { fr: "chef court", en: "short head" },
+    "chef lateral": { fr: "chef lateral", en: "lateral head" },
+    "chef long": { fr: "chef long", en: "long head" },
+    epaisseur: { fr: "epaisseur", en: "thickness" },
+    global: { fr: "global", en: "overall" },
+    "grand droit": { fr: "grand droit", en: "rectus abdominis" },
+    "grand fessier": { fr: "grand fessier", en: "glute max" },
+    haut: { fr: "haut", en: "upper" },
+    largeur: { fr: "largeur", en: "width" },
+    lateral: { fr: "lateral", en: "lateral" },
+    milieu: { fr: "milieu", en: "middle" },
+    obliques: { fr: "obliques", en: "obliques" },
+    posterieur: { fr: "posterieur", en: "rear" },
+    superieur: { fr: "superieur", en: "upper" },
+    transverse: { fr: "transverse", en: "transverse" },
+    "vaste lateral": { fr: "vaste lateral", en: "vastus lateralis" }
+  },
+  contraction_type: {
+    contraction: { fr: "contraction", en: "shortened" },
+    etirement: { fr: "etirement", en: "stretch" },
+    isometrique: { fr: "isometrique", en: "isometric" },
+    "mi-course": { fr: "mi-course", en: "mid-range" }
+  },
+  equipment: {
+    autre: { fr: "autre", en: "other" },
+    ballon: { fr: "ballon", en: "ball" },
+    bandes: { fr: "bandes", en: "bands" },
+    barre: { fr: "barre", en: "barbell" },
+    barre_ez: { fr: "barre EZ", en: "EZ bar" },
+    halteres: { fr: "halteres", en: "dumbbells" },
+    kettlebell: { fr: "kettlebell", en: "kettlebell" },
+    machine: { fr: "machine", en: "machine" },
+    medecine_ball: { fr: "medecine ball", en: "medicine ball" },
+    poids_du_corps: { fr: "poids du corps", en: "bodyweight" },
+    poulie: { fr: "poulie", en: "cable" },
+    rouleau: { fr: "rouleau", en: "foam roller" }
+  },
+  difficulty: {
+    debutant: { fr: "debutant", en: "beginner" },
+    intermediaire: { fr: "intermediaire", en: "intermediate" },
+    avance: { fr: "avance", en: "advanced" }
+  }
+};
+
+function humanizeValue(value) {
+  return String(value || "")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+class I18n {
+  constructor() {
+    this.currentLanguage = localStorage.getItem("language") || "fr";
+    document.documentElement.lang = this.currentLanguage;
+  }
+
+  setLanguage(lang) {
+    if (!translations[lang]) return;
+    this.currentLanguage = lang;
+    localStorage.setItem("language", lang);
+    document.documentElement.lang = lang;
+  }
+
+  getLanguage() {
+    return this.currentLanguage;
+  }
+
+  getLocale() {
+    return this.currentLanguage === "en" ? "en-US" : "fr-FR";
+  }
+
+  t(key, variables = {}) {
+    const keys = key.split(".");
+
+    if (keys.length === 2 && valueTranslations[keys[0]]) {
+      return this.translateValue(keys[0], keys[1]);
+    }
+
+    let value = translations[this.currentLanguage];
+
+    for (const entry of keys) {
+      value = value?.[entry];
+      if (value == null) {
+        console.warn(`Translation key not found: ${key}`);
+        return key;
+      }
+    }
+
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    return value.replace(/\{(\w+)\}/g, (_, variableName) => {
+      const replacement = variables[variableName];
+      return replacement == null ? `{${variableName}}` : String(replacement);
+    });
+  }
+
+  translateValue(category, value) {
+    if (value == null || value === "") return "";
+    const normalizedValue = String(value).trim();
+    const translated = valueTranslations[category]?.[normalizedValue]?.[this.currentLanguage];
+    return translated || humanizeValue(normalizedValue);
+  }
+}
+
+export const i18n = new I18n();
