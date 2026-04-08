@@ -138,6 +138,8 @@ function init() {
 
 function bindGlobalEvents() {
   $("#google-signin-btn").addEventListener("click", handleGoogleSignIn);
+$("#email-signin-btn").addEventListener("click", handleEmailSignIn);
+  $("#email-signup-btn").addEventListener("click", handleEmailSignUp);
 
   $("#profile-btn").addEventListener("click", openProfileDrawer);
   $("#drawer-close-btn").addEventListener("click", closeProfileDrawer);
@@ -167,7 +169,12 @@ function bindGlobalEvents() {
   $("#open-launcher-btn").addEventListener("click", openLauncher);
   $("#open-weight-btn").addEventListener("click", openWeightModal);
   $("#save-weight-btn").addEventListener("click", saveWeight);
-  $("#export-btn").addEventListener("click", exportData);
+  $("#open-export-btn").addEventListener("click", () => openModal("modal-export"));
+  $("#export-perf-btn").addEventListener("click", () => { closeModal("modal-export"); exportPerfExcel(); });
+  $("#export-programs-btn").addEventListener("click", () => { closeModal("modal-export"); exportProgramsExcel(); });
+  $("#export-gmail-btn").addEventListener("click", () => { closeModal("modal-export"); exportAndSendGmail(); });
+  $("#export-json-btn").addEventListener("click", () => { closeModal("modal-export"); exportData(); });
+  $("#import-file-input").addEventListener("change", handleImportFile);
   $("#create-program-btn").addEventListener("click", () => openModal("modal-create-program"));
   $("#save-program-btn").addEventListener("click", createProgram);
 
@@ -247,6 +254,33 @@ async function handleGoogleSignIn() {
   try {
     showLoading(true);
     await Auth.signInWithGoogle();
+  } catch (error) {
+    showLoading(false);
+    showAuthError(error.message || t("authError"));
+  }
+}
+
+async function handleEmailSignIn() {
+  const email = $("#auth-email-input").value.trim();
+  const password = $("#auth-password-input").value;
+  if (!email || !password) { showAuthError(t("emailRequired")); return; }
+  try {
+    showLoading(true);
+    await Auth.signInWithEmail(email, password);
+  } catch (error) {
+    showLoading(false);
+    showAuthError(error.message || t("authError"));
+  }
+}
+
+async function handleEmailSignUp() {
+  const email = $("#auth-email-input").value.trim();
+  const password = $("#auth-password-input").value;
+  if (!email || !password) { showAuthError(t("emailRequired")); return; }
+  if (password.length < 6) { showAuthError(t("passwordTooShort")); return; }
+  try {
+    showLoading(true);
+    await Auth.signUpWithEmail(email, password);
   } catch (error) {
     showLoading(false);
     showAuthError(error.message || t("authError"));
@@ -494,6 +528,145 @@ function setView(view) {
   if (view === "workout") renderWorkout();
 }
 
+// ─── Streak / Dragon Ball Badges ────────────────────────
+const DB_TIERS = [
+  { days: 0,   key: "rankMasterRoshi",           color: "#8B6914", flame: "🔥" },
+  { days: 1,   key: "rankSaiyan",                color: "#c8c8c8", flame: "🔥" },
+  { days: 3,   key: "rankGuerrierSaiyan",        color: "#e8d44d", flame: "🔥" },
+  { days: 7,   key: "rankSuperSaiyan",           color: "#FFD700", flame: "🔥🔥" },
+  { days: 14,  key: "rankSuperSaiyan2",          color: "#FFC125", flame: "⚡🔥⚡" },
+  { days: 30,  key: "rankSuperSaiyan3",          color: "#FFB300", flame: "🔥🔥🔥" },
+  { days: 60,  key: "rankSuperSaiyanGod",        color: "#FF4444", flame: "🔥❤️‍🔥🔥" },
+  { days: 90,  key: "rankSuperSaiyanBlue",       color: "#00BFFF", flame: "💎🔥💎" },
+  { days: 180, key: "rankUltraInstinct",         color: "#C0C0C0", flame: "🌟🔥🌟" },
+  { days: 365, key: "rankUltraInstinctMastered", color: "#FFFFFF", flame: "✨👁️‍🗨️✨" }
+];
+
+function getTodayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getStreakData() {
+  const raw = localStorage.getItem("tracklift_streak_dates");
+  const dates = raw ? JSON.parse(raw) : [];
+  return [...new Set(dates)].sort();
+}
+
+function recordTodayStreak() {
+  const dates = getStreakData();
+  const today = getTodayStr();
+  if (!dates.includes(today)) {
+    dates.push(today);
+    localStorage.setItem("tracklift_streak_dates", JSON.stringify(dates));
+  }
+  return dates;
+}
+
+function calcStreak(dates) {
+  if (!dates.length) return { current: 0, best: 0 };
+  const today = getTodayStr();
+  const sorted = [...dates].sort().reverse();
+
+  // Current streak: consecutive days ending today or yesterday
+  let current = 0;
+  let checkDate = new Date(today + "T00:00:00");
+
+  // Allow starting from today or yesterday
+  if (sorted[0] !== today) {
+    const yesterday = new Date(checkDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().slice(0, 10);
+    if (sorted[0] !== yStr) return { current: 0, best: calcBest(dates) };
+    checkDate = yesterday;
+  }
+
+  for (const dateStr of sorted) {
+    const expected = checkDate.toISOString().slice(0, 10);
+    if (dateStr === expected) {
+      current++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else if (dateStr < expected) {
+      break;
+    }
+  }
+
+  return { current, best: Math.max(current, calcBest(dates)) };
+}
+
+function calcBest(dates) {
+  if (!dates.length) return 0;
+  const sorted = [...dates].sort();
+  let best = 1, run = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i - 1] + "T00:00:00");
+    prev.setDate(prev.getDate() + 1);
+    if (prev.toISOString().slice(0, 10) === sorted[i]) {
+      run++;
+      if (run > best) best = run;
+    } else {
+      run = 1;
+    }
+  }
+  return best;
+}
+
+function getDbTier(streak) {
+  let tier = DB_TIERS[0];
+  for (const entry of DB_TIERS) {
+    if (streak >= entry.days) tier = entry;
+  }
+  return tier;
+}
+
+function getNextTier(streak) {
+  for (const entry of DB_TIERS) {
+    if (streak < entry.days) return entry;
+  }
+  return null;
+}
+
+function renderStreakCard() {
+  const container = $("#streak-card");
+  if (!container) return;
+
+  try {
+    const dates = recordTodayStreak();
+    const { current, best } = calcStreak(dates);
+    const tier = getDbTier(current);
+    const next = getNextTier(current);
+    const todayRecorded = dates.includes(getTodayStr());
+
+    const nextHtml = next
+      ? `<div class="streak-next">${t("nextRank", { rank: t(next.key), days: next.days - current })}</div>`
+      : "";
+
+    container.innerHTML = `
+      <div class="streak-flame-wrap" style="--tier-color: ${tier.color}">
+        <div class="streak-flame">${tier.flame}</div>
+        <div class="streak-count">${current}</div>
+      </div>
+      <div class="streak-info">
+        <div class="streak-rank" style="color: ${tier.color}">${t(tier.key)}</div>
+        <div class="streak-days">${t("streakDays", { count: current })}</div>
+        <div class="streak-best">${t("streakRecord", { count: best })}</div>
+        ${nextHtml}
+        <div class="streak-status ${todayRecorded ? "streak-ok" : ""}">${todayRecorded ? t("streakToday") : t("streakMissed")}</div>
+      </div>
+      <div class="streak-badges">
+        ${DB_TIERS.slice(1).map(b => {
+          const unlocked = current >= b.days;
+          return `<div class="streak-badge ${unlocked ? "unlocked" : "locked"}" title="${t(b.key)} (${b.days}j)" style="${unlocked ? `--badge-color: ${b.color}` : ""}">
+            <span class="streak-badge-icon">${unlocked ? b.flame.charAt(0) : "🔒"}</span>
+            <span class="streak-badge-label">${b.days}j</span>
+          </div>`;
+        }).join("")}
+      </div>
+    `;
+  } catch (err) {
+    console.error("[TrackLift] streak render error:", err);
+  }
+}
+
 function renderHome() {
   const displayName = String(state.profile?.name || "").trim() || t("athlete");
   $("#home-title").textContent = t("homeGreeting", { name: displayName });
@@ -505,6 +678,8 @@ function renderHome() {
     { value: state.programs.length, label: t("programsLabel") },
     { value: state.exercises.length, label: t("exercisesLabel") }
   ];
+
+  renderStreakCard();
 
   $("#stats-grid").innerHTML = stats.map(item => `
     <div class="stat-box">
@@ -600,15 +775,276 @@ function saveWeight() {
 function exportData() {
   const data = DB.exportCurrentData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  downloadBlob(blob, "tracklift_data.json");
+  showToast(t("exportDownloaded"));
+}
+
+function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "tracklift_data.json";
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  showToast(t("exportDownloaded"));
+}
+
+function buildPerfRows() {
+  const rows = [];
+  for (const log of state.sessionLogs) {
+    const dateStr = new Date(log.date).toLocaleDateString(i18n.getLocale());
+    for (const ex of (log.exercises || [])) {
+      const doneSets = (ex.sets || []).filter(s => s.status === "done");
+      if (doneSets.length === 0) continue;
+      const exercise = state.exercises.find(e => e.id === ex.exerciseId);
+      const name = exercise ? getExerciseName(exercise) : ex.exerciseName || ex.exerciseId;
+      const muscle = exercise ? translateExerciseValue("muscle_focus", exercise.muscle_focus) : "";
+      for (const s of doneSets) {
+        rows.push({
+          [t("colDate")]: dateStr,
+          [t("colSession")]: log.sessionName,
+          [t("colType")]: getSessionTypeLabel(log.type),
+          [t("colMuscleGroup")]: muscle,
+          [t("colExercise")]: name,
+          [t("colReps")]: s.reps || 0,
+          [t("colWeight")]: s.weight || 0,
+          [t("colVolume")]: (s.reps || 0) * (s.weight || 0)
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+function buildMuscleGroupRows() {
+  const groups = {};
+  for (const log of state.sessionLogs) {
+    for (const ex of (log.exercises || [])) {
+      const exercise = state.exercises.find(e => e.id === ex.exerciseId);
+      const muscle = exercise?.muscle_focus || "other";
+      const label = translateExerciseValue("muscle_focus", muscle) || muscle;
+      if (!groups[label]) groups[label] = { volume: 0, bestWeight: 0, sessions: 0 };
+      const doneSets = (ex.sets || []).filter(s => s.status === "done");
+      if (doneSets.length === 0) continue;
+      groups[label].sessions++;
+      groups[label].bestWeight = Math.max(groups[label].bestWeight, ...doneSets.map(s => s.weight || 0));
+      groups[label].volume += doneSets.reduce((sum, s) => sum + (s.reps || 0) * (s.weight || 0), 0);
+    }
+  }
+  return Object.entries(groups).map(([label, data]) => ({
+    [t("colMuscleGroup")]: label,
+    [t("colBestWeight")]: data.bestWeight,
+    [t("colTotalVolume")]: data.volume,
+    [t("colSessionCount")]: data.sessions
+  }));
+}
+
+function buildPRRows() {
+  const prs = {};
+  for (const log of state.sessionLogs) {
+    for (const ex of (log.exercises || [])) {
+      const doneSets = (ex.sets || []).filter(s => s.status === "done");
+      if (doneSets.length === 0) continue;
+      const exercise = state.exercises.find(e => e.id === ex.exerciseId);
+      const name = exercise ? getExerciseName(exercise) : ex.exerciseName || ex.exerciseId;
+      const maxW = Math.max(...doneSets.map(s => s.weight || 0));
+      if (!prs[name] || maxW > prs[name].weight) {
+        prs[name] = { weight: maxW, date: log.date };
+      }
+    }
+  }
+  return Object.entries(prs)
+    .sort((a, b) => b[1].weight - a[1].weight)
+    .map(([name, data]) => ({
+      [t("colExercise")]: name,
+      [t("colPR")]: data.weight,
+      [t("colPRDate")]: new Date(data.date).toLocaleDateString(i18n.getLocale())
+    }));
+}
+
+function exportPerfExcel() {
+  const wb = XLSX.utils.book_new();
+
+  const perfRows = buildPerfRows();
+  if (perfRows.length) {
+    const ws1 = XLSX.utils.json_to_sheet(perfRows);
+    XLSX.utils.book_append_sheet(wb, ws1, t("sheetSessions"));
+  }
+
+  const muscleRows = buildMuscleGroupRows();
+  if (muscleRows.length) {
+    const ws2 = XLSX.utils.json_to_sheet(muscleRows);
+    XLSX.utils.book_append_sheet(wb, ws2, t("sheetByMuscle"));
+  }
+
+  const prRows = buildPRRows();
+  if (prRows.length) {
+    const ws3 = XLSX.utils.json_to_sheet(prRows);
+    XLSX.utils.book_append_sheet(wb, ws3, t("sheetPRs"));
+  }
+
+  const data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  downloadBlob(new Blob([data], { type: "application/octet-stream" }), "tracklift_performances.xlsx");
+  showToast(t("exportPerfDone"));
+}
+
+function exportProgramsExcel() {
+  const wb = XLSX.utils.book_new();
+
+  for (const program of state.programs) {
+    const rows = [];
+    for (const session of (program.sessions || [])) {
+      for (const exId of (session.exerciseIds || [])) {
+        const exercise = state.exercises.find(e => e.id === exId);
+        const name = exercise ? getExerciseName(exercise) : exId;
+        const muscle = exercise ? translateExerciseValue("muscle_focus", exercise.muscle_focus) : "";
+        const type = exercise ? translateExerciseValue("type", exercise.type) : "";
+        rows.push({
+          [t("colSession")]: session.name,
+          [t("colType")]: getSessionTypeLabel(session.type),
+          [t("colExercise")]: name,
+          [t("colMuscleGroup")]: muscle,
+          "Type exo": type
+        });
+      }
+    }
+    if (rows.length) {
+      const sheetName = program.name.slice(0, 31).replace(/[\\/*?:\[\]]/g, "");
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    }
+  }
+
+  if (wb.SheetNames.length === 0) {
+    const ws = XLSX.utils.json_to_sheet([{ Info: t("noProgramsYet") }]);
+    XLSX.utils.book_append_sheet(wb, ws, "Info");
+  }
+
+  const data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  downloadBlob(new Blob([data], { type: "application/octet-stream" }), "tracklift_programmes.xlsx");
+  showToast(t("exportProgramsDone"));
+}
+
+function exportAndSendGmail() {
+  const wb = XLSX.utils.book_new();
+
+  const perfRows = buildPerfRows();
+  if (perfRows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(perfRows), t("sheetSessions"));
+  const muscleRows = buildMuscleGroupRows();
+  if (muscleRows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(muscleRows), t("sheetByMuscle"));
+  const prRows = buildPRRows();
+  if (prRows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prRows), t("sheetPRs"));
+
+  const data = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  downloadBlob(new Blob([data], { type: "application/octet-stream" }), "tracklift_performances.xlsx");
+
+  const name = state.profile?.name || "Athlete";
+  const date = new Date().toLocaleDateString(i18n.getLocale());
+  const subject = encodeURIComponent(`TrackLift - ${t("sheetSessions")} ${date}`);
+  const body = encodeURIComponent(
+    `${t("homeGreeting", { name })}\n\n` +
+    `${t("sheetSessions")}: ${perfRows.length} ${t("colSets").toLowerCase()}\n` +
+    `${t("sheetPRs")}: ${prRows.length} ${t("colExercise").toLowerCase()}\n\n` +
+    `---\nTrackLift`
+  );
+  window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, "_blank");
+  showToast(t("gmailSent"));
+}
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+      const sheetName = wb.SheetNames.find(n => n === t("sheetSessions") || n === "Seances" || n === "Sessions") || wb.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName]);
+
+      if (!rows.length) {
+        showToast(t("importNoData"));
+        return;
+      }
+
+      const sessionMap = {};
+      for (const row of rows) {
+        const sessionName = row[t("colSession")] || row["Seance"] || row["Session"] || "Import";
+        const dateStr = row[t("colDate")] || row["Date"] || "";
+        const key = `${sessionName}_${dateStr}`;
+
+        if (!sessionMap[key]) {
+          sessionMap[key] = {
+            id: uid(),
+            sessionName,
+            type: row[t("colType")] || row["Type"] || "other",
+            date: parseDateStr(dateStr),
+            durationMs: 0,
+            exercises: {}
+          };
+        }
+
+        const exName = row[t("colExercise")] || row["Exercice"] || row["Exercise"] || "";
+        if (!exName) continue;
+
+        if (!sessionMap[key].exercises[exName]) {
+          const match = state.exercises.find(ex => getExerciseName(ex) === exName || ex.name === exName);
+          sessionMap[key].exercises[exName] = {
+            exerciseId: match?.id || exName.toLowerCase().replace(/\s+/g, "_"),
+            exerciseName: exName,
+            muscleFocus: match?.muscle_focus || "other",
+            type: match?.type || "other",
+            sets: [],
+            restSeconds: 90
+          };
+        }
+
+        sessionMap[key].exercises[exName].sets.push({
+          reps: Number(row[t("colReps")] || row["Reps"] || 0),
+          weight: Number(row[t("colWeight")] || row["Charge (kg)"] || row["Weight (kg)"] || 0),
+          targetReps: Number(row[t("colReps")] || row["Reps"] || 0),
+          status: "done"
+        });
+      }
+
+      let count = 0;
+      for (const session of Object.values(sessionMap)) {
+        const log = {
+          id: session.id,
+          sessionName: session.sessionName,
+          type: session.type,
+          date: session.date,
+          durationMs: 0,
+          exercises: Object.values(session.exercises)
+        };
+        DB.saveSessionLog(log);
+        count++;
+      }
+
+      state.sessionLogs = DB.getSessionLogs();
+      renderHome();
+      showToast(t("importSuccess", { count }));
+    } catch (err) {
+      console.error("[TrackLift] import error:", err);
+      showToast(t("importError"));
+    }
+    event.target.value = "";
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseDateStr(str) {
+  if (!str) return Date.now();
+  const parts = str.split(/[/.\-]/);
+  if (parts.length === 3) {
+    const [a, b, c] = parts.map(Number);
+    if (a > 31) return new Date(a, b - 1, c).getTime();
+    if (c > 31) return new Date(c, b - 1, a).getTime();
+    return new Date(c, a - 1, b).getTime();
+  }
+  const parsed = Date.parse(str);
+  return isNaN(parsed) ? Date.now() : parsed;
 }
 
 function renderPrograms() {
@@ -1433,12 +1869,19 @@ function renderExerciseDetails(exercise) {
     </div>
     <div class="detail-block">
       <div class="meta-label">${t("similar")}</div>
-      <div class="detail-list">${similarExercises.map(item => `<span class="badge">${getExerciseName(item)}</span>`).join("") || "-"}</div>
+      <div class="detail-list">${similarExercises.map(item => `<span class="badge badge-link" data-similar-id="${item.id}">${getExerciseName(item)}</span>`).join("") || "-"}</div>
     </div>
   `;
 
   applyImageFallback($("#img-detail-start"), startImage.urls, startImage.fallback);
   applyImageFallback($("#img-detail-end"), endImage.urls, endImage.fallback);
+
+  $("#exercise-details").querySelectorAll("[data-similar-id]").forEach(badge => {
+    badge.addEventListener("click", () => {
+      const similarExercise = getExerciseById(badge.dataset.similarId, state.exercises);
+      if (similarExercise) renderExerciseDetails(similarExercise);
+    });
+  });
 }
 
 function updateUILanguage() {

@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <!-- Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -37,6 +38,19 @@
         </svg>
         <span data-i18n="signInWithGoogle">se connecter avec Google</span>
       </button>
+
+      <div class="auth-divider">
+        <span data-i18n="or">ou</span>
+      </div>
+
+      <div class="auth-email-form">
+        <label class="label" for="auth-email-input" data-i18n="email">email</label>
+        <input id="auth-email-input" class="input" type="email" placeholder="nom@exemple.com">
+        <label class="label" for="auth-password-input" data-i18n="password">mot de passe</label>
+        <input id="auth-password-input" class="input" type="password" placeholder="••••••••">
+        <button id="email-signin-btn" class="btn btn-primary btn-block" data-i18n="signInWithEmail">se connecter</button>
+        <button id="email-signup-btn" class="btn btn-ghost btn-block" data-i18n="signUpWithEmail">creer un compte</button>
+      </div>
     </div>
   </div>
 
@@ -114,13 +128,19 @@
           <button id="open-launcher-btn" class="btn btn-primary" data-i18n="startWorkout">demarrer</button>
         </div>
 
+        <div id="streak-card" class="card streak-card mb-12"></div>
+
         <div class="grid stats-grid" id="stats-grid"></div>
 
         <div class="section-row">
           <h2 class="section-title" data-i18n="previousSessions">seances precedentes</h2>
           <div class="section-actions">
             <button id="open-weight-btn" class="btn btn-ghost btn-sm" data-i18n="weight">poids</button>
-            <button id="export-btn" class="btn btn-ghost btn-sm" data-i18n="export">export</button>
+            <button id="open-export-btn" class="btn btn-ghost btn-sm" data-i18n="export">export</button>
+            <label id="import-label" class="btn btn-ghost btn-sm" style="cursor:pointer;">
+              <span data-i18n="import">import</span>
+              <input id="import-file-input" type="file" accept=".xlsx,.xls" style="display:none;">
+            </label>
           </div>
         </div>
         <div id="recent-sessions-list"></div>
@@ -451,6 +471,19 @@
         <button id="confirm-stop-btn" class="btn btn-danger btn-grow" data-i18n="stop">stop</button>
         <button class="btn btn-ghost btn-grow" data-close="modal-stop" data-i18n="cancel">annuler</button>
       </div>
+    </div>
+  </div>
+
+  <div id="modal-export" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 data-i18n="exportTitle">exporter</h3>
+        <button class="icon-btn" data-close="modal-export">x</button>
+      </div>
+      <button id="export-perf-btn" class="btn btn-surface btn-block mb-12" data-i18n="exportPerf">export performances (Excel)</button>
+      <button id="export-programs-btn" class="btn btn-surface btn-block mb-12" data-i18n="exportPrograms">export programmes (Excel)</button>
+      <button id="export-gmail-btn" class="btn btn-surface btn-block mb-12" data-i18n="sendGmail">envoyer par Gmail</button>
+      <button id="export-json-btn" class="btn btn-ghost btn-block" data-i18n="exportJson">export JSON (sauvegarde complete)</button>
     </div>
   </div>
 

@@ -47,6 +47,15 @@ button, input, select { font: inherit; }
 .btn-google:hover { background: #f0f0f0; box-shadow: 0 2px 12px rgba(255,255,255,0.08); }
 .btn-google:active { transform: scale(0.98); }
 .btn-google svg { flex-shrink: 0; }
+.btn-facebook { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 14px 24px; background: #1877F2; color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; font-family: var(--font-body); cursor: pointer; transition: all 0.2s; margin-top: 10px; }
+.btn-facebook:hover { background: #1565d8; box-shadow: 0 2px 12px rgba(24,119,242,0.25); }
+.btn-facebook:active { transform: scale(0.98); }
+.btn-facebook svg { flex-shrink: 0; }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--text3); font-size: 12px; font-family: var(--font-mono); }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.auth-email-form { display: flex; flex-direction: column; gap: 10px; }
+.auth-email-form .label { margin-bottom: 0; }
+.auth-email-form .btn { margin-top: 4px; }
 .topbar { position: sticky; top: 0; z-index: 10; height: 60px; background: rgba(10,10,11,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 18px; }
 .topbar-brand { font-family: var(--font-title); letter-spacing: 2px; color: var(--accent); font-size: 28px; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
@@ -128,6 +137,8 @@ button, input, select { font: inherit; }
 .session-exercise-stats { font-size: 12px; color: var(--accent); font-family: var(--font-mono); white-space: nowrap; }
 .badge { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; background: rgba(223,245,66,0.12); border: 1px solid rgba(223,245,66,0.3); color: var(--accent); font-size: 11px; font-family: var(--font-mono); }
 .badge-secondary { background: rgba(125,92,255,0.12); border-color: rgba(125,92,255,0.32); color: #b7a3ff; }
+.badge-link { cursor: pointer; transition: background 0.2s, border-color 0.2s; }
+.badge-link:hover { background: rgba(223,245,66,0.25); border-color: rgba(223,245,66,0.6); }
 .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .filter-col { min-width: 0; }
 .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(17,17,19,0.96); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
@@ -172,5 +183,138 @@ button, input, select { font: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--surface3); border: 1px solid var(--border); color: var(--text); padding: 12px 14px; border-radius: 12px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: 70; }
 .toast.show { opacity: 1; }
+/* ─── Dragon Ball Streak Card ─────────────────────── */
+.streak-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(255,165,0,0.06) 0%, rgba(255,69,0,0.04) 100%);
+  border: 1px solid rgba(255,165,0,0.18);
+  position: relative;
+  overflow: hidden;
+}
+.streak-card::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, var(--tier-color, #FFD700) 0%, transparent 70%);
+  opacity: 0.07;
+  pointer-events: none;
+}
+.streak-flame-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 70px;
+}
+.streak-flame {
+  font-size: 32px;
+  animation: dbFlicker 1.2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 8px var(--tier-color, #FFD700));
+}
+.streak-count {
+  font-family: var(--font-title);
+  font-size: 42px;
+  letter-spacing: 2px;
+  color: var(--tier-color, #FFD700);
+  text-shadow: 0 0 12px var(--tier-color, #FFD700), 0 0 24px rgba(255,165,0,0.3);
+  line-height: 1;
+}
+.streak-info {
+  flex: 1;
+  min-width: 0;
+}
+.streak-rank {
+  font-family: var(--font-title);
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px currentColor;
+}
+.streak-days {
+  color: var(--text2);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+.streak-best {
+  color: var(--text3);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+.streak-next {
+  color: var(--text3);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+.streak-status {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255,82,82,0.12);
+  color: var(--danger);
+}
+.streak-status.streak-ok {
+  background: rgba(65,217,125,0.12);
+  color: var(--success);
+}
+.streak-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 180px;
+}
+.streak-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+  padding: 6px 2px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  transition: all 0.3s;
+}
+.streak-badge.unlocked {
+  border-color: var(--badge-color, #FFD700);
+  background: linear-gradient(180deg, rgba(255,215,0,0.08) 0%, transparent 100%);
+  box-shadow: 0 0 8px rgba(255,215,0,0.15);
+  animation: dbPulse 2.5s ease-in-out infinite;
+}
+.streak-badge.locked {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+.streak-badge-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.streak-badge-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  margin-top: 2px;
+}
+.streak-badge.unlocked .streak-badge-label {
+  color: var(--badge-color, #FFD700);
+}
+
+@keyframes dbFlicker {
+  0% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.08) translateY(-2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+@keyframes dbPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255,215,0,0.1); }
+  50% { box-shadow: 0 0 14px rgba(255,215,0,0.25); }
+}
+
 @media (min-width: 720px) { .modal { align-items: center; } .stats-grid { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 640px) { .guided-inputs, .detail-grid, .filters, .stats-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .guided-inputs, .detail-grid, .filters, .stats-grid { grid-template-columns: 1fr; } .streak-card { flex-wrap: wrap; } .streak-badges { max-width: 100%; } }
