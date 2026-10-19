@@ -838,3 +838,86 @@ body:not(:has(#view-nutrition.active)) .nx-mobar { display: none; }
   .perf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .perf-select { max-width: 46%; }
 }
+
+/* ─── Carte perf : appel à l'action ─────────────────── */
+.perf-cta { margin-top: 12px; }
+
+/* ─── Assistant programme ─────────────────────────────── */
+.wz-card { max-width: 560px; }
+.wz-progress { height: 4px; border-radius: 2px; background: var(--surface3); overflow: hidden; margin-bottom: 10px; }
+.wz-progress > div { height: 100%; background: var(--grad); border-radius: 2px; transition: width 0.4s var(--ease); }
+.wz-step { font-size: 12px; color: var(--text2); font-weight: 500; }
+.wz-q { font-family: var(--font-title); font-size: 21px; font-weight: 700; letter-spacing: -0.03em; margin: 4px 0 14px; }
+.wz-options { display: flex; flex-direction: column; gap: 8px; }
+.wz-option {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; width: 100%;
+  border: 0; border-radius: var(--radius); padding: 13px 14px; cursor: pointer; color: var(--text);
+  background: var(--surface2); box-shadow: inset 0 0 0 1px var(--border); transition: box-shadow 0.2s, background 0.2s, transform 0.15s;
+}
+.wz-option:active { transform: scale(0.985); }
+.wz-option:hover { box-shadow: inset 0 0 0 1px rgba(139,108,255,0.5); }
+.wz-option.on { background: var(--grad-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.wz-option-l { font-size: 15px; font-weight: 600; }
+.wz-option-d { font-size: 12.5px; color: var(--text2); }
+.wz-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; }
+.wz-chip {
+  border: 0; border-radius: var(--radius); padding: 14px 6px 10px; cursor: pointer; color: var(--text);
+  background: var(--surface2); box-shadow: inset 0 0 0 1px var(--border);
+  font-family: var(--font-round); font-size: 26px; font-weight: 700; line-height: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.wz-chip small { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--text2); }
+.wz-chip.on { background: var(--grad); box-shadow: none; }
+.wz-chip.on small { color: rgba(255,255,255,0.85); }
+.wz-help { font-size: 13px; color: var(--text2); line-height: 1.5; margin: 0 0 12px; }
+.wz-help b { color: var(--text); }
+.wz-lifts { display: flex; flex-direction: column; gap: 6px; }
+.wz-lift { display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: var(--radius); padding: 6px 12px; box-shadow: inset 0 0 0 1px var(--border); }
+.wz-lift span { flex: 1; font-size: 14.5px; }
+.wz-lift input { width: 90px; border: 0; background: transparent; color: var(--text); font-size: 17px; font-weight: 600; text-align: right; outline: none; padding: 8px 0; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.wz-lift input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.wz-lift em { font-style: normal; font-size: 12px; color: var(--text2); width: 18px; }
+.wz-recap-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+.wz-recap-head b { font-size: 16px; }
+.wz-recap-head span { font-size: 13px; color: var(--text2); }
+.wz-sessions { display: flex; flex-direction: column; gap: 8px; max-height: 46vh; overflow-y: auto; margin-bottom: 12px; padding-right: 2px; }
+.wz-session { background: var(--surface2); border-radius: var(--radius); padding: 10px 12px; box-shadow: inset 0 0 0 1px var(--border); }
+.wz-session-h { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; font-size: 14.5px; margin-bottom: 4px; }
+.wz-session-h span { font-size: 11.5px; color: var(--text2); font-weight: 500; }
+.wz-ex { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 5px 0; border-top: 1px solid var(--separator); }
+.wz-ex span { color: var(--text2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wz-ex span:first-letter { text-transform: uppercase; }
+.wz-ex b { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wz-actions { display: flex; gap: 8px; margin-top: 16px; }
+.wz-actions .btn[disabled] { opacity: 0.4; pointer-events: none; }
+
+/* ─── Carte musculaire ────────────────────────────────── */
+.mm { display: flex; justify-content: center; gap: 6px; }
+.mm-fig { position: relative; flex: 0 1 auto; }
+.mm-fig img { position: absolute; top: 0; left: 0; width: 100%; }
+.mm-fig .mm-base { position: relative; display: block; filter: invert(0.88) hue-rotate(180deg) brightness(0.9); opacity: 0.85; }
+.mm-md .mm-fig { width: min(150px, 42%); }
+.mm-legend { display: flex; justify-content: center; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--text2); }
+.mm-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.mm-main { background: #d9363e; }
+.mm-sec { background: #e8963a; }
+.mm-credit { text-align: center; font-size: 10.5px; color: var(--text3); margin-top: 6px; }
+.guided-illu { position: relative; }
+.mm-sm {
+  position: absolute; right: 8px; bottom: 22px; padding: 6px 6px 2px; border-radius: 12px;
+  background: rgba(7,7,13,0.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+.mm-sm .mm-fig { width: 46px; }
+
+/* ─── Import Notion ───────────────────────────────────── */
+.ni-help { font-size: 13px; color: var(--text2); line-height: 1.5; margin: 0 0 12px; }
+.ni-help b { color: var(--text); }
+.ni-help a { color: #b9a8ff; }
+.ni-file { cursor: pointer; }
+.ni-status { text-align: center; color: var(--text2); padding: 16px; font-size: 14px; }
+.ni-section { font-size: 13px; color: var(--text2); margin: 16px 0 8px; }
+.ni-map { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ni-map-row span { display: block; font-size: 12px; color: var(--text2); margin: 0 0 4px 2px; }
+.ni-summary { margin: 14px 0 12px; padding: 10px 12px; border-radius: var(--radius); background: var(--grad-soft); box-shadow: inset 0 0 0 1px rgba(194,92,255,0.25); font-size: 13.5px; line-height: 1.5; }
+.ni-unmatched { font-size: 12px; color: var(--text2); margin-top: 4px; }
+@media (max-width: 520px) { .ni-map { grid-template-columns: 1fr; } }

@@ -1,15 +1,18 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261019c";
-import { DB } from "./db.js?v=20261019c";
-import { Auth } from "./auth.js?v=20261019c";
-import { i18n } from "./i18n.js?v=20261019c";
-import { getImprovedDescription } from "./improved-descriptions.js?v=20261019c";
-import { getExerciseTips } from "./exercise-tips.js?v=20261019c";
-import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019c";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261019c";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261019c";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261019c";
-import { renderWeightChart } from "./charts.js?v=20261019c";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261019c";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261019d";
+import { DB } from "./db.js?v=20261019d";
+import { Auth } from "./auth.js?v=20261019d";
+import { i18n } from "./i18n.js?v=20261019d";
+import { getImprovedDescription } from "./improved-descriptions.js?v=20261019d";
+import { getExerciseTips } from "./exercise-tips.js?v=20261019d";
+import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019d";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261019d";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261019d";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261019d";
+import { renderWeightChart } from "./charts.js?v=20261019d";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261019d";
+import { openProgramWizard } from "./program-wizard.js?v=20261019d";
+import { muscleMapHtml } from "./muscle-map.js?v=20261019d";
+import { openNotionImport } from "./notion-import.js?v=20261019d";
 
 const state = {
   user: null,
@@ -169,6 +172,13 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     updateUILanguage();
     showToast(t("languageActivated"));
   });
+
+  $("#perf-card").addEventListener("click", event => {
+    if (event.target.closest("[data-open-wizard]")) openWizard();
+  });
+  $("#guided-program-btn").addEventListener("click", openWizard);
+  $("#drawer-wizard-btn").addEventListener("click", () => { closeProfileDrawer(); openWizard(); });
+  $("#drawer-notion-btn").addEventListener("click", () => { closeProfileDrawer(); openNotion(); });
 
   $("#perf-card").addEventListener("change", event => {
     if (event.target.id !== "perf-program") return;
@@ -517,7 +527,9 @@ async function loadApp(firebaseUser) {
       email: firebaseUser.email,
       name: firebaseUser.displayName || firebaseUser.email,
       photoURL: firebaseUser.photoURL || null,
-      createdAt: data.profile?.createdAt || Date.now()
+      createdAt: data.profile?.createdAt || Date.now(),
+      onboardingDone: data.profile?.onboardingDone || false,
+      trainingProfile: data.profile?.trainingProfile || null
     };
     DB.saveData(data);
 
@@ -546,6 +558,11 @@ async function loadApp(firebaseUser) {
 
     applyStaticTranslations();
     renderAll();
+
+    // Premier lancement : on guide la création du programme avant la première séance
+    if (!state.sessionLogs.length && !state.programs.length && !state.profile?.onboardingDone) {
+      setTimeout(openWizard, 450);
+    }
   } catch (error) {
     showAuthError(`${t("loadErrorPrefix")}: ${error.message}`);
   } finally {
@@ -691,7 +708,12 @@ function renderPerfCard() {
     </div>`;
 
   if (!perf) {
-    container.innerHTML = `${head}<div class="perf-empty">${t("perfNoData")}</div>`;
+    const hasPrograms = state.programs.length > 0;
+    container.innerHTML = `${head}
+      <div class="perf-empty">${hasPrograms ? t("perfNoData") : t("perfStartIntro")}</div>
+      <div class="perf-cta">
+        <button class="btn ${hasPrograms ? "btn-ghost" : "btn-primary"} btn-sm" data-open-wizard>${hasPrograms ? t("wizardRedo") : t("wizardStart")}</button>
+      </div>`;
     return;
   }
 
@@ -729,6 +751,49 @@ function renderPerfCard() {
       ${perfSparkline(perf.series)}
     </div>` : ""}
   `;
+}
+
+function openWizard() {
+  const last = state.weightLog[state.weightLog.length - 1];
+  openProgramWizard({
+    exercises: state.exercises,
+    nameOf: getExerciseName,
+    bodyweight: last ? last.weight : "",
+    onCreate: (generated, answers) => {
+      const program = {
+        id: uid(),
+        name: generated.name,
+        description: generated.description,
+        createdAt: Date.now(),
+        generated: true,
+        sessions: generated.sessions.map(session => ({ id: uid(), ...session }))
+      };
+      DB.addProgram(program);
+      state.profile = DB.updateProfile({ onboardingDone: true, trainingProfile: answers });
+      state.programs = DB.getPrograms();
+      setPerfProgramId(program.id);
+      renderHome();
+      renderPrograms();
+      showToast(t("wizardCreated"));
+    },
+    onDismiss: () => {
+      if (!state.profile?.onboardingDone) state.profile = DB.updateProfile({ onboardingDone: true });
+    }
+  });
+}
+
+function openNotion() {
+  openNotionImport({
+    exercises: state.exercises,
+    nameOf: getExerciseName,
+    existingIds: new Set(state.sessionLogs.map(log => log.id)),
+    onImport: logs => {
+      DB.addSessionLogs(logs);
+      state.sessionLogs = DB.getSessionLogs();
+      renderHome();
+      showToast(t("importSuccess", { count: logs.length }));
+    }
+  });
 }
 
 function renderHome() {
@@ -1359,7 +1424,8 @@ function launchSpecificProgSession(sessionId) {
     type: session.type,
     exerciseIds: session.exerciseIds,
     exercises: state.exercises,
-    sessionLogs: state.sessionLogs
+    sessionLogs: state.sessionLogs,
+    plan: session.plan
   });
   state.workout.programId = program.id;
 
@@ -1634,9 +1700,12 @@ function renderProgramSelectOptions() {
     return `<option value="${program.id}">${program.name}</option>`;
   }).join("");
 
-  if (currentProgramId && state.programs.some(program => program.id === currentProgramId)) {
-    $("#program-select").value = currentProgramId;
-  }
+  // sinon : le programme suivi dans la carte performances, ou le seul programme existant
+  const fallbackId = state.programs.some(program => program.id === getPerfProgramId())
+    ? getPerfProgramId()
+    : (state.programs.length === 1 ? state.programs[0].id : "");
+  const selectedId = state.programs.some(program => program.id === currentProgramId) ? currentProgramId : fallbackId;
+  if (selectedId) $("#program-select").value = selectedId;
 }
 
 function renderLauncher() {
@@ -1737,7 +1806,8 @@ function launchProgramWorkout() {
     type: session.type,
     exerciseIds: session.exerciseIds,
     exercises: state.exercises,
-    sessionLogs: state.sessionLogs
+    sessionLogs: state.sessionLogs,
+    plan: session.plan
   });
   state.workout.programId = program.id;
 
@@ -1782,7 +1852,7 @@ function renderWorkout() {
   const illuBox = $("#guided-illu");
   if (illuBox && illuBox.dataset.exerciseId !== (exercise?.id || "")) {
     illuBox.dataset.exerciseId = exercise?.id || "";
-    illuBox.innerHTML = illustrationHtml(exercise, "hero");
+    illuBox.innerHTML = illustrationHtml(exercise, "hero") + muscleMapHtml(exercise, { size: "sm", label: meta.muscleFocus || "" });
   }
   $("#guided-exercise-tip").textContent = displayTip;
   $("#guided-set-progress").textContent = t("setProgress", {
@@ -1944,6 +2014,12 @@ function renderExerciseDetails(exercise) {
       <div class="small-meta">${[meta.equipment, meta.difficulty, meta.contractionType].filter(Boolean).join(" · ")}</div>
     </div>
     ${imageHtml}
+    ${muscleMapHtml(exercise) ? `<div class="detail-block">
+      <div class="meta-label">${t("musclesWorked")}</div>
+      ${muscleMapHtml(exercise, { size: "md", label: [meta.muscleFocus, ...(exercise.secondary_muscles || []).map(m => translateExerciseValue("muscle_focus", m))].filter(Boolean).join(" · ") })}
+      <div class="mm-legend"><span><i class="mm-main"></i>${meta.muscleFocus}</span>${(exercise.secondary_muscles || []).length ? `<span><i class="mm-sec"></i>${t("secondaryMuscles")}</span>` : ""}</div>
+      <div class="mm-credit">${t("muscleMapCredit")}</div>
+    </div>` : ""}
     <div class="detail-block">
       <div class="meta-label">${t("description")}</div>
       <div class="description-text">${description}</div>

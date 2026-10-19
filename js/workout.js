@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261019c";
-import { getExerciseById } from "./exercises.js?v=20261019c";
+import { uid } from "./utils.js?v=20261019d";
+import { getExerciseById } from "./exercises.js?v=20261019d";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -28,8 +28,11 @@ function suggestWeight(previousExerciseLog, fallback) {
   if (allSkipped) return roundWeight(Math.max(0, (fallback || 0) - 2.5));
   return roundWeight(fallback || 0);
 }
-function buildSuggestedSets(exercise, previousExerciseLog) {
+function buildSuggestedSets(exercise, previousExerciseLog, planned) {
   const previousSets = previousExerciseLog?.sets || [];
+  if (!previousSets.length && planned) {
+    return Array.from({ length: planned.sets || 3 }, () => ({ targetReps: planned.reps || 10, reps: planned.reps || 10, weight: planned.weight || 0, status: "pending" }));
+  }
   if (previousSets.length) {
     return previousSets.map(item => ({ targetReps: suggestReps(previousExerciseLog, item.reps), reps: item.reps, weight: suggestWeight(previousExerciseLog, item.weight), status: "pending" }));
   }
@@ -44,11 +47,11 @@ export function findLatestExerciseLog(exerciseId, sessionLogs) {
   }
   return null;
 }
-export function buildWorkoutFromExercises({ sessionName, type, exerciseIds, exercises, sessionLogs }) {
+export function buildWorkoutFromExercises({ sessionName, type, exerciseIds, exercises, sessionLogs, plan }) {
   const orderedExercises = exerciseIds.map(id => getExerciseById(id, exercises)).filter(Boolean);
   const blocks = orderedExercises.map(exercise => {
     const previousExerciseLog = findLatestExerciseLog(exercise.id, sessionLogs);
-    return { exerciseId: exercise.id, restSeconds: getRestBase(exercise), sets: buildSuggestedSets(exercise, previousExerciseLog) };
+    return { exerciseId: exercise.id, restSeconds: getRestBase(exercise), sets: buildSuggestedSets(exercise, previousExerciseLog, plan?.[exercise.id]) };
   });
   return { id: uid(), sessionName, type, mode: "guided", currentExerciseIndex: 0, currentSetIndex: 0, startedAt: Date.now(), blocks };
 }

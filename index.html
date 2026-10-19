@@ -16,7 +16,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261019c">
+  <link rel="stylesheet" href="./styles.css?v=20261019d">
 </head>
 <body>
   <div id="loading-overlay" class="loading-overlay hidden">
@@ -95,6 +95,8 @@
       <nav class="drawer-menu">
         <button id="drawer-progress-btn" class="drawer-menu-item" data-i18n="progress">progression</button>
         <button id="drawer-about-btn" class="drawer-menu-item" data-i18n="about">a propos</button>
+        <button id="drawer-wizard-btn" class="drawer-menu-item" data-i18n="wizardMenu">créer mon programme</button>
+        <button id="drawer-notion-btn" class="drawer-menu-item" data-i18n="notionMenu">importer depuis Notion</button>
         <button id="drawer-language-btn" class="drawer-menu-item" data-i18n="language">langue</button>
         <button id="drawer-exercisedb-btn" class="drawer-menu-item hidden" data-i18n="exercisedbTitle">ExerciseDB (GIFs)</button>
         <button id="drawer-logout-btn" class="drawer-menu-item drawer-menu-danger" data-i18n="disconnect">deconnexion</button>
@@ -169,7 +171,8 @@
           <p class="page-subtitle" data-i18n="organizeWorkouts">organise tes entrainements</p>
         </div>
         <div class="section-actions mb-12">
-          <button id="create-program-btn" class="btn btn-primary btn-sm" data-i18n="newProgram">nouveau programme</button>
+          <button id="guided-program-btn" class="btn btn-primary btn-sm" data-i18n="wizardMenu">créer mon programme</button>
+          <button id="create-program-btn" class="btn btn-ghost btn-sm" data-i18n="newProgram">nouveau programme</button>
         </div>
         <div id="programs-list"></div>
       </section>
@@ -522,7 +525,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261019c"></script>
+  <script type="module" src="./js/app.js?v=20261019d"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

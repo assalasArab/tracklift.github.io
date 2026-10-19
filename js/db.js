@@ -1,6 +1,6 @@
-import { uid } from "./utils.js?v=20261019c";
-import { EXERCISE_SEED } from "./exercises.js?v=20261019c";
-import { firestore } from "./firebase-config.js?v=20261019c";
+import { uid } from "./utils.js?v=20261019d";
+import { EXERCISE_SEED } from "./exercises.js?v=20261019d";
+import { firestore } from "./firebase-config.js?v=20261019d";
 
 export const DB = {
   currentUserId: null,
@@ -100,6 +100,27 @@ export const DB = {
     data.programs.push(program);
     this.saveData(data);
     return program;
+  },
+
+  addProgram(program) {
+    const data = this.getData();
+    data.programs.push(program);
+    this.saveData(data);
+    return program;
+  },
+
+  addSessionLogs(logs) {
+    const data = this.getData();
+    data.sessionLogs.push(...logs);
+    this.saveData(data);
+    return logs.length;
+  },
+
+  updateProfile(patch) {
+    const data = this.getData();
+    data.profile = { ...(data.profile || {}), ...patch };
+    this.saveData(data);
+    return data.profile;
   },
 
   saveSessionLog(log) {
