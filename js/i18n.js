@@ -23,6 +23,7 @@ export const translations = {
     home: "accueil",
     programs: "programmes",
     exercises: "exercices",
+    nutrition: "nutrition",
     progress: "progression",
 
     homeGreeting: "bonjour {name}",
@@ -213,7 +214,21 @@ export const translations = {
     rankUltraInstinct: "Ultra Instinct",
     rankUltraInstinctMastered: "Ultra Instinct Maitrise",
     rankMasterRoshi: "Tortue Geniale",
-    nextRank: "prochain : {rank} dans {days}j"
+    nextRank: "prochain : {rank} dans {days}j",
+
+    exercisedbTitle: "ExerciseDB (GIFs)",
+    exercisedbApiKeyLabel: "Cle API RapidAPI",
+    exercisedbHelp: "Obtenez une cle gratuite sur rapidapi.com/justin-WFnsXH_t6/api/exercisedb",
+    exercisedbNotSynced: "non synchronise",
+    exercisedbSync: "Synchroniser",
+    exercisedbClear: "Vider le cache",
+    exercisedbSyncing: "Synchronisation ExerciseDB en cours...",
+    exercisedbSyncDone: "Synchronisation terminee !",
+    exercisedbSyncError: "Erreur de synchronisation",
+    exercisedbNoKey: "Entrez votre cle API RapidAPI d'abord",
+    exercisedbCacheCleared: "Cache ExerciseDB vide",
+    apiKeySaved: "Cle API sauvegardee",
+    animatedDemo: "demonstration animee"
   },
   en: {
     appTitle: "TrackLift",
@@ -239,6 +254,7 @@ export const translations = {
     home: "home",
     programs: "programs",
     exercises: "exercises",
+    nutrition: "nutrition",
     progress: "progress",
 
     homeGreeting: "hello {name}",
@@ -429,7 +445,21 @@ export const translations = {
     rankUltraInstinct: "Ultra Instinct",
     rankUltraInstinctMastered: "Ultra Instinct Mastered",
     rankMasterRoshi: "Master Roshi",
-    nextRank: "next: {rank} in {days}d"
+    nextRank: "next: {rank} in {days}d",
+
+    exercisedbTitle: "ExerciseDB (GIFs)",
+    exercisedbApiKeyLabel: "RapidAPI Key",
+    exercisedbHelp: "Get a free key at rapidapi.com/justin-WFnsXH_t6/api/exercisedb",
+    exercisedbNotSynced: "not synced",
+    exercisedbSync: "Sync",
+    exercisedbClear: "Clear cache",
+    exercisedbSyncing: "Syncing with ExerciseDB...",
+    exercisedbSyncDone: "Sync complete!",
+    exercisedbSyncError: "Sync error",
+    exercisedbNoKey: "Enter your RapidAPI key first",
+    exercisedbCacheCleared: "ExerciseDB cache cleared",
+    apiKeySaved: "API key saved",
+    animatedDemo: "animated demo"
   }
 };
 

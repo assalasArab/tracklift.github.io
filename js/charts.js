@@ -26,8 +26,8 @@ const CHART_BASE_OPTIONS = {
   responsive: true,
   plugins: { legend: { display: false } },
   scales: {
-    x: { grid: { color: "#2d2d35" }, ticks: { color: "#9c9ca8", font: { family: "DM Mono", size: 10 } } },
-    y: { grid: { color: "#2d2d35" }, ticks: { color: "#9c9ca8", font: { family: "DM Mono", size: 10 } } }
+    x: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } },
+    y: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } }
   }
 };
 
@@ -58,12 +58,12 @@ export function renderWeightChart(weightLogArray, canvasId = "chart-weight") {
       labels: weightLogArray.map(item => formatChartDate(item.date)),
       datasets: [{
         data: weightLogArray.map(item => item.weight),
-        borderColor: "#dff542",
-        backgroundColor: "rgba(223,245,66,0.1)",
+        borderColor: "#0a84ff",
+        backgroundColor: "rgba(10,132,255,0.14)",
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: "#dff542",
+        pointBackgroundColor: "#0a84ff",
         borderWidth: 2
       }]
     },
@@ -116,12 +116,12 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
       labels: points.map(point => point.date),
       datasets: [{
         data: points.map(point => point.maxWeight),
-        borderColor: "#7d5cff",
-        backgroundColor: "rgba(125,92,255,0.1)",
+        borderColor: "#bf5af2",
+        backgroundColor: "rgba(191,90,242,0.14)",
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: "#7d5cff",
+        pointBackgroundColor: "#bf5af2",
         borderWidth: 2
       }]
     },
@@ -134,7 +134,7 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
       labels: points.map(point => point.date),
       datasets: [{
         data: points.map(point => point.volume),
-        backgroundColor: "#dff542",
+        backgroundColor: "#0a84ff",
         borderRadius: 4
       }]
     },

@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>TrackLift</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <!-- Firebase SDK (compat) -->
@@ -80,7 +84,7 @@
     <aside id="profile-drawer" class="profile-drawer">
       <div class="drawer-header">
         <h2 data-i18n="profile">profil</h2>
-        <button id="drawer-close-btn" class="icon-btn">x</button>
+        <button id="drawer-close-btn" class="icon-btn" aria-label="fermer">✕</button>
       </div>
       <div class="drawer-profile-info">
         <div id="drawer-avatar" class="drawer-avatar">t</div>
@@ -92,8 +96,21 @@
         <button id="drawer-progress-btn" class="drawer-menu-item" data-i18n="progress">progression</button>
         <button id="drawer-about-btn" class="drawer-menu-item" data-i18n="about">a propos</button>
         <button id="drawer-language-btn" class="drawer-menu-item" data-i18n="language">langue</button>
+        <button id="drawer-exercisedb-btn" class="drawer-menu-item" data-i18n="exercisedbTitle">ExerciseDB (GIFs)</button>
         <button id="drawer-logout-btn" class="drawer-menu-item drawer-menu-danger" data-i18n="disconnect">deconnexion</button>
       </nav>
+      <div id="drawer-exercisedb-section" class="drawer-exercisedb-section hidden">
+        <div class="exercisedb-config">
+          <label class="meta-label" for="exercisedb-api-key" data-i18n="exercisedbApiKeyLabel">RapidAPI Key</label>
+          <input id="exercisedb-api-key" type="password" class="input-field" placeholder="xxxxxxxxxxxxxxxx" autocomplete="off">
+          <p class="exercisedb-help" data-i18n="exercisedbHelp">Obtenez une cle gratuite sur rapidapi.com/justin-WFnsXH_t6/api/exercisedb</p>
+          <div id="exercisedb-status" class="exercisedb-status" data-i18n="exercisedbNotSynced">non synchronise</div>
+          <div class="exercisedb-actions">
+            <button id="exercisedb-sync-btn" class="btn btn-primary btn-sm" data-i18n="exercisedbSync">Synchroniser</button>
+            <button id="exercisedb-clear-btn" class="btn btn-ghost btn-sm" data-i18n="exercisedbClear">Vider le cache</button>
+          </div>
+        </div>
+      </div>
       <div id="drawer-about-section" class="drawer-about-section hidden">
         <div class="drawer-about-tabs">
           <button class="drawer-tab active" data-about-tab="current" data-i18n="currentStats">stats actuelles</button>
@@ -318,12 +335,29 @@
           </div>
         </div>
       </section>
+
+      <section id="view-nutrition" class="view" aria-label="nutrition"></section>
     </main>
 
-    <nav class="bottom-nav bottom-nav-3">
-      <button class="nav-btn active" data-view="home" data-i18n="home">accueil</button>
-      <button class="nav-btn" data-view="programs" data-i18n="programs">programmes</button>
-      <button class="nav-btn" data-view="exercises" data-i18n="exercises">exercices</button>
+    <div id="nx-mobar" class="nx-mobar"><span>Cible</span><b id="nx-moKcal">0</b><span id="nx-moMacros"></span></div>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v10.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg>
+        <span data-i18n="home">accueil</span>
+      </button>
+      <button class="nav-btn" data-view="programs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg>
+        <span data-i18n="programs">programmes</span>
+      </button>
+      <button class="nav-btn" data-view="exercises">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>
+        <span data-i18n="exercises">exercices</span>
+      </button>
+      <button class="nav-btn" data-view="nutrition">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5c-1.6-1.4-4.6-1.6-6.3.4-2 2.4-1.2 6.8 1 9.8 1.4 1.9 3 3 4.1 2.3.7-.4 1.7-.4 2.4 0 1.1.7 2.7-.4 4.1-2.3 2.2-3 3-7.4 1-9.8-1.7-2-4.7-1.8-6.3-.4Z"/><path d="M12 6.5c0-1.6.8-3 2.5-3.5"/></svg>
+        <span data-i18n="nutrition">nutrition</span>
+      </button>
     </nav>
   </div>
 
@@ -331,7 +365,7 @@
      <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="newSession">nouvelle seance</h3>
-        <button class="icon-btn" data-close="modal-launcher">x</button>
+        <button class="icon-btn" data-close="modal-launcher" aria-label="fermer">✕</button>
       </div>
       <div class="tab-row">
         <button class="launcher-tab active" data-launcher-tab="free" data-i18n="free">libre</button>
@@ -378,7 +412,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="createProgram">nouveau programme</h3>
-        <button class="icon-btn" data-close="modal-create-program">x</button>
+        <button class="icon-btn" data-close="modal-create-program" aria-label="fermer">✕</button>
       </div>
       <label class="label" for="program-name-input" data-i18n="name">nom</label>
       <input id="program-name-input" class="input" type="text" placeholder="ex ppl force" data-i18n-placeholder="programNamePlaceholder">
@@ -394,7 +428,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="newSession">nouvelle seance</h3>
-        <button class="icon-btn" data-close="modal-add-prog-session">x</button>
+        <button class="icon-btn" data-close="modal-add-prog-session" aria-label="fermer">✕</button>
       </div>
       <label class="label" for="prog-sess-name" data-i18n="name">nom</label>
       <input id="prog-sess-name" class="input" type="text" placeholder="ex push A" data-i18n-placeholder="programSessionNamePlaceholder">
@@ -418,7 +452,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="weight">poids</h3>
-        <button class="icon-btn" data-close="modal-weight">x</button>
+        <button class="icon-btn" data-close="modal-weight" aria-label="fermer">✕</button>
       </div>
       <label class="label" for="weight-input" data-i18n="weightToday">poids du jour</label>
       <input id="weight-input" class="input" type="number" min="20" max="300" step="0.1" placeholder="80.5">
@@ -433,7 +467,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="skip">skip</h3>
-        <button class="icon-btn" data-close="modal-skip">x</button>
+        <button class="icon-btn" data-close="modal-skip" aria-label="fermer">✕</button>
       </div>
       <button id="skip-set-btn" class="btn btn-surface btn-block mb-12" data-i18n="skipSet">skip serie</button>
       <button id="skip-exercise-btn" class="btn btn-surface btn-block" data-i18n="skipExercise">skip exercice</button>
@@ -444,7 +478,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="similarExercises">exos similaires</h3>
-        <button class="icon-btn" data-close="modal-similar">x</button>
+        <button class="icon-btn" data-close="modal-similar" aria-label="fermer">✕</button>
       </div>
       <div id="similar-list"></div>
     </div>
@@ -454,7 +488,7 @@
     <div class="modal-card large-modal">
       <div class="modal-head">
         <h3 data-i18n="exerciseSheet">fiche exercice</h3>
-        <button class="icon-btn" data-close="modal-details">x</button>
+        <button class="icon-btn" data-close="modal-details" aria-label="fermer">✕</button>
       </div>
       <div id="exercise-details"></div>
     </div>
@@ -464,7 +498,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="stopWorkoutTitle">stop entrainement</h3>
-        <button class="icon-btn" data-close="modal-stop">x</button>
+        <button class="icon-btn" data-close="modal-stop" aria-label="fermer">✕</button>
       </div>
       <p class="confirm-text" data-i18n="confirmStopWorkout">veux tu vraiment stopper la seance en cours</p>
       <div class="section-actions">
@@ -478,7 +512,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="exportTitle">exporter</h3>
-        <button class="icon-btn" data-close="modal-export">x</button>
+        <button class="icon-btn" data-close="modal-export" aria-label="fermer">✕</button>
       </div>
       <button id="export-perf-btn" class="btn btn-surface btn-block mb-12" data-i18n="exportPerf">export performances (Excel)</button>
       <button id="export-programs-btn" class="btn btn-surface btn-block mb-12" data-i18n="exportPrograms">export programmes (Excel)</button>
@@ -492,7 +526,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="sessionExercises">exercices de la seance</h3>
-        <button class="icon-btn" data-close="modal-manage-exercises">x</button>
+        <button class="icon-btn" data-close="modal-manage-exercises" aria-label="fermer">✕</button>
       </div>
       <input id="search-manage-exercises" class="input mb-12" type="text" placeholder="rechercher un exercice..." data-i18n-placeholder="searchExercisePlaceholderLong">
       <div id="manage-exercises-list" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">

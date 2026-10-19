@@ -22,6 +22,7 @@ export const DB = {
           programs: raw.programs || [],
           sessionLogs: raw.sessionLogs || [],
           weightLog: raw.weightLog || [],
+          nutrition: raw.nutrition || null,
           createdAt: raw.createdAt || Date.now()
         };
         // Nettoyer le document Firestore si exercises etait stocke dedans
@@ -71,6 +72,7 @@ export const DB = {
   getExercises()  { return this._cache?.exercises || []; },
   getSessionLogs(){ return [...(this._cache?.sessionLogs || [])].sort((a, b) => b.date - a.date); },
   getWeightLog()  { return [...(this._cache?.weightLog || [])].sort((a, b) => a.date - b.date); },
+  getNutrition()  { return this._cache?.nutrition || null; },
 
   // ─── Ecriture (cache + Firestore) ─────────────────────
   saveData(data) {
@@ -83,6 +85,13 @@ export const DB = {
     data.weightLog.push({ id: uid(), date: Date.now(), weight });
     this.saveData(data);
     return data.weightLog;
+  },
+
+  saveNutrition(profile) {
+    const data = this.getData();
+    if (!data) return;
+    data.nutrition = profile || null;
+    this.saveData(data);
   },
 
   createProgram({ name, description }) {
@@ -107,6 +116,7 @@ export const DB = {
       programs: data.programs,
       sessionLogs: data.sessionLogs,
       weightLog: data.weightLog,
+      nutrition: data.nutrition || null,
       exportDate: new Date().toISOString()
     };
   },

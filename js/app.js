@@ -6,8 +6,10 @@ import { getImprovedDescription } from "./improved-descriptions.js";
 import { getExerciseTips } from "./exercise-tips.js";
 import { getExerciseNameTranslation } from "./exercise-names-translations.js";
 import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js";
+import { ExerciseDBAPI } from "./exercisedb-api.js";
 import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js";
 import { renderWeightChart } from "./charts.js";
+import { mountNutrition, unmountNutrition } from "./nutrition.js";
 
 const state = {
   user: null,
@@ -128,6 +130,7 @@ function init() {
     state.sessionLogs = [];
     state.weightLog = [];
     state.workout = null;
+    unmountNutrition();
     showLoading(false);
     updateSyncBadge();
     closeProfileDrawer();
@@ -148,6 +151,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#drawer-language-btn").addEventListener("click", () => openModal("modal-language"));
   $("#drawer-progress-btn").addEventListener("click", () => { closeProfileDrawer(); setView("progress"); });
   $("#drawer-about-btn").addEventListener("click", toggleDrawerAbout);
+  $("#drawer-exercisedb-btn").addEventListener("click", toggleDrawerExerciseDB);
   $("#progress-back-btn").addEventListener("click", () => setView("home"));
 
   $all(".drawer-tab").forEach(tab => {
@@ -242,6 +246,29 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
       event.target.classList.add("hidden");
     }
   });
+
+  // ExerciseDB API key & sync
+  const exercisedbKeyInput = $("#exercisedb-api-key");
+  if (exercisedbKeyInput) {
+    exercisedbKeyInput.value = ExerciseDBAPI.getApiKey();
+    exercisedbKeyInput.addEventListener("change", () => {
+      ExerciseDBAPI.setApiKey(exercisedbKeyInput.value);
+      showToast(t("apiKeySaved"));
+    });
+  }
+
+  const syncBtn = $("#exercisedb-sync-btn");
+  if (syncBtn) syncBtn.addEventListener("click", syncExerciseDB);
+
+  const clearBtn = $("#exercisedb-clear-btn");
+  if (clearBtn) clearBtn.addEventListener("click", () => {
+    ExerciseDBAPI.clearCache();
+    state.exercises.forEach(ex => { delete ex.gifUrl; });
+    updateExerciseDBStatus();
+    showToast(t("exercisedbCacheCleared"));
+  });
+
+  updateExerciseDBStatus();
 }
 
 function showAuthError(message) {
@@ -312,6 +339,18 @@ function toggleDrawerAbout() {
   section.classList.toggle("hidden");
   if (!section.classList.contains("hidden")) {
     renderAboutCurrentStats();
+  }
+}
+
+function toggleDrawerExerciseDB() {
+  const section = $("#drawer-exercisedb-section");
+  if (section) {
+    section.classList.toggle("hidden");
+    if (!section.classList.contains("hidden")) {
+      updateExerciseDBStatus();
+      const keyInput = $("#exercisedb-api-key");
+      if (keyInput) keyInput.value = ExerciseDBAPI.getApiKey();
+    }
   }
 }
 
@@ -414,11 +453,11 @@ function renderRadarChart() {
       labels,
       datasets: [{
         data: values,
-        backgroundColor: "rgba(125,92,255,0.25)",
-        borderColor: "#7d5cff",
+        backgroundColor: "rgba(191,90,242,0.25)",
+        borderColor: "#bf5af2",
         borderWidth: 2,
-        pointBackgroundColor: "#dff542",
-        pointBorderColor: "#dff542",
+        pointBackgroundColor: "#0a84ff",
+        pointBorderColor: "#0a84ff",
         pointRadius: 4
       }]
     },
@@ -430,9 +469,9 @@ function renderRadarChart() {
           min: 0,
           max: 100,
           ticks: { display: false, stepSize: 20 },
-          grid: { color: "rgba(45,45,53,0.8)" },
-          angleLines: { color: "rgba(45,45,53,0.8)" },
-          pointLabels: { color: "#9c9ca8", font: { family: "DM Mono", size: 10 } }
+          grid: { color: "rgba(84,84,88,0.45)" },
+          angleLines: { color: "rgba(84,84,88,0.45)" },
+          pointLabels: { color: "#98989f", font: { family: "Inter", size: 10 } }
         }
       }
     }
@@ -495,8 +534,18 @@ async function loadApp(firebaseUser) {
     $("#auth-screen").classList.add("hidden");
     $("#app-screen").classList.remove("hidden");
 
+    // Apply ExerciseDB GIF URLs from cache
+    ExerciseDBAPI.applyGifUrls(state.exercises);
+
     applyStaticTranslations();
     renderAll();
+
+    // Auto-sync ExerciseDB si pas encore en cache
+    console.log("[ExerciseDB] hasCachedData:", ExerciseDBAPI.hasCachedData(), "hasApiKey:", ExerciseDBAPI.hasApiKey());
+    if (!ExerciseDBAPI.hasCachedData() && ExerciseDBAPI.hasApiKey()) {
+      console.log("[ExerciseDB] Lancement auto-sync...");
+      syncExerciseDB();
+    }
   } catch (error) {
     showAuthError(`${t("loadErrorPrefix")}: ${error.message}`);
   } finally {
@@ -526,6 +575,18 @@ function setView(view) {
   if (view === "exercises") renderExerciseList();
   if (view === "progress") renderProgress();
   if (view === "workout") renderWorkout();
+  if (view === "nutrition") renderNutrition();
+}
+
+function renderNutrition() {
+  mountNutrition($("#view-nutrition"), {
+    load: () => DB.getNutrition(),
+    save: profile => DB.saveNutrition(profile),
+    getLatestWeight: () => {
+      const last = state.weightLog[state.weightLog.length - 1];
+      return last ? last.weight : null;
+    }
+  });
 }
 
 // ─── Streak / Dragon Ball Badges ────────────────────────
@@ -1384,8 +1445,8 @@ function renderExerciseList() {
 }
 
 const CHART_COLORS = [
-  "#7d5cff", "#dff542", "#ff5252", "#41d97d", "#ff9f43",
-  "#36a2eb", "#ff6b9d", "#c084fc", "#22d3ee", "#fb923c"
+  "#0a84ff", "#ff9f0a", "#bf5af2", "#30d158", "#ff375f",
+  "#64d2ff", "#ffd60a", "#5e5ce6", "#66d4cf", "#ff453a"
 ];
 
 let progressActiveExercises = new Set();
@@ -1511,11 +1572,11 @@ function renderProgressCharts() {
   const chartOpts = {
     responsive: true,
     plugins: {
-      legend: { display: activeIds.length > 1, labels: { color: "#9c9ca8", font: { family: "DM Mono", size: 10 }, boxWidth: 12 } }
+      legend: { display: activeIds.length > 1, labels: { color: "#98989f", font: { family: "Inter", size: 10 }, boxWidth: 12 } }
     },
     scales: {
-      x: { grid: { color: "#2d2d35" }, ticks: { color: "#9c9ca8", font: { family: "DM Mono", size: 10 } } },
-      y: { grid: { color: "#2d2d35" }, ticks: { color: "#9c9ca8", font: { family: "DM Mono", size: 10 } } }
+      x: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } },
+      y: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } }
     }
   };
 
@@ -1839,22 +1900,33 @@ function renderExerciseDetails(exercise) {
   const detailsModal = $("#modal-details");
   if (detailsModal) detailsModal.dataset.currentExerciseId = exercise.id;
 
+  // Use GIF from ExerciseDB if available, otherwise fall back to static images
+  const hasGif = !!exercise.gifUrl;
+  const imageHtml = hasGif
+    ? `<div class="detail-gif-container mb-12">
+        <div class="detail-block">
+          <div class="meta-label">${t("animatedDemo")}</div>
+          <img class="detail-gif" src="${exercise.gifUrl}" alt="${exerciseDisplayName}" loading="lazy">
+        </div>
+      </div>`
+    : `<div class="detail-grid mb-12">
+        <div class="detail-block">
+          <div class="meta-label">${t("startMovement")}</div>
+          <img class="detail-photo" id="img-detail-start" alt="${t("startMovement")} ${exerciseDisplayName}">
+        </div>
+        <div class="detail-block">
+          <div class="meta-label">${t("endMovement")}</div>
+          <img class="detail-photo" id="img-detail-end" alt="${t("endMovement")} ${exerciseDisplayName}">
+        </div>
+      </div>`;
+
   $("#exercise-details").innerHTML = `
     <div class="detail-block">
       <div class="item-title">${exerciseDisplayName}</div>
       <div class="item-subtitle">${[meta.type, meta.muscleFocus, meta.musclePortion].filter(Boolean).join(" · ")}</div>
       <div class="small-meta">${[meta.equipment, meta.difficulty, meta.contractionType].filter(Boolean).join(" · ")}</div>
     </div>
-    <div class="detail-grid mb-12">
-      <div class="detail-block">
-        <div class="meta-label">${t("startMovement")}</div>
-        <img class="detail-photo" id="img-detail-start" alt="${t("startMovement")} ${exerciseDisplayName}">
-      </div>
-      <div class="detail-block">
-        <div class="meta-label">${t("endMovement")}</div>
-        <img class="detail-photo" id="img-detail-end" alt="${t("endMovement")} ${exerciseDisplayName}">
-      </div>
-    </div>
+    ${imageHtml}
     <div class="detail-block">
       <div class="meta-label">${t("description")}</div>
       <div class="description-text">${description}</div>
@@ -1873,8 +1945,11 @@ function renderExerciseDetails(exercise) {
     </div>
   `;
 
-  applyImageFallback($("#img-detail-start"), startImage.urls, startImage.fallback);
-  applyImageFallback($("#img-detail-end"), endImage.urls, endImage.fallback);
+  // Apply static image fallbacks only when not using GIF
+  if (!hasGif) {
+    applyImageFallback($("#img-detail-start"), startImage.urls, startImage.fallback);
+    applyImageFallback($("#img-detail-end"), endImage.urls, endImage.fallback);
+  }
 
   $("#exercise-details").querySelectorAll("[data-similar-id]").forEach(badge => {
     badge.addEventListener("click", () => {
@@ -1955,6 +2030,46 @@ function finishWorkout() {
   renderHome();
   setView("home");
   showToast(t("sessionSaved"));
+}
+
+// ─── ExerciseDB sync ───────────────────────────────────────────
+
+function updateExerciseDBStatus() {
+  const statusEl = $("#exercisedb-status");
+  if (!statusEl) return;
+
+  const info = ExerciseDBAPI.getSyncInfo();
+  if (info.synced) {
+    const date = new Date(info.lastSync).toLocaleDateString();
+    statusEl.textContent = `${info.matchCount} GIFs (${date})`;
+    statusEl.className = "exercisedb-status synced";
+  } else {
+    statusEl.textContent = t("exercisedbNotSynced");
+    statusEl.className = "exercisedb-status";
+  }
+}
+
+async function syncExerciseDB() {
+  const syncBtn = $("#exercisedb-sync-btn");
+  if (syncBtn) syncBtn.disabled = true;
+
+  try {
+    showToast(t("exercisedbSyncing"));
+    const result = await ExerciseDBAPI.syncExercises(null, state.exercises, (msg) => {
+      console.log("[ExerciseDB]", msg);
+    });
+
+    // Apply gif URLs to current exercises and re-render
+    ExerciseDBAPI.applyGifUrls(state.exercises);
+    updateExerciseDBStatus();
+    renderExerciseList();
+    showToast(`${t("exercisedbSyncDone")} ${result.matchCount}/${state.exercises.length} GIFs`);
+  } catch (error) {
+    console.error("[ExerciseDB] sync error:", error);
+    showToast(`${t("exercisedbSyncError")}: ${error.message}`);
+  } finally {
+    if (syncBtn) syncBtn.disabled = false;
+  }
 }
 
 init();

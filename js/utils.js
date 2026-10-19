@@ -62,21 +62,22 @@ export function getExerciseImagePaths(exercise) {
 
   const start = exercise?.wger_image || `./exercises/${folder}/0.jpg`;
   const end = `./exercises/${folder}/1.jpg`;
-  return { folder, candidates, start, end };
+  return { folder, candidates, start, end, gifUrl: exercise?.gifUrl || null };
 }
 
 export function fallbackImage() {
   const label = i18n.getLanguage() === "en" ? "image unavailable" : "image absente";
-  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="100%" height="100%" fill="#1a1a1e"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#686875" font-family="Arial" font-size="26">${label}</text></svg>`);
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="100%" height="100%" fill="#1c1c1e"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#6c6c70" font-family="-apple-system, Segoe UI, Arial" font-size="26">${label}</text></svg>`);
 }
 
 /**
  * Charge une image en testant plusieurs chemins possibles.
  * Retourne un <img> fonctionnel ou le fallback SVG.
+ * Si l'exercice a un gifUrl (ExerciseDB), il est prioritaire.
  */
 export function loadExerciseImage(exercise, position = "start") {
   const fb = fallbackImage();
-  if (!exercise) return fb;
+  if (!exercise) return { urls: [], fallback: fb, gifUrl: null };
 
   const folder = exercise.image_folder || exercise.id || slugify(exercise.name || "exercise");
   const folders = [folder];
@@ -100,8 +101,7 @@ export function loadExerciseImage(exercise, position = "start") {
     }
   }
 
-  // Retourne un data-attribute avec les candidats pour le test en cascade
-  return { urls, fallback: fb };
+  return { urls, fallback: fb, gifUrl: exercise.gifUrl || null };
 }
 
 /**
