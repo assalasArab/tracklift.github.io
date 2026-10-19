@@ -145,7 +145,7 @@ function markup() {
     <div class="nx-group">
       <div class="nx-group-h"><h2>Composition corporelle</h2><span class="nx-hint" id="nx-lbmHint"></span></div>
       <div class="nx-card">
-        ${seg("bfSeg", [["known", "Je connais mon %MG", 1], ["tape", "Ruban"], ["none", "Aucune idée"]])}
+        ${seg("bfSeg", [["known", "%MG connu", 1], ["tape", "Ruban"], ["none", "Aucune idée"]])}
         <div style="margin-top:16px">
           <div id="nx-bfKnown" class="nx-slider">
             <div class="nx-slider-head"><span class="nx-lab">Masse grasse</span><span class="nx-val" id="nx-bfVal">18 %</span></div>
@@ -386,7 +386,7 @@ function markup() {
       <div class="nx-legend">
         <span><i class="line" style="background:var(--c-weight)"></i>Avec recalibrage</span>
         <span><i class="dash"></i>Calories figées</span>
-        <span><i class="line" style="background:var(--c-delta)"></i><span id="nx-legTarget">%MG visé</span></span>
+        <span><i class="line" style="background:var(--c-target)"></i><span id="nx-legTarget">%MG visé</span></span>
       </div>
       <div class="nx-eta" id="nx-eta"></div>
     </div>
@@ -497,8 +497,8 @@ function renderActs() {
     const custom = FLAT[a.n] && FLAT[a.n].custom;
     row.innerHTML =
       `<select data-i="${idx}" data-f="n" aria-label="Activité">${optionsHtml(a.n)}</select>` +
-      `<input type="number" inputmode="numeric" data-i="${idx}" data-f="min" value="${a.min}" min="5" max="300" step="5" aria-label="Minutes par séance">` +
-      `<input type="number" inputmode="numeric" data-i="${idx}" data-f="sess" value="${a.sess}" min="0" max="14" step="1" aria-label="Séances par semaine">` +
+      `<label class="nx-mini"><input type="number" inputmode="numeric" data-i="${idx}" data-f="min" value="${a.min}" min="5" max="300" step="5" aria-label="Minutes par séance"><span>min</span></label>` +
+      `<label class="nx-mini"><input type="number" inputmode="numeric" data-i="${idx}" data-f="sess" value="${a.sess}" min="0" max="14" step="1" aria-label="Séances par semaine"><span>×/sem</span></label>` +
       `<button type="button" class="nx-x" data-del="${idx}" aria-label="Supprimer">−</button>`;
     box.appendChild(row);
     if (custom) {
@@ -704,11 +704,13 @@ function project(R, fixedIntake) {
 
 /* ---------- rendu : barre de dépense ---------- */
 function drawBar(R) {
-  const W = 600, segH = 28, gapPx = 2;
+  const svg = $("bar");
+  const W = Math.max(280, Math.round(svg.clientWidth) || 600), segH = 28, gapPx = 2;
+  svg.setAttribute("viewBox", `0 0 ${W} 76`);
   const parts = [
     { k: "bmr", v: R.B.v, l: "Métabolisme de base", txt: "nx-t-on" },
     { k: "neat", v: R.N.total, l: "NEAT", txt: "nx-t-dark" },
-    { k: "eat", v: R.E.perDay, l: "Entraînement", txt: "nx-t-on" },
+    { k: "eat", v: R.E.perDay, l: "Entraînement", txt: "nx-t-dark" },
     { k: "tef", v: R.tef, l: "Effet thermique", txt: "nx-t-dark" }
   ];
   const span = Math.max(R.tdee, R.intake), sc = W / span;
@@ -727,14 +729,15 @@ function drawBar(R) {
   g += `<text class="nx-t-on" x="8" y="${y2 + 18.5}" pointer-events="none">Apport ${nf(R.intake)}</text>`;
   if (gap > 0.5) {
     g += `<rect x="${base2.toFixed(1)}" y="${y2}" width="${gap.toFixed(1)}" height="${segH}" rx="5" fill="url(#nx-hatch)"><title>${PHASE[R.phase].leg} : ${nf(Math.abs(R.deficit))} kcal</title></rect>`;
-    if (gap > 78) g += `<text class="nx-t-dark" x="${(base2 + 8).toFixed(1)}" y="${y2 + 18.5}" pointer-events="none">${R.gain ? "+" : "−"}${nf(Math.abs(R.deficit))}</text>`;
+    if (gap > 60) g += `<text class="nx-t-dark" x="${(base2 + 8).toFixed(1)}" y="${y2 + 18.5}" pointer-events="none">${R.gain ? "+" : "−"}${nf(Math.abs(R.deficit))}</text>`;
   }
   $("bar").innerHTML = g;
   $("barTotal").textContent = nf(R.tdee) + " kcal/j";
 }
 
 /* ---------- rendu : projection (deux graphiques, un axe chacun) ---------- */
-const CW = 620, CH = 150, PAD = { l: 44, r: 14, t: 10, b: 24 };
+let CW = 620;
+const CH = 150, PAD = { l: 40, r: 12, t: 10, b: 24 };
 const PX = i => PAD.l + (i / 24) * (CW - PAD.l - PAD.r);
 
 function scaleY(min, max) {
@@ -747,7 +750,7 @@ function axesSvg(min, max, Y, d) {
     g += `<line class="nx-grid-l" x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${CW - PAD.r}" y2="${y.toFixed(1)}"/>`;
     g += `<text class="nx-t-axis" x="${PAD.l - 8}" y="${(y + 3.5).toFixed(1)}" text-anchor="end">${nf(v, d)}</text>`;
   }
-  [0, 4, 8, 12, 16, 20, 24].forEach(k => {
+  (CW < 420 ? [0, 6, 12, 18, 24] : [0, 4, 8, 12, 16, 20, 24]).forEach(k => {
     g += `<text class="nx-t-axis" x="${PX(k).toFixed(1)}" y="${CH - 6}" text-anchor="middle">S${k}</text>`;
   });
   return g;
@@ -756,6 +759,8 @@ const pathOf = (s, f, Y) => s.map((d, i) => (i ? "L" : "M") + PX(i).toFixed(1) +
 
 function drawChart(R) {
   const A = project(R, false), B = project(R, true);
+  CW = Math.max(280, Math.round($("chartW").clientWidth) || 620);
+  ["chartW", "chartBf"].forEach(id => $(id).setAttribute("viewBox", `0 0 ${CW} ${CH}`));
 
   // poids : courbe pilotée + courbe sans recalibrage
   const ws = A.series.map(d => d.w).concat(B.series.map(d => d.w));
@@ -1236,7 +1241,7 @@ function buildPrintDoc(R) {
     <div class="p-head"><h1 style="font-size:18pt">Projection</h1><div class="meta">24 semaines · ${R.recal ? "recalibrage toutes les 2 semaines" : "calories figées"}</div></div>
     <h2>Poids (kg) — trait plein : recalibrage · pointillés : calories figées</h2>
     ${$("chartW").outerHTML.replace(/id="nx-chartW"/, "")}
-    <h2>Masse grasse (%) — pointillés jaunes : cible</h2>
+    <h2>Masse grasse (%) — pointillés ambre : cible</h2>
     ${$("chartBf").outerHTML.replace(/id="nx-chartBf"/, "")}
     <div class="cols">
       <div><h2>Trajectoire</h2><table><tr><th>Semaine</th><th>Poids</th><th>%MG</th><th>Apport</th></tr>${projRows}</table></div>
@@ -1371,6 +1376,12 @@ export function mountNutrition(container, options = {}) {
   $("resetBtn").addEventListener("click", () => {
     if (opts.save) { clearTimeout(saveT); opts.save(null); }
     reset();
+  });
+
+  let rT = null, lastW = 0;
+  window.addEventListener("resize", () => {
+    clearTimeout(rT);
+    rT = setTimeout(() => { if (root && root.offsetWidth && root.offsetWidth !== lastW) { lastW = root.offsetWidth; run(); } }, 150);
   });
 
   const onAny = e => { if (e.target.closest("#nx-acts") || e.target.closest("#nx-supps")) return; run(); };

@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js";
+import { i18n } from "./i18n.js?v=20261019b";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
@@ -67,7 +67,7 @@ export function getExerciseImagePaths(exercise) {
 
 export function fallbackImage() {
   const label = i18n.getLanguage() === "en" ? "image unavailable" : "image absente";
-  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="100%" height="100%" fill="#1c1c1e"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#6c6c70" font-family="-apple-system, Segoe UI, Arial" font-size="26">${label}</text></svg>`);
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="100%" height="100%" fill="#1b1b29"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#6e6e88" font-family="-apple-system, Segoe UI, Arial" font-size="26">${label}</text></svg>`);
 }
 
 /**

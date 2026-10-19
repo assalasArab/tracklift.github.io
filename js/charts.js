@@ -1,5 +1,5 @@
-import { i18n } from "./i18n.js";
-import { getExerciseNameTranslation } from "./exercise-names-translations.js";
+import { i18n } from "./i18n.js?v=20261019b";
+import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019b";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];
@@ -26,8 +26,8 @@ const CHART_BASE_OPTIONS = {
   responsive: true,
   plugins: { legend: { display: false } },
   scales: {
-    x: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } },
-    y: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } }
+    x: { grid: { color: "rgba(255,255,255,0.07)" }, ticks: { color: "#8a8aa6", font: { family: "Inter", size: 10 } } },
+    y: { grid: { color: "rgba(255,255,255,0.07)" }, ticks: { color: "#8a8aa6", font: { family: "Inter", size: 10 } } }
   }
 };
 
@@ -58,12 +58,12 @@ export function renderWeightChart(weightLogArray, canvasId = "chart-weight") {
       labels: weightLogArray.map(item => formatChartDate(item.date)),
       datasets: [{
         data: weightLogArray.map(item => item.weight),
-        borderColor: "#0a84ff",
-        backgroundColor: "rgba(10,132,255,0.14)",
+        borderColor: "#8b6cff",
+        backgroundColor: "rgba(139,108,255,0.14)",
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: "#0a84ff",
+        pointBackgroundColor: "#8b6cff",
         borderWidth: 2
       }]
     },
@@ -116,12 +116,12 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
       labels: points.map(point => point.date),
       datasets: [{
         data: points.map(point => point.maxWeight),
-        borderColor: "#bf5af2",
-        backgroundColor: "rgba(191,90,242,0.14)",
+        borderColor: "#ff5ca8",
+        backgroundColor: "rgba(255,92,168,0.14)",
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: "#bf5af2",
+        pointBackgroundColor: "#ff5ca8",
         borderWidth: 2
       }]
     },
@@ -134,7 +134,7 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
       labels: points.map(point => point.date),
       datasets: [{
         data: points.map(point => point.volume),
-        backgroundColor: "#0a84ff",
+        backgroundColor: "#8b6cff",
         borderRadius: 4
       }]
     },

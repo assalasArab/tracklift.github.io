@@ -1,15 +1,15 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, uid } from "./utils.js";
-import { DB } from "./db.js";
-import { Auth } from "./auth.js";
-import { i18n } from "./i18n.js";
-import { getImprovedDescription } from "./improved-descriptions.js";
-import { getExerciseTips } from "./exercise-tips.js";
-import { getExerciseNameTranslation } from "./exercise-names-translations.js";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js";
-import { ExerciseDBAPI } from "./exercisedb-api.js";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js";
-import { renderWeightChart } from "./charts.js";
-import { mountNutrition, unmountNutrition } from "./nutrition.js";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, uid } from "./utils.js?v=20261019b";
+import { DB } from "./db.js?v=20261019b";
+import { Auth } from "./auth.js?v=20261019b";
+import { i18n } from "./i18n.js?v=20261019b";
+import { getImprovedDescription } from "./improved-descriptions.js?v=20261019b";
+import { getExerciseTips } from "./exercise-tips.js?v=20261019b";
+import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019b";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261019b";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261019b";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261019b";
+import { renderWeightChart } from "./charts.js?v=20261019b";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261019b";
 
 const state = {
   user: null,
@@ -453,11 +453,11 @@ function renderRadarChart() {
       labels,
       datasets: [{
         data: values,
-        backgroundColor: "rgba(191,90,242,0.25)",
-        borderColor: "#bf5af2",
+        backgroundColor: "rgba(139,108,255,0.25)",
+        borderColor: "#8b6cff",
         borderWidth: 2,
-        pointBackgroundColor: "#0a84ff",
-        pointBorderColor: "#0a84ff",
+        pointBackgroundColor: "#ff5ca8",
+        pointBorderColor: "#ff5ca8",
         pointRadius: 4
       }]
     },
@@ -469,9 +469,9 @@ function renderRadarChart() {
           min: 0,
           max: 100,
           ticks: { display: false, stepSize: 20 },
-          grid: { color: "rgba(84,84,88,0.45)" },
-          angleLines: { color: "rgba(84,84,88,0.45)" },
-          pointLabels: { color: "#98989f", font: { family: "Inter", size: 10 } }
+          grid: { color: "rgba(255,255,255,0.07)" },
+          angleLines: { color: "rgba(255,255,255,0.07)" },
+          pointLabels: { color: "#8a8aa6", font: { family: "Inter", size: 10 } }
         }
       }
     }
@@ -1445,8 +1445,8 @@ function renderExerciseList() {
 }
 
 const CHART_COLORS = [
-  "#0a84ff", "#ff9f0a", "#bf5af2", "#30d158", "#ff375f",
-  "#64d2ff", "#ffd60a", "#5e5ce6", "#66d4cf", "#ff453a"
+  "#8b6cff", "#ffc23d", "#ff5ca8", "#2ee6a6", "#c25cff",
+  "#4cc9ff", "#ff8a3d", "#5ce1e6", "#ff4d6a", "#b8f35c"
 ];
 
 let progressActiveExercises = new Set();
@@ -1572,11 +1572,11 @@ function renderProgressCharts() {
   const chartOpts = {
     responsive: true,
     plugins: {
-      legend: { display: activeIds.length > 1, labels: { color: "#98989f", font: { family: "Inter", size: 10 }, boxWidth: 12 } }
+      legend: { display: activeIds.length > 1, labels: { color: "#8a8aa6", font: { family: "Inter", size: 10 }, boxWidth: 12 } }
     },
     scales: {
-      x: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } },
-      y: { grid: { color: "rgba(84,84,88,0.45)" }, ticks: { color: "#98989f", font: { family: "Inter", size: 10 } } }
+      x: { grid: { color: "rgba(255,255,255,0.07)" }, ticks: { color: "#8a8aa6", font: { family: "Inter", size: 10 } } },
+      y: { grid: { color: "rgba(255,255,255,0.07)" }, ticks: { color: "#8a8aa6", font: { family: "Inter", size: 10 } } }
     }
   };
 
