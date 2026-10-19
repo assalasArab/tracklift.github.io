@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261019b";
-import { getExerciseById } from "./exercises.js?v=20261019b";
+import { uid } from "./utils.js?v=20261019c";
+import { getExerciseById } from "./exercises.js?v=20261019c";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -63,5 +63,5 @@ export function skipCurrentExercise(workout) { const block = getCurrentBlock(wor
 export function replaceCurrentExercise(workout, newExerciseId, exercises, sessionLogs) { const nextExercise = getExerciseById(newExerciseId, exercises); const currentBlock = getCurrentBlock(workout); if (!nextExercise || !currentBlock) return workout; const previousExerciseLog = findLatestExerciseLog(nextExercise.id, sessionLogs); currentBlock.exerciseId = nextExercise.id; currentBlock.restSeconds = getRestBase(nextExercise); currentBlock.sets = buildSuggestedSets(nextExercise, previousExerciseLog); workout.currentSetIndex = 0; return workout; }
 export function buildSessionLogFromWorkout(workout, exercises) {
   const completedExercises = workout.blocks.map(block => { const exercise = getExerciseById(block.exerciseId, exercises); return { exerciseId: block.exerciseId, exerciseName: exercise?.name || "exercice", muscleFocus: exercise?.muscle_focus || "other", type: exercise?.type || "other", sets: block.sets.map(item => ({ reps: item.reps, weight: item.weight, targetReps: item.targetReps, status: item.status })), restSeconds: block.restSeconds }; });
-  return { id: uid(), sessionName: workout.sessionName, type: workout.type, date: Date.now(), durationMs: Date.now() - workout.startedAt, exercises: completedExercises };
+  return { id: uid(), sessionName: workout.sessionName, type: workout.type, programId: workout.programId || null, date: Date.now(), durationMs: Date.now() - workout.startedAt, exercises: completedExercises };
 }

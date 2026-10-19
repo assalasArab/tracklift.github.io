@@ -1,15 +1,15 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, uid } from "./utils.js?v=20261019b";
-import { DB } from "./db.js?v=20261019b";
-import { Auth } from "./auth.js?v=20261019b";
-import { i18n } from "./i18n.js?v=20261019b";
-import { getImprovedDescription } from "./improved-descriptions.js?v=20261019b";
-import { getExerciseTips } from "./exercise-tips.js?v=20261019b";
-import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019b";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261019b";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261019b";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261019b";
-import { renderWeightChart } from "./charts.js?v=20261019b";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261019b";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261019c";
+import { DB } from "./db.js?v=20261019c";
+import { Auth } from "./auth.js?v=20261019c";
+import { i18n } from "./i18n.js?v=20261019c";
+import { getImprovedDescription } from "./improved-descriptions.js?v=20261019c";
+import { getExerciseTips } from "./exercise-tips.js?v=20261019c";
+import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019c";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261019c";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261019c";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261019c";
+import { renderWeightChart } from "./charts.js?v=20261019c";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261019c";
 
 const state = {
   user: null,
@@ -168,6 +168,12 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     closeModal("modal-language");
     updateUILanguage();
     showToast(t("languageActivated"));
+  });
+
+  $("#perf-card").addEventListener("change", event => {
+    if (event.target.id !== "perf-program") return;
+    setPerfProgramId(event.target.value);
+    renderPerfCard();
   });
 
   $("#open-launcher-btn").addEventListener("click", openLauncher);
@@ -534,18 +540,12 @@ async function loadApp(firebaseUser) {
     $("#auth-screen").classList.add("hidden");
     $("#app-screen").classList.remove("hidden");
 
-    // Apply ExerciseDB GIF URLs from cache
-    ExerciseDBAPI.applyGifUrls(state.exercises);
+    // L'API ExerciseDB gratuite ne renvoie plus que 25 exercices : on purge les GIF mal associés.
+    // Les illustrations viennent désormais de free-exercise-db (voir utils.js).
+    ExerciseDBAPI.clearCache();
 
     applyStaticTranslations();
     renderAll();
-
-    // Auto-sync ExerciseDB si pas encore en cache
-    console.log("[ExerciseDB] hasCachedData:", ExerciseDBAPI.hasCachedData(), "hasApiKey:", ExerciseDBAPI.hasApiKey());
-    if (!ExerciseDBAPI.hasCachedData() && ExerciseDBAPI.hasApiKey()) {
-      console.log("[ExerciseDB] Lancement auto-sync...");
-      syncExerciseDB();
-    }
   } catch (error) {
     showAuthError(`${t("loadErrorPrefix")}: ${error.message}`);
   } finally {
@@ -589,143 +589,146 @@ function renderNutrition() {
   });
 }
 
-// ─── Streak / Dragon Ball Badges ────────────────────────
-const DB_TIERS = [
-  { days: 0,   key: "rankMasterRoshi",           color: "#8B6914", flame: "🔥" },
-  { days: 1,   key: "rankSaiyan",                color: "#c8c8c8", flame: "🔥" },
-  { days: 3,   key: "rankGuerrierSaiyan",        color: "#e8d44d", flame: "🔥" },
-  { days: 7,   key: "rankSuperSaiyan",           color: "#FFD700", flame: "🔥🔥" },
-  { days: 14,  key: "rankSuperSaiyan2",          color: "#FFC125", flame: "⚡🔥⚡" },
-  { days: 30,  key: "rankSuperSaiyan3",          color: "#FFB300", flame: "🔥🔥🔥" },
-  { days: 60,  key: "rankSuperSaiyanGod",        color: "#FF4444", flame: "🔥❤️‍🔥🔥" },
-  { days: 90,  key: "rankSuperSaiyanBlue",       color: "#00BFFF", flame: "💎🔥💎" },
-  { days: 180, key: "rankUltraInstinct",         color: "#C0C0C0", flame: "🌟🔥🌟" },
-  { days: 365, key: "rankUltraInstinctMastered", color: "#FFFFFF", flame: "✨👁️‍🗨️✨" }
-];
+// ─── Performances moyennes (par programme) ──────────────
+const PERF_PROGRAM_KEY = "tracklift_perf_program";
 
-function getTodayStr() {
-  return new Date().toISOString().slice(0, 10);
+function getPerfProgramId() {
+  try { return localStorage.getItem(PERF_PROGRAM_KEY) || ""; } catch { return ""; }
 }
 
-function getStreakData() {
-  const raw = localStorage.getItem("tracklift_streak_dates");
-  const dates = raw ? JSON.parse(raw) : [];
-  return [...new Set(dates)].sort();
+function setPerfProgramId(id) {
+  try { localStorage.setItem(PERF_PROGRAM_KEY, id); } catch { /* stockage indisponible */ }
 }
 
-function recordTodayStreak() {
-  const dates = getStreakData();
-  const today = getTodayStr();
-  if (!dates.includes(today)) {
-    dates.push(today);
-    localStorage.setItem("tracklift_streak_dates", JSON.stringify(dates));
-  }
-  return dates;
+// Les séances récentes portent leur programId ; les plus anciennes sont rattachées par le nom de séance.
+function logBelongsToProgram(log, program) {
+  if (log.programId) return log.programId === program.id;
+  const target = normalizeText(log.sessionName);
+  return (program.sessions || []).some(session => normalizeText(session.name) === target);
 }
 
-function calcStreak(dates) {
-  if (!dates.length) return { current: 0, best: 0 };
-  const today = getTodayStr();
-  const sorted = [...dates].sort().reverse();
+function computePerformance(logs) {
+  if (!logs.length) return null;
+  let doneSets = 0, totalSets = 0, totalReps = 0, loadSum = 0, loadCount = 0, durationSum = 0, durationCount = 0;
 
-  // Current streak: consecutive days ending today or yesterday
-  let current = 0;
-  let checkDate = new Date(today + "T00:00:00");
+  const perSession = logs.map(log => {
+    let volume = 0, sets = 0;
+    (log.exercises || []).forEach(exercise => (exercise.sets || []).forEach(set => {
+      totalSets++;
+      if (set.status !== "done") return;
+      const reps = Number(set.reps) || 0;
+      const weight = Number(set.weight) || 0;
+      sets++;
+      totalReps += reps;
+      volume += reps * weight;
+      if (weight > 0) { loadSum += weight; loadCount++; }
+    }));
+    doneSets += sets;
+    if ((log.durationMs || 0) > 60000) { durationSum += log.durationMs; durationCount++; }
+    return { date: log.date, volume, sets, name: log.sessionName };
+  }).sort((a, b) => a.date - b.date);
 
-  // Allow starting from today or yesterday
-  if (sorted[0] !== today) {
-    const yesterday = new Date(checkDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yStr = yesterday.toISOString().slice(0, 10);
-    if (sorted[0] !== yStr) return { current: 0, best: calcBest(dates) };
-    checkDate = yesterday;
-  }
+  const n = perSession.length;
+  const weeks = Math.max(1, (Date.now() - perSession[0].date) / (7 * 864e5));
+  const avg = list => list.reduce((sum, item) => sum + item.volume, 0) / Math.max(1, list.length);
+  const third = Math.max(1, Math.floor(n / 3));
+  const firstAvg = avg(perSession.slice(0, third));
+  const progression = n >= 4 && firstAvg > 0 ? (avg(perSession.slice(-third)) - firstAvg) / firstAvg * 100 : null;
 
-  for (const dateStr of sorted) {
-    const expected = checkDate.toISOString().slice(0, 10);
-    if (dateStr === expected) {
-      current++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else if (dateStr < expected) {
-      break;
-    }
-  }
-
-  return { current, best: Math.max(current, calcBest(dates)) };
+  return {
+    sessions: n,
+    perWeek: n / weeks,
+    avgDurationMs: durationCount ? durationSum / durationCount : null,
+    avgVolume: avg(perSession),
+    avgSets: doneSets / n,
+    avgLoad: loadCount ? loadSum / loadCount : null,
+    avgReps: doneSets ? totalReps / doneSets : null,
+    completion: totalSets ? doneSets / totalSets : null,
+    progression,
+    series: perSession.slice(-12)
+  };
 }
 
-function calcBest(dates) {
-  if (!dates.length) return 0;
-  const sorted = [...dates].sort();
-  let best = 1, run = 1;
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = new Date(sorted[i - 1] + "T00:00:00");
-    prev.setDate(prev.getDate() + 1);
-    if (prev.toISOString().slice(0, 10) === sorted[i]) {
-      run++;
-      if (run > best) best = run;
-    } else {
-      run = 1;
-    }
-  }
-  return best;
+function formatNumber(value, digits = 0) {
+  return Number(value).toLocaleString(i18n.getLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
-function getDbTier(streak) {
-  let tier = DB_TIERS[0];
-  for (const entry of DB_TIERS) {
-    if (streak >= entry.days) tier = entry;
-  }
-  return tier;
+function perfSparkline(series) {
+  if (series.length < 2) return "";
+  const W = 300, H = 56, gap = 3;
+  const max = Math.max(...series.map(item => item.volume), 1);
+  const barW = (W - gap * (series.length - 1)) / series.length;
+  const bars = series.map((item, index) => {
+    const h = Math.max(3, item.volume / max * (H - 4));
+    const x = index * (barW + gap);
+    const label = `${formatDateForUi(item.date)} · ${item.name} · ${formatNumber(item.volume)} kg`;
+    return `<rect class="perf-bar${index === series.length - 1 ? " perf-bar-last" : ""}" x="${x.toFixed(1)}" y="${(H - h).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="3"><title>${label}</title></rect>`;
+  }).join("");
+  return `<svg class="perf-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${t("perfTrend", { count: series.length })}">${bars}</svg>`;
 }
 
-function getNextTier(streak) {
-  for (const entry of DB_TIERS) {
-    if (streak < entry.days) return entry;
-  }
-  return null;
-}
-
-function renderStreakCard() {
-  const container = $("#streak-card");
+function renderPerfCard() {
+  const container = $("#perf-card");
   if (!container) return;
 
-  try {
-    const dates = recordTodayStreak();
-    const { current, best } = calcStreak(dates);
-    const tier = getDbTier(current);
-    const next = getNextTier(current);
-    const todayRecorded = dates.includes(getTodayStr());
+  let programId = getPerfProgramId();
+  const program = state.programs.find(item => item.id === programId);
+  if (!program) programId = "";
+  const logs = program ? state.sessionLogs.filter(log => logBelongsToProgram(log, program)) : state.sessionLogs;
+  const perf = computePerformance(logs);
 
-    const nextHtml = next
-      ? `<div class="streak-next">${t("nextRank", { rank: t(next.key), days: next.days - current })}</div>`
-      : "";
+  const options = [`<option value="">${t("perfAllPrograms")}</option>`]
+    .concat(state.programs.map(item => `<option value="${item.id}" ${item.id === programId ? "selected" : ""}>${item.name}</option>`))
+    .join("");
 
-    container.innerHTML = `
-      <div class="streak-flame-wrap" style="--tier-color: ${tier.color}">
-        <div class="streak-flame">${tier.flame}</div>
-        <div class="streak-count">${current}</div>
+  const head = `
+    <div class="perf-head">
+      <div>
+        <div class="perf-title">${t("perfTitle")}</div>
+        <div class="perf-sub">${perf ? t("perfSessionsCount", { count: perf.sessions }) : t("perfAverages")}</div>
       </div>
-      <div class="streak-info">
-        <div class="streak-rank" style="color: ${tier.color}">${t(tier.key)}</div>
-        <div class="streak-days">${t("streakDays", { count: current })}</div>
-        <div class="streak-best">${t("streakRecord", { count: best })}</div>
-        ${nextHtml}
-        <div class="streak-status ${todayRecorded ? "streak-ok" : ""}">${todayRecorded ? t("streakToday") : t("streakMissed")}</div>
-      </div>
-      <div class="streak-badges">
-        ${DB_TIERS.slice(1).map(b => {
-          const unlocked = current >= b.days;
-          return `<div class="streak-badge ${unlocked ? "unlocked" : "locked"}" title="${t(b.key)} (${b.days}j)" style="${unlocked ? `--badge-color: ${b.color}` : ""}">
-            <span class="streak-badge-icon">${unlocked ? b.flame.charAt(0) : "🔒"}</span>
-            <span class="streak-badge-label">${b.days}j</span>
-          </div>`;
-        }).join("")}
-      </div>
-    `;
-  } catch (err) {
-    console.error("[TrackLift] streak render error:", err);
+      <select id="perf-program" class="perf-select" aria-label="${t("program")}">${options}</select>
+    </div>`;
+
+  if (!perf) {
+    container.innerHTML = `${head}<div class="perf-empty">${t("perfNoData")}</div>`;
+    return;
   }
+
+  const dash = "—";
+  const tiles = [
+    { label: t("perfPerWeek"), value: formatNumber(perf.perWeek, 1), unit: "" },
+    { label: t("perfDuration"), value: perf.avgDurationMs ? formatNumber(perf.avgDurationMs / 60000) : dash, unit: perf.avgDurationMs ? "min" : "" },
+    { label: t("perfVolume"), value: formatNumber(perf.avgVolume), unit: "kg" },
+    { label: t("perfSets"), value: formatNumber(perf.avgSets, 1), unit: "" },
+    { label: t("perfLoad"), value: perf.avgLoad ? formatNumber(perf.avgLoad, 1) : dash, unit: perf.avgLoad ? "kg" : "" },
+    { label: t("perfCompletion"), value: perf.completion !== null ? formatNumber(perf.completion * 100) : dash, unit: perf.completion !== null ? "%" : "" }
+  ];
+
+  let progressHtml = "";
+  if (perf.progression !== null) {
+    const up = perf.progression >= 0;
+    progressHtml = `<span class="perf-progress ${up ? "up" : "down"}">${up ? "▲" : "▼"} ${up ? "+" : ""}${formatNumber(perf.progression)} %</span>`;
+  }
+
+  container.innerHTML = `
+    ${head}
+    <div class="perf-grid">
+      ${tiles.map(tile => `
+        <div class="perf-tile">
+          <div class="perf-value">${tile.value}${tile.unit ? `<small>${tile.unit}</small>` : ""}</div>
+          <div class="perf-label">${tile.label}</div>
+        </div>`).join("")}
+    </div>
+    ${perf.series.length >= 2 ? `
+    <div class="perf-trend">
+      <div class="perf-trend-head">
+        <span>${t("perfTrend", { count: perf.series.length })}</span>
+        ${progressHtml ? `<span class="perf-trend-right">${t("perfProgress")} ${progressHtml}</span>` : ""}
+      </div>
+      ${perfSparkline(perf.series)}
+    </div>` : ""}
+  `;
 }
 
 function renderHome() {
@@ -740,7 +743,7 @@ function renderHome() {
     { value: state.exercises.length, label: t("exercisesLabel") }
   ];
 
-  renderStreakCard();
+  renderPerfCard();
 
   $("#stats-grid").innerHTML = stats.map(item => `
     <div class="stat-box">
@@ -1283,9 +1286,12 @@ function renderManageExercisesList() {
 
     return `
       <div class="exercise-item" style="display:flex; justify-content:space-between; align-items:center; padding: 12px; background: var(--surface2); border-radius: 12px;">
-        <div>
-          <div class="item-title" style="font-size: 14px;">${getExerciseName(exercise)}</div>
-          <div class="item-subtitle" style="font-size: 11px;">${meta.muscleFocus}</div>
+        <div class="ex-row">
+          ${illustrationHtml(exercise, "thumb")}
+          <div class="ex-row-text">
+            <div class="item-title" style="font-size: 14px;">${getExerciseName(exercise)}</div>
+            <div class="item-subtitle" style="font-size: 11px;">${meta.muscleFocus}</div>
+          </div>
         </div>
         <div style="display:flex; gap: 8px;">
           <button class="btn btn-surface btn-sm" data-manage-details="${exercise.id}">${t("details")}</button>
@@ -1355,6 +1361,7 @@ function launchSpecificProgSession(sessionId) {
     exercises: state.exercises,
     sessionLogs: state.sessionLogs
   });
+  state.workout.programId = program.id;
 
   setView("workout");
 }
@@ -1428,10 +1435,13 @@ function renderExerciseList() {
     return `
       <div class="exercise-item">
         <div class="exercise-item-head">
-          <div>
-            <div class="item-title">${getExerciseName(exercise)}</div>
-            <div class="item-subtitle">${subtitle}</div>
-            <div class="small-meta">${smallMeta}</div>
+          <div class="ex-row">
+            ${illustrationHtml(exercise, "thumb")}
+            <div class="ex-row-text">
+              <div class="item-title">${getExerciseName(exercise)}</div>
+              <div class="item-subtitle">${subtitle}</div>
+              <div class="small-meta">${smallMeta}</div>
+            </div>
           </div>
           <button class="btn btn-ghost btn-sm" data-details-id="${exercise.id}">${t("details")}</button>
         </div>
@@ -1729,6 +1739,7 @@ function launchProgramWorkout() {
     exercises: state.exercises,
     sessionLogs: state.sessionLogs
   });
+  state.workout.programId = program.id;
 
   closeModal("modal-launcher");
   setView("workout");
@@ -1738,6 +1749,7 @@ function repeatWorkout(logId) {
   const log = state.sessionLogs.find(item => item.id === logId);
   if (!log) return;
   state.workout = buildWorkoutFromRecentLog(log, state.exercises);
+  state.workout.programId = log.programId || null;
   setView("workout");
 }
 
@@ -1767,6 +1779,11 @@ function renderWorkout() {
   $("#guided-type-badge").textContent = meta.type || getSessionTypeLabel("other");
   $("#guided-muscle-badge").textContent = meta.muscleFocus || t("muscle");
   $("#guided-exercise-name").textContent = exercise ? getExerciseName(exercise) : t("exerciseFallback");
+  const illuBox = $("#guided-illu");
+  if (illuBox && illuBox.dataset.exerciseId !== (exercise?.id || "")) {
+    illuBox.dataset.exerciseId = exercise?.id || "";
+    illuBox.innerHTML = illustrationHtml(exercise, "hero");
+  }
   $("#guided-exercise-tip").textContent = displayTip;
   $("#guided-set-progress").textContent = t("setProgress", {
     current: state.workout.currentSetIndex + 1,
@@ -1901,7 +1918,7 @@ function renderExerciseDetails(exercise) {
   if (detailsModal) detailsModal.dataset.currentExerciseId = exercise.id;
 
   // Use GIF from ExerciseDB if available, otherwise fall back to static images
-  const hasGif = !!exercise.gifUrl;
+  const hasGif = false;
   const imageHtml = hasGif
     ? `<div class="detail-gif-container mb-12">
         <div class="detail-block">

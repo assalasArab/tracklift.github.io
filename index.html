@@ -16,7 +16,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261019b">
+  <link rel="stylesheet" href="./styles.css?v=20261019c">
 </head>
 <body>
   <div id="loading-overlay" class="loading-overlay hidden">
@@ -96,7 +96,7 @@
         <button id="drawer-progress-btn" class="drawer-menu-item" data-i18n="progress">progression</button>
         <button id="drawer-about-btn" class="drawer-menu-item" data-i18n="about">a propos</button>
         <button id="drawer-language-btn" class="drawer-menu-item" data-i18n="language">langue</button>
-        <button id="drawer-exercisedb-btn" class="drawer-menu-item" data-i18n="exercisedbTitle">ExerciseDB (GIFs)</button>
+        <button id="drawer-exercisedb-btn" class="drawer-menu-item hidden" data-i18n="exercisedbTitle">ExerciseDB (GIFs)</button>
         <button id="drawer-logout-btn" class="drawer-menu-item drawer-menu-danger" data-i18n="disconnect">deconnexion</button>
       </nav>
       <div id="drawer-exercisedb-section" class="drawer-exercisedb-section hidden">
@@ -145,7 +145,7 @@
           <button id="open-launcher-btn" class="btn btn-primary" data-i18n="startWorkout">demarrer</button>
         </div>
 
-        <div id="streak-card" class="card streak-card mb-12"></div>
+        <div id="perf-card" class="card perf-card mb-12"></div>
 
         <div class="grid stats-grid" id="stats-grid"></div>
 
@@ -279,6 +279,7 @@
           </div>
 
           <div class="guided-card card">
+            <div id="guided-illu" class="guided-illu"></div>
             <div class="guided-badges">
               <span id="guided-type-badge" class="badge">push</span>
               <span id="guided-muscle-badge" class="badge badge-secondary">pectoraux</span>
@@ -521,7 +522,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261019b"></script>
+  <script type="module" src="./js/app.js?v=20261019c"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

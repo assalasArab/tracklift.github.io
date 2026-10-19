@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261019b";
+import { i18n } from "./i18n.js?v=20261019c";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
@@ -54,6 +54,36 @@ export function closeModal(id) {
   if (modal) modal.classList.add("hidden");
 }
 
+// Photos libres de droits (free-exercise-db, licence Unlicense) servies par jsDelivr.
+// Chaque exercice a deux photos : 0.jpg (position de départ) et 1.jpg (position finale).
+const FREE_EXERCISE_DB_CDN = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises";
+
+export function getExerciseIllustration(exercise) {
+  if (!exercise) return null;
+  const folder = exercise.image_folder;
+  if (folder && !folder.startsWith("wger_")) {
+    const base = `${FREE_EXERCISE_DB_CDN}/${encodeURIComponent(folder)}`;
+    return { start: `${base}/0.jpg`, end: `${base}/1.jpg` };
+  }
+  if (exercise.wger_image) return { start: exercise.wger_image, end: null };
+  return null;
+}
+
+const ILLU_PLACEHOLDER = `<span class="ex-illu-ph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span>`;
+
+/** Vignette (thumb, photo de départ seule) ou illustration animée (hero, alterne départ / fin). */
+export function illustrationHtml(exercise, size = "thumb") {
+  const illu = getExerciseIllustration(exercise);
+  const alt = String(exercise?.name || "").replace(/"/g, "&quot;");
+  if (!illu) return `<div class="ex-illu ex-illu-${size} ex-illu-missing">${ILLU_PLACEHOLDER}</div>`;
+  const animated = size !== "thumb" && illu.end;
+  return `<div class="ex-illu ex-illu-${size}${animated ? "" : " ex-illu-static"}">
+    <img src="${illu.start}" alt="${alt}" loading="lazy" decoding="async" onerror="this.closest('.ex-illu').classList.add('ex-illu-missing')">
+    ${animated ? `<img class="ex-illu-end" src="${illu.end}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ""}
+    ${ILLU_PLACEHOLDER}
+  </div>`;
+}
+
 export function getExerciseImagePaths(exercise) {
   const folder = exercise?.image_folder || exercise?.id || slugify(exercise?.name || "exercise");
   // Candidats: image_folder original, puis id en lowercase
@@ -90,7 +120,12 @@ export function loadExerciseImage(exercise, position = "start") {
   // Construire toutes les urls candidates
   const urls = [];
 
-  // Si l'exercice a une image wger externe, la tester en premier
+  // Source principale : free-exercise-db via CDN
+  const illu = getExerciseIllustration(exercise);
+  const cdnUrl = illu && (position === "start" ? illu.start : illu.end);
+  if (cdnUrl) urls.push(cdnUrl);
+
+  // Puis l'image wger externe éventuelle
   if (exercise.wger_image) {
     urls.push(exercise.wger_image);
   }

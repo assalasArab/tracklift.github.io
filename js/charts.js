@@ -1,5 +1,5 @@
-import { i18n } from "./i18n.js?v=20261019b";
-import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019b";
+import { i18n } from "./i18n.js?v=20261019c";
+import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019c";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];
