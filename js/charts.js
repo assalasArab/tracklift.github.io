@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261020d";
+import { i18n } from "./i18n.js?v=20261020e";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];
@@ -57,12 +57,12 @@ export function renderWeightChart(weightLogArray, canvasId = "chart-weight") {
       labels: weightLogArray.map(item => formatChartDate(item.date)),
       datasets: [{
         data: weightLogArray.map(item => item.weight),
-        borderColor: "#ac92a6",
-        backgroundColor: "rgba(172,146,166,0.18)",
+        borderColor: "#a96f9c",
+        backgroundColor: "rgba(169,111,156,0.18)",
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: "#ac92a6",
+        pointBackgroundColor: "#a96f9c",
         borderWidth: 2
       }]
     },
@@ -115,12 +115,12 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
       labels: points.map(point => point.date),
       datasets: [{
         data: points.map(point => point.maxWeight),
-        borderColor: "#c9a48c",
+        borderColor: "#e2a07e",
         backgroundColor: "rgba(201,179,165,0.25)",
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: "#c9a48c",
+        pointBackgroundColor: "#e2a07e",
         borderWidth: 2
       }]
     },
@@ -133,7 +133,7 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
       labels: points.map(point => point.date),
       datasets: [{
         data: points.map(point => point.volume),
-        backgroundColor: "#ac92a6",
+        backgroundColor: "#a96f9c",
         borderRadius: 4
       }]
     },
