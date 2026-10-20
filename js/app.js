@@ -1,18 +1,19 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261020c";
-import { DB } from "./db.js?v=20261020c";
-import { Auth } from "./auth.js?v=20261020c";
-import { i18n } from "./i18n.js?v=20261020c";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261020c";
-import { muscleName } from "./muscles.js?v=20261020c";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261020c";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261020c";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261020c";
-import { renderWeightChart } from "./charts.js?v=20261020c";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261020c";
-import { openProgramWizard } from "./program-wizard.js?v=20261020c";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261020c";
-import { openNotionImport } from "./notion-import.js?v=20261020c";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261020c";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261020d";
+import { DB } from "./db.js?v=20261020d";
+import { Auth } from "./auth.js?v=20261020d";
+import { i18n } from "./i18n.js?v=20261020d";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261020d";
+import { muscleName } from "./muscles.js?v=20261020d";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261020d";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261020d";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261020d";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261020d";
+import { renderWeightChart } from "./charts.js?v=20261020d";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261020d";
+import { openProgramWizard } from "./program-wizard.js?v=20261020d";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261020d";
+import { openNotionImport } from "./notion-import.js?v=20261020d";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261020d";
 
 const state = {
   user: null,
@@ -253,6 +254,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   });
 
   $("#exercise-search").addEventListener("input", renderExerciseList);
+  $("#create-exercise-btn").addEventListener("click", () => openCustomExercise());
   $("#filter-type").addEventListener("change", renderExerciseList);
   $("#filter-muscle").addEventListener("change", () => {
     updatePortionFilter();
@@ -794,6 +796,7 @@ function openWizard() {
     exercises: state.exercises,
     nameOf: getExerciseName,
     bodyweight: last ? last.weight : "",
+    createExercise: (name, done) => openCustomExercise({ name, onCreated: done }),
     onCreate: (generated, answers) => {
       const program = {
         id: uid(),
@@ -816,6 +819,47 @@ function openWizard() {
     },
     onDismiss: () => {
       if (!state.profile?.onboardingDone) state.profile = DB.updateProfile({ onboardingDone: true });
+    }
+  });
+}
+
+// ─── Exercices personnels ───────────────────────────────
+function escapeHtml(value) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+}
+
+function refreshExercises() {
+  state.exercises = DB.getExercises();
+  state.programs = DB.getPrograms();
+  renderExerciseFilters();
+  renderExerciseList();
+}
+
+/** opts: { exercise (à modifier), name (pré-rempli), onCreated(exercise) } */
+function openCustomExercise(opts = {}) {
+  openCustomExerciseForm({
+    exercise: opts.exercise || null,
+    name: opts.name || "",
+    lang: i18n.getLanguage(),
+    t,
+    translate: translateExerciseValue,
+    onSave: exercise => {
+      DB.saveCustomExercise(exercise);
+      refreshExercises();
+      showToast(t("customSaved"));
+      const details = $("#modal-details");
+      if (opts.exercise && details && !details.classList.contains("hidden")) renderExerciseDetails(exercise);
+      opts.onCreated && opts.onCreated(exercise);
+    },
+    onDelete: exercise => {
+      DB.deleteCustomExercise(exercise.id);
+      refreshExercises();
+      closeModal("modal-details");
+      if (state.currentProgramId) {
+        const program = state.programs.find(item => item.id === state.currentProgramId);
+        if (program) renderProgSessions(program);
+      }
+      showToast(t("customDeleted"));
     }
   });
 }
@@ -1482,8 +1526,12 @@ function renderManageExercisesList() {
   const selectedIds = session.exerciseIds || [];
   const search = normalizeText($("#search-manage-exercises").value);
   const filtered = state.exercises.filter(exercise => !search || buildExerciseSearchText(exercise).includes(search));
+  const query = $("#search-manage-exercises").value.trim();
+  const createRow = query && !filtered.some(exercise => normalizeText(getExerciseName(exercise)) === search)
+    ? `<button type="button" class="create-row" data-create-ex>+ ${t("customCreateNamed", { name: escapeHtml(query) })}</button>`
+    : "";
 
-  $("#manage-exercises-list").innerHTML = filtered.map(exercise => {
+  $("#manage-exercises-list").innerHTML = createRow + filtered.map(exercise => {
     const isSelected = selectedIds.includes(exercise.id);
     const meta = getExerciseMeta(exercise);
 
@@ -1510,6 +1558,14 @@ function renderManageExercisesList() {
     button.addEventListener("click", event => {
       toggleExerciseInSession(event.target.dataset.toggleEx);
     });
+  });
+
+  $("#manage-exercises-list [data-create-ex]")?.addEventListener("click", () => {
+    openCustomExercise({ name: query, onCreated: exercise => {
+      if (!(session.exerciseIds || []).includes(exercise.id)) toggleExerciseInSession(exercise.id);
+      $("#search-manage-exercises").value = "";
+      renderManageExercisesList();
+    } });
   });
 
   $all("[data-manage-details]").forEach(button => {
@@ -1642,7 +1698,7 @@ function renderExerciseList() {
           <div class="ex-row">
             ${illustrationHtml(exercise, "thumb")}
             <div class="ex-row-text">
-              <div class="item-title">${getExerciseName(exercise)}</div>
+              <div class="item-title">${getExerciseName(exercise)}${exercise.custom ? ` <span class="custom-tag">${t("customBadge")}</span>` : ""}</div>
               <div class="item-subtitle">${subtitle}</div>
               <div class="small-meta">${smallMeta}</div>
             </div>
@@ -2145,6 +2201,7 @@ function renderExerciseDetails(exercise) {
       </div>`;
 
   $("#exercise-details").innerHTML = `
+    ${exercise.custom ? `<div class="section-actions mb-12"><span class="custom-tag">${t("customBadge")}</span><button type="button" class="btn btn-surface btn-sm" data-edit-custom>${t("customEdit")}</button></div>` : ""}
     <div class="detail-block">
       <div class="item-title">${exerciseDisplayName}</div>
       <div class="item-subtitle">${[meta.type, musclesLabel].filter(Boolean).join(" · ")}</div>
@@ -2180,6 +2237,8 @@ function renderExerciseDetails(exercise) {
     applyImageFallback($("#img-detail-start"), startImage.urls, startImage.fallback);
     applyImageFallback($("#img-detail-end"), endImage.urls, endImage.fallback);
   }
+
+  $("#exercise-details [data-edit-custom]")?.addEventListener("click", () => openCustomExercise({ exercise }));
 
   $("#exercise-details").querySelectorAll("[data-similar-id]").forEach(badge => {
     badge.addEventListener("click", () => {

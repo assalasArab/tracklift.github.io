@@ -1125,3 +1125,33 @@ body:not(:has(#view-nutrition.active)) .nx-mobar { display: none; }
 .data-credit { text-align: center; font-size: 12px; color: var(--text3); margin: 16px 0 4px; }
 .data-credit a { color: var(--accent-ink); }
 .ex-illu { background: #d9ecf8; }
+
+/* ─── Exercices personnels ────────────────────────────── */
+.cx-modal { z-index: 70; }
+.cx-card { max-width: 560px; }
+.cx-form { display: flex; flex-direction: column; gap: 16px; }
+.cx-field { display: flex; flex-direction: column; min-width: 0; }
+.cx-field .label { margin-top: 0; }
+.cx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cx-notes { resize: vertical; min-height: 72px; font-family: var(--font-body); font-size: 16px; line-height: 1.5; }
+.cx-error { margin: 4px 0 0 2px; font-size: 13px; color: var(--danger); }
+.cx-muscles { display: flex; flex-wrap: wrap; gap: 8px; }
+.cx-muscle {
+  min-height: 36px; padding: 0 12px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--text);
+  background: var(--surface2); border: 1px solid var(--border); transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+.cx-muscle:hover { border-color: var(--accent); }
+.cx-muscle[aria-pressed="true"] { background: var(--accent-tint); border-color: var(--accent-ink); color: var(--accent-ink); font-weight: 600; }
+.cx-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding-top: 8px; }
+.cx-actions .btn-danger { margin-right: auto; }
+.custom-tag {
+  display: inline-block; vertical-align: 2px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  color: var(--accent-ink); border: 1px solid var(--accent); line-height: 20px;
+}
+.create-row {
+  width: 100%; min-height: 44px; padding: 0 12px; border-radius: 8px; cursor: pointer; text-align: left;
+  font-size: 14px; font-weight: 600; color: var(--accent-ink); background: transparent; border: 1px dashed var(--accent);
+}
+.create-row:hover { background: var(--accent-tint); }
+.wz-create span { color: var(--accent-ink); font-weight: 600; }
+@media (max-width: 420px) { .cx-row { grid-template-columns: 1fr; } }

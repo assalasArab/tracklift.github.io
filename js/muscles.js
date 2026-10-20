@@ -58,3 +58,27 @@ export function muscleWgerIds(keys) {
   (keys || []).forEach(key => (MUSCLES[key]?.wger || []).forEach(id => out.add(id)));
   return out;
 }
+
+/* muscle anatomique → groupe utilisé par les filtres et l'appli (muscle_focus) */
+export const MUSCLE_GROUP = {
+  pectoralis_major: "pectoraux", serratus_anterior: "pectoraux",
+  anterior_deltoid: "epaules", lateral_deltoid: "epaules", posterior_deltoid: "epaules", supraspinatus: "epaules",
+  triceps_brachii: "triceps", biceps_brachii: "biceps", brachialis: "biceps",
+  brachioradialis: "avant_bras", forearm_flexors: "avant_bras", forearm_extensors: "avant_bras", forearms: "avant_bras",
+  rectus_abdominis: "abdominaux", obliques: "abdominaux", transverse_abdominis: "abdominaux",
+  hip_flexors: "flechisseurs_hanche",
+  quadriceps: "quadriceps", hamstrings: "ischio_jambiers",
+  gluteus_maximus: "fessiers", gluteus_medius: "fessiers",
+  gastrocnemius: "mollets", soleus: "mollets", tibialis_anterior: "mollets",
+  latissimus_dorsi: "dos", rhomboids: "dos", trapezius: "trapeces",
+  erector_spinae: "bas_dos", quadratus_lumborum: "bas_dos",
+  adductors: "adducteurs", abductors: "abducteurs"
+};
+
+/* muscles proposés dans les formulaires, rangés par zone */
+export const MUSCLE_REGIONS = [
+  { fr: "Poussée", en: "Push", keys: ["pectoralis_major", "serratus_anterior", "anterior_deltoid", "lateral_deltoid", "posterior_deltoid", "triceps_brachii"] },
+  { fr: "Dos et bras", en: "Back and arms", keys: ["latissimus_dorsi", "rhomboids", "trapezius", "erector_spinae", "biceps_brachii", "brachialis", "brachioradialis", "forearm_flexors", "forearm_extensors"] },
+  { fr: "Tronc", en: "Core", keys: ["rectus_abdominis", "obliques", "transverse_abdominis", "hip_flexors", "quadratus_lumborum"] },
+  { fr: "Jambes", en: "Legs", keys: ["quadriceps", "hamstrings", "gluteus_maximus", "gluteus_medius", "adductors", "abductors", "gastrocnemius", "soleus", "tibialis_anterior"] }
+];

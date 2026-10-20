@@ -430,6 +430,9 @@ function renderSearchResults(query) {
       <span>${esc(wiz.nameOf(ex) || ex.name)}</span><small>${esc(String(ex.muscle_focus || "").replace(/_/g, " "))}</small>
     </button>`).join("")
     : query.trim() ? `<div class="wz-noresult">Aucun exercice trouvé</div>` : "";
+  if (query.trim() && wiz.createExercise) {
+    box.insertAdjacentHTML("beforeend", `<button type="button" class="wz-result wz-create" data-act="create-ex" data-name="${esc(query.trim())}"><span>+ Créer « ${esc(query.trim())} »</span><small>exercice perso</small></button>`);
+  }
 }
 
 function weekBody() {
@@ -640,6 +643,16 @@ function handleCustomAction(act, target) {
   if (act === "del-session") c.sessions.splice(i, 1);
   if (act === "del-ex" && session) session.items.splice(i, 1);
   if (act === "suggest" && session) suggestItems(session);
+  if (act === "create-ex" && session) {
+    const index = step.session;
+    wiz.createExercise(target.dataset.name, exercise => {
+      if (!wiz) return;
+      if (!wiz.exercises.some(ex => ex.id === exercise.id)) wiz.exercises.unshift(exercise);
+      wiz.custom.sessions[index].items.push({ id: exercise.id, sets: 3, reps: 10, weight: "" });
+      renderStep();
+    });
+    return;
+  }
   if (act === "add-ex" && session) {
     const id = target.dataset.id;
     session.items.push({ id, sets: 3, reps: id === "plank" ? 45 : 10, weight: "" });
@@ -667,7 +680,7 @@ export function openProgramWizard(opts) {
     el, index: 0, program: null, level: null,
     exercises: opts.exercises || [],
     nameOf: opts.nameOf || (ex => ex?.name),
-    onCreate: opts.onCreate, onDismiss: opts.onDismiss,
+    onCreate: opts.onCreate, onDismiss: opts.onDismiss, createExercise: opts.createExercise,
     answers: { bodyweight: opts.bodyweight || "", lifts: {}, sex: "male" },
     custom: { preset: null, name: "", sessions: [] }
   };
@@ -737,7 +750,7 @@ export function openProgramWizard(opts) {
     if (event.key !== "Enter" || event.target.dataset.search === undefined) return;
     event.preventDefault();
     const first = el.querySelector(".wz-result");
-    if (first) handleCustomAction("add-ex", first);
+    if (first) handleCustomAction(first.dataset.act, first);
   });
 
   renderStep();

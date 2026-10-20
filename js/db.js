@@ -1,6 +1,6 @@
-import { uid } from "./utils.js?v=20261020c";
-import { EXERCISE_SEED } from "./exercises.js?v=20261020c";
-import { firestore } from "./firebase-config.js?v=20261020c";
+import { uid } from "./utils.js?v=20261020d";
+import { EXERCISE_SEED } from "./exercises.js?v=20261020d";
+import { firestore } from "./firebase-config.js?v=20261020d";
 
 export const DB = {
   currentUserId: null,
@@ -24,6 +24,7 @@ export const DB = {
           weightLog: raw.weightLog || [],
           nutrition: raw.nutrition || null,
           exerciseDb: raw.exerciseDb || null,
+          customExercises: raw.customExercises || [],
           createdAt: raw.createdAt || Date.now()
         };
         // Nettoyer le document Firestore si exercises etait stocke dedans
@@ -70,7 +71,8 @@ export const DB = {
   getData()       { return this._cache; },
   getProfile()    { return this._cache?.profile; },
   getPrograms()   { return this._cache?.programs || []; },
-  getExercises()  { return this._cache?.exercises || []; },
+  getExercises()  { return [...(this._cache?.customExercises || []), ...(this._cache?.exercises || [])]; },
+  getCustomExercises() { return this._cache?.customExercises || []; },
   getSessionLogs(){ return [...(this._cache?.sessionLogs || [])].sort((a, b) => b.date - a.date); },
   getWeightLog()  { return [...(this._cache?.weightLog || [])].sort((a, b) => a.date - b.date); },
   getNutrition()  { return this._cache?.nutrition || null; },
@@ -107,6 +109,26 @@ export const DB = {
     const data = this.getData();
     if (!data) return;
     data.nutrition = profile || null;
+    this.saveData(data);
+  },
+
+  /** Ajoute ou remplace un exercice personnel */
+  saveCustomExercise(exercise) {
+    const data = this.getData();
+    const list = (data.customExercises || []).filter(item => item.id !== exercise.id);
+    data.customExercises = [exercise, ...list];
+    this.saveData(data);
+    return exercise;
+  },
+
+  /** Supprime un exercice personnel et le retire des séances de programme */
+  deleteCustomExercise(id) {
+    const data = this.getData();
+    data.customExercises = (data.customExercises || []).filter(item => item.id !== id);
+    (data.programs || []).forEach(program => (program.sessions || []).forEach(session => {
+      session.exerciseIds = (session.exerciseIds || []).filter(item => item !== id);
+      if (session.plan) delete session.plan[id];
+    }));
     this.saveData(data);
   },
 
@@ -154,6 +176,7 @@ export const DB = {
       sessionLogs: data.sessionLogs,
       weightLog: data.weightLog,
       nutrition: data.nutrition || null,
+      customExercises: data.customExercises || [],
       exportDate: new Date().toISOString()
     };
   },
