@@ -11,9 +11,10 @@ structure
 - js/charts.js
 - js/utils.js
 
-images
-- remplace les fichiers start.jpg et end.jpg dans assets/exercises/nom_exercice
+exercices
+- base : js/exercises.js (650 exercices), images : assets/exercises/*.webp, muscles : assets/muscles/repdb
+- Exercise data by RepDB (repdb.co) — https://repdb.co (licence free tier : attribution obligatoire, pas de redistribution du dataset)
+- schémas anatomiques : wger.de (CC-BY-SA 3.0)
 
 notes
-- cette version utilise localstorage
-- pour une vraie sync multi appareil il faut brancher firebase ou supabase dans db.js et auth.js
+- données synchronisées via Firebase (auth + Firestore)

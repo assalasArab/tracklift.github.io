@@ -1,18 +1,18 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261019d";
-import { DB } from "./db.js?v=20261019d";
-import { Auth } from "./auth.js?v=20261019d";
-import { i18n } from "./i18n.js?v=20261019d";
-import { getImprovedDescription } from "./improved-descriptions.js?v=20261019d";
-import { getExerciseTips } from "./exercise-tips.js?v=20261019d";
-import { getExerciseNameTranslation } from "./exercise-names-translations.js?v=20261019d";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261019d";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261019d";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261019d";
-import { renderWeightChart } from "./charts.js?v=20261019d";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261019d";
-import { openProgramWizard } from "./program-wizard.js?v=20261019d";
-import { muscleMapHtml } from "./muscle-map.js?v=20261019d";
-import { openNotionImport } from "./notion-import.js?v=20261019d";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261020c";
+import { DB } from "./db.js?v=20261020c";
+import { Auth } from "./auth.js?v=20261020c";
+import { i18n } from "./i18n.js?v=20261020c";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261020c";
+import { muscleName } from "./muscles.js?v=20261020c";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261020c";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261020c";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261020c";
+import { renderWeightChart } from "./charts.js?v=20261020c";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261020c";
+import { openProgramWizard } from "./program-wizard.js?v=20261020c";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261020c";
+import { openNotionImport } from "./notion-import.js?v=20261020c";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261020c";
 
 const state = {
   user: null,
@@ -48,7 +48,25 @@ function formatDateForUi(input) {
 
 function getExerciseName(exercise) {
   if (!exercise) return "";
-  return getExerciseNameTranslation(exercise.id, i18n.getLanguage()) || exercise.name;
+  return (i18n.getLanguage() === "fr" && exercise.name_fr) || exercise.name;
+}
+
+function exerciseNameById(id) {
+  return getExerciseName(getExerciseById(id, state.exercises));
+}
+
+/* Ancienne base (free-exercise-db) → RepDB : on renomme les identifiants dans les programmes et l'historique */
+const EXERCISE_DB_VERSION = "repdb-1";
+function migrateExerciseIds(data) {
+  if (data.exerciseDb === EXERCISE_DB_VERSION) return;
+  const map = id => EXERCISE_ALIASES[id] || id;
+  (data.programs || []).forEach(program => (program.sessions || []).forEach(session => {
+    session.exerciseIds = [...new Set((session.exerciseIds || []).map(map))];
+    if (session.plan) session.plan = Object.fromEntries(Object.entries(session.plan).map(([id, plan]) => [map(id), plan]));
+  }));
+  (data.sessionLogs || []).forEach(log => (log.exercises || []).forEach(ex => { ex.exerciseId = map(ex.exerciseId); }));
+  data.exerciseDb = EXERCISE_DB_VERSION;
+  DB.saveData(data);
 }
 
 function translateExerciseValue(category, value) {
@@ -63,7 +81,7 @@ function getExerciseMeta(exercise) {
   return {
     type: translateExerciseValue("type", exercise?.type),
     muscleFocus: translateExerciseValue("muscle_focus", exercise?.muscle_focus),
-    musclePortion: translateExerciseValue("muscle_portion", exercise?.muscle_portion),
+    musclePortion: exercise?.muscle_portion ? muscleName(exercise.muscle_portion, i18n.getLanguage()) : "",
     contractionType: translateExerciseValue("contraction_type", exercise?.contraction_type),
     equipment: translateExerciseValue("equipment", exercise?.equipment),
     difficulty: translateExerciseValue("difficulty", exercise?.difficulty)
@@ -82,6 +100,9 @@ function buildExerciseSearchText(exercise) {
     meta.muscleFocus,
     exercise?.muscle_portion,
     meta.musclePortion,
+    exercise?.name_fr,
+    primaryMusclesLabel(exercise, "fr"),
+    primaryMusclesLabel(exercise, "en"),
     exercise?.contraction_type,
     meta.contractionType,
     exercise?.equipment,
@@ -188,6 +209,14 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
 
   $("#open-launcher-btn").addEventListener("click", openLauncher);
   $("#open-weight-btn").addEventListener("click", openWeightModal);
+  $("#streak-pill").addEventListener("click", focusStreakCard);
+  $("#streak-card").addEventListener("click", event => {
+    if (event.target.closest("[data-streak-save]")) saveStreakWeight();
+    if (event.target.closest("[data-streak-edit]")) openWeightModal();
+  });
+  $("#streak-card").addEventListener("keydown", event => {
+    if (event.key === "Enter" && event.target.id === "streak-input") saveStreakWeight();
+  });
   $("#save-weight-btn").addEventListener("click", saveWeight);
   $("#open-export-btn").addEventListener("click", () => openModal("modal-export"));
   $("#export-perf-btn").addEventListener("click", () => { closeModal("modal-export"); exportPerfExcel(); });
@@ -398,7 +427,7 @@ function renderAboutCurrentStats() {
   for (const log of state.sessionLogs) {
     for (const ex of (log.exercises || [])) {
       const maxW = Math.max(...(ex.sets || []).filter(s => s.status === "done").map(s => s.weight || 0), 0);
-      const name = getExerciseNameTranslation(ex.exerciseId, i18n.getLanguage()) || ex.exerciseName || ex.exerciseId;
+      const name = exerciseNameById(ex.exerciseId) || ex.exerciseName || ex.exerciseId;
       topExercises[name] = Math.max(topExercises[name] || 0, maxW);
     }
   }
@@ -469,11 +498,11 @@ function renderRadarChart() {
       labels,
       datasets: [{
         data: values,
-        backgroundColor: "rgba(139,108,255,0.25)",
-        borderColor: "#8b6cff",
+        backgroundColor: "rgba(172,146,166,0.28)",
+        borderColor: "#ac92a6",
         borderWidth: 2,
-        pointBackgroundColor: "#ff5ca8",
-        pointBorderColor: "#ff5ca8",
+        pointBackgroundColor: "#c9a48c",
+        pointBorderColor: "#c9a48c",
         pointRadius: 4
       }]
     },
@@ -485,9 +514,9 @@ function renderRadarChart() {
           min: 0,
           max: 100,
           ticks: { display: false, stepSize: 20 },
-          grid: { color: "rgba(255,255,255,0.07)" },
-          angleLines: { color: "rgba(255,255,255,0.07)" },
-          pointLabels: { color: "#8a8aa6", font: { family: "Inter", size: 10 } }
+          grid: { color: "rgba(122,100,116,0.12)" },
+          angleLines: { color: "rgba(122,100,116,0.12)" },
+          pointLabels: { color: "#8c7f88", font: { family: "Inter", size: 10 } }
         }
       }
     }
@@ -522,6 +551,7 @@ async function loadApp(firebaseUser) {
     }
 
     const data = DB.getData();
+    migrateExerciseIds(data);
     data.profile = {
       id: firebaseUser.uid,
       email: firebaseUser.email,
@@ -562,6 +592,9 @@ async function loadApp(firebaseUser) {
     // Premier lancement : on guide la création du programme avant la première séance
     if (!state.sessionLogs.length && !state.programs.length && !state.profile?.onboardingDone) {
       setTimeout(openWizard, 450);
+    } else {
+      const streak = computeStreak(state.weightLog);
+      if (streak.atRisk) setTimeout(() => showToast(t("streakRisk", { count: streak.current })), 900);
     }
   } catch (error) {
     showAuthError(`${t("loadErrorPrefix")}: ${error.message}`);
@@ -693,6 +726,7 @@ function renderPerfCard() {
   if (!program) programId = "";
   const logs = program ? state.sessionLogs.filter(log => logBelongsToProgram(log, program)) : state.sessionLogs;
   const perf = computePerformance(logs);
+  const levelLabel = state.profile?.trainingProfile?.levelLabel || "";
 
   const options = [`<option value="">${t("perfAllPrograms")}</option>`]
     .concat(state.programs.map(item => `<option value="${item.id}" ${item.id === programId ? "selected" : ""}>${item.name}</option>`))
@@ -703,6 +737,7 @@ function renderPerfCard() {
       <div>
         <div class="perf-title">${t("perfTitle")}</div>
         <div class="perf-sub">${perf ? t("perfSessionsCount", { count: perf.sessions }) : t("perfAverages")}</div>
+        ${levelLabel ? `<span class="level-chip">${t("levelChip", { level: levelLabel })}</span>` : ""}
       </div>
       <select id="perf-program" class="perf-select" aria-label="${t("program")}">${options}</select>
     </div>`;
@@ -771,6 +806,9 @@ function openWizard() {
       DB.addProgram(program);
       state.profile = DB.updateProfile({ onboardingDone: true, trainingProfile: answers });
       state.programs = DB.getPrograms();
+      // le poids saisi dans le questionnaire allume la flamme du jour
+      const bodyweight = Number(answers.bodyweight);
+      if (bodyweight >= 20 && bodyweight <= 300 && !computeStreak(state.weightLog).doneToday) logWeight(bodyweight, { silent: true });
       setPerfProgramId(program.id);
       renderHome();
       renderPrograms();
@@ -808,6 +846,7 @@ function renderHome() {
     { value: state.exercises.length, label: t("exercisesLabel") }
   ];
 
+  renderStreak();
   renderPerfCard();
 
   $("#stats-grid").innerHTML = stats.map(item => `
@@ -828,7 +867,7 @@ function renderHome() {
       const maxWeight = doneSets.length ? Math.max(...doneSets.map(s => s.weight || 0)) : 0;
       const totalSets = doneSets.length;
       const bestReps = doneSets.length ? doneSets.reduce((best, s) => (s.weight || 0) >= maxWeight ? s.reps : best, 0) : 0;
-      const name = getExerciseNameTranslation(ex.exerciseId, i18n.getLanguage()) || ex.exerciseName || ex.exerciseId;
+      const name = exerciseNameById(ex.exerciseId) || ex.exerciseName || ex.exerciseId;
       return { name, maxWeight, totalSets, bestReps };
     }).filter(ex => ex.totalSets > 0);
 
@@ -888,17 +927,116 @@ function saveWeight() {
     showToast(t("invalidWeight"));
     return;
   }
-
-  DB.addWeight(weight);
-  state.weightLog = DB.getWeightLog();
   closeModal("modal-weight");
-  renderHome();
+  logWeight(weight);
+}
 
-  if (state.activeView === "progress") {
-    renderProgress();
+// ─── Flamme de pesée ────────────────────────────────────
+/** Enregistre la pesée du jour, met à jour la flamme et félicite aux paliers */
+function logWeight(weight, { silent = false } = {}) {
+  const before = computeStreak(state.weightLog);
+  DB.setDayWeight(weight);
+  state.weightLog = DB.getWeightLog();
+  const after = computeStreak(state.weightLog);
+  renderHome();
+  if (state.activeView === "progress") renderProgress();
+  if (silent) return;
+
+  if (before.doneToday) {
+    showToast(t("weightSaved"));
+    return;
+  }
+  if (STREAK_MILESTONES.includes(after.current)) {
+    showToast(t("streakMilestone", { count: after.current }));
+    const card = $("#streak-card");
+    card?.classList.add("streak-celebrate");
+    setTimeout(() => card?.classList.remove("streak-celebrate"), 1600);
+  } else {
+    showToast(after.current > 1 ? t("streakLit", { count: after.current }) : t("streakFirst"));
+  }
+}
+
+function saveStreakWeight() {
+  const input = $("#streak-input");
+  const weight = Number(String(input?.value || "").replace(",", "."));
+  if (!weight || weight < 20 || weight > 300) {
+    showToast(t("invalidWeight"));
+    input?.focus();
+    return;
+  }
+  logWeight(weight);
+}
+
+function focusStreakCard() {
+  if (state.activeView !== "home") setView("home");
+  $("#streak-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => $("#streak-input")?.focus({ preventScroll: true }), 350);
+}
+
+const FLAME_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg>`;
+
+function renderStreak() {
+  const card = $("#streak-card");
+  if (!card) return;
+  const s = computeStreak(state.weightLog);
+  const lit = s.doneToday;
+
+  const pill = $("#streak-pill");
+  pill.classList.toggle("off", !lit);
+  pill.classList.toggle("risk", s.atRisk);
+  $("#streak-pill-count").textContent = s.current;
+
+  const week = s.week.map(day => `
+    <div class="streak-day${day.done ? " done" : ""}${day.isToday ? " today" : ""}">
+      ${FLAME_SVG}
+      <span>${day.date.toLocaleDateString(i18n.getLocale(), { weekday: "narrow" })}</span>
+    </div>`).join("");
+
+  const message = lit ? t("streakLoggedToday")
+    : s.atRisk ? t("streakPromptKeep", { count: s.current })
+    : t("streakPromptStart");
+
+  let action;
+  if (lit) {
+    const delta = s.previousEntry ? s.todayEntry.weight - s.previousEntry.weight : null;
+    const deltaHtml = delta === null ? "" : `<span class="streak-delta">${delta > 0 ? "+" : ""}${formatNumber(delta, 1)} kg</span>`;
+    action = `
+      <div class="streak-done">
+        <div class="streak-weight">${formatNumber(s.todayEntry.weight, 1)}<small>kg</small></div>
+        ${deltaHtml}
+        <button class="btn btn-ghost btn-sm" data-streak-edit>${t("streakEdit")}</button>
+      </div>`;
+  } else {
+    const last = s.previousEntry ? formatNumber(s.previousEntry.weight, 1) : "75";
+    action = `
+      <div class="streak-form">
+        <input id="streak-input" class="streak-input" type="text" inputmode="decimal" placeholder="${last}" aria-label="${t("weightToday")}">
+        <span class="streak-unit">kg</span>
+        <button class="btn btn-primary btn-sm" data-streak-save>${t("streakSave")}</button>
+      </div>`;
   }
 
-  showToast(t("weightSaved"));
+  const nextHtml = s.next ? `
+    <div class="streak-next">
+      <div class="streak-next-bar"><div style="width:${Math.round(s.current / s.next * 100)}%"></div></div>
+      <span>${t("streakNext", { count: s.next - s.current, target: s.next })}</span>
+    </div>` : "";
+
+  card.classList.toggle("lit", lit);
+  card.classList.toggle("risk", s.atRisk);
+  card.innerHTML = `
+    <div class="streak-head">
+      <div class="streak-flame${lit ? "" : " off"}">${FLAME_SVG}</div>
+      <div class="streak-count">
+        <b>${s.current}</b>
+        <span>${s.current > 1 ? t("streakDaysMany") : t("streakDaysOne")}</span>
+      </div>
+      <div class="streak-best">${t("streakBest", { count: s.best })}</div>
+    </div>
+    <div class="streak-msg">${message}</div>
+    ${action}
+    <div class="streak-week">${week}</div>
+    ${nextHtml}`;
 }
 
 function exportData() {
@@ -1466,7 +1604,7 @@ function updatePortionFilter() {
   const portions = getAllMusclePortion(source);
 
   $("#filter-portion").innerHTML = `<option value="">${t("allFeminine")}</option>` + portions.map(item => {
-    return `<option value="${item}">${translateExerciseValue("muscle_portion", item)}</option>`;
+    return `<option value="${item}">${muscleName(item, i18n.getLanguage())}</option>`;
   }).join("");
 
   if (currentPortion && portions.includes(currentPortion)) {
@@ -1495,7 +1633,7 @@ function renderExerciseList() {
 
   $("#exercise-list").innerHTML = filtered.map(exercise => {
     const meta = getExerciseMeta(exercise);
-    const subtitle = [meta.type, meta.muscleFocus, meta.musclePortion].filter(Boolean).join(" · ");
+    const subtitle = [meta.type, primaryMusclesLabel(exercise, i18n.getLanguage())].filter(Boolean).join(" · ");
     const smallMeta = [meta.equipment, meta.difficulty, meta.contractionType].filter(Boolean).join(" · ");
 
     return `
@@ -1521,8 +1659,8 @@ function renderExerciseList() {
 }
 
 const CHART_COLORS = [
-  "#8b6cff", "#ffc23d", "#ff5ca8", "#2ee6a6", "#c25cff",
-  "#4cc9ff", "#ff8a3d", "#5ce1e6", "#ff4d6a", "#b8f35c"
+  "#ac92a6", "#7fb08a", "#d9ab5c", "#6fa2b6", "#d08ea0",
+  "#8a6f84", "#c9a48c", "#5f9e6e", "#b07a8f", "#9bb07a"
 ];
 
 let progressActiveExercises = new Set();
@@ -1648,11 +1786,11 @@ function renderProgressCharts() {
   const chartOpts = {
     responsive: true,
     plugins: {
-      legend: { display: activeIds.length > 1, labels: { color: "#8a8aa6", font: { family: "Inter", size: 10 }, boxWidth: 12 } }
+      legend: { display: activeIds.length > 1, labels: { color: "#8c7f88", font: { family: "Inter", size: 10 }, boxWidth: 12 } }
     },
     scales: {
-      x: { grid: { color: "rgba(255,255,255,0.07)" }, ticks: { color: "#8a8aa6", font: { family: "Inter", size: 10 } } },
-      y: { grid: { color: "rgba(255,255,255,0.07)" }, ticks: { color: "#8a8aa6", font: { family: "Inter", size: 10 } } }
+      x: { grid: { color: "rgba(122,100,116,0.12)" }, ticks: { color: "#8c7f88", font: { family: "Inter", size: 10 } } },
+      y: { grid: { color: "rgba(122,100,116,0.12)" }, ticks: { color: "#8c7f88", font: { family: "Inter", size: 10 } } }
     }
   };
 
@@ -1837,9 +1975,8 @@ function renderWorkout() {
   const block = getCurrentBlock(state.workout);
   const currentSet = getCurrentSet(state.workout);
   const exercise = getExerciseById(block.exerciseId, state.exercises);
-  const tips = getExerciseTips(exercise?.id, i18n.getLanguage());
   const meta = getExerciseMeta(exercise);
-  const displayTip = tips.length > 0 ? tips[0] : (exercise?.tips || "");
+  const displayTip = (exercise?.tips || [])[0] || "";
 
   $("#guided-session-name").textContent = state.workout.sessionName;
   $("#guided-progress").textContent = t("exerciseProgress", {
@@ -1852,7 +1989,7 @@ function renderWorkout() {
   const illuBox = $("#guided-illu");
   if (illuBox && illuBox.dataset.exerciseId !== (exercise?.id || "")) {
     illuBox.dataset.exerciseId = exercise?.id || "";
-    illuBox.innerHTML = illustrationHtml(exercise, "hero") + muscleMapHtml(exercise, { size: "sm", label: meta.muscleFocus || "" });
+    illuBox.innerHTML = illustrationHtml(exercise, "hero") + muscleMapHtml(exercise, { size: "sm", label: primaryMusclesLabel(exercise, i18n.getLanguage()) });
   }
   $("#guided-exercise-tip").textContent = displayTip;
   $("#guided-set-progress").textContent = t("setProgress", {
@@ -1974,15 +2111,15 @@ function renderExerciseDetails(exercise) {
   const startImage = loadExerciseImage(exercise, "start");
   const endImage = loadExerciseImage(exercise, "end");
   const similarExercises = getSimilarExercises(exercise, state.exercises, 6);
-  const improvedDescription = getImprovedDescription(exercise.id, i18n.getLanguage());
-  const description = improvedDescription || exercise.description || "-";
-  const tips = getExerciseTips(exercise.id, i18n.getLanguage());
-  const tipsHtml = tips.length ? `<ol class="tips-list">${tips.map(item => `<li>${item}</li>`).join("")}</ol>` : "-";
+  const lang = i18n.getLanguage();
+  const description = exercise.description || "-";
+  const instructions = exercise.instructions || [];
+  const instructionsHtml = instructions.length ? `<ol class="tips-list">${instructions.map(item => `<li>${item}</li>`).join("")}</ol>` : "-";
+  const tips = exercise.tips || [];
+  const tipsHtml = tips.length ? `<ul class="tips-list">${tips.map(item => `<li>${item}</li>`).join("")}</ul>` : "-";
   const meta = getExerciseMeta(exercise);
   const exerciseDisplayName = getExerciseName(exercise);
-  const secondaryMuscles = (exercise.secondary_muscles || []).map(item => {
-    return `<span class="badge badge-secondary">${translateExerciseValue("muscle_focus", item)}</span>`;
-  }).join("") || "-";
+  const musclesLabel = primaryMusclesLabel(exercise, lang);
 
   const detailsModal = $("#modal-details");
   if (detailsModal) detailsModal.dataset.currentExerciseId = exercise.id;
@@ -2010,14 +2147,14 @@ function renderExerciseDetails(exercise) {
   $("#exercise-details").innerHTML = `
     <div class="detail-block">
       <div class="item-title">${exerciseDisplayName}</div>
-      <div class="item-subtitle">${[meta.type, meta.muscleFocus, meta.musclePortion].filter(Boolean).join(" · ")}</div>
+      <div class="item-subtitle">${[meta.type, musclesLabel].filter(Boolean).join(" · ")}</div>
       <div class="small-meta">${[meta.equipment, meta.difficulty, meta.contractionType].filter(Boolean).join(" · ")}</div>
     </div>
     ${imageHtml}
-    ${muscleMapHtml(exercise) ? `<div class="detail-block">
+    ${(exercise.primary_muscles || []).length ? `<div class="detail-block">
       <div class="meta-label">${t("musclesWorked")}</div>
-      ${muscleMapHtml(exercise, { size: "md", label: [meta.muscleFocus, ...(exercise.secondary_muscles || []).map(m => translateExerciseValue("muscle_focus", m))].filter(Boolean).join(" · ") })}
-      <div class="mm-legend"><span><i class="mm-main"></i>${meta.muscleFocus}</span>${(exercise.secondary_muscles || []).length ? `<span><i class="mm-sec"></i>${t("secondaryMuscles")}</span>` : ""}</div>
+      ${muscleMapHtml(exercise, { size: "md", label: musclesLabel })}
+      ${muscleChipsHtml(exercise, { lang, labels: { primary: t("primaryMuscles"), secondary: t("secondaryMuscles") } })}
       <div class="mm-credit">${t("muscleMapCredit")}</div>
     </div>` : ""}
     <div class="detail-block">
@@ -2025,12 +2162,12 @@ function renderExerciseDetails(exercise) {
       <div class="description-text">${description}</div>
     </div>
     <div class="detail-block">
-      <div class="meta-label">${t("tips")}</div>
-      <div>${tipsHtml}</div>
+      <div class="meta-label">${t("instructions")}</div>
+      <div>${instructionsHtml}</div>
     </div>
     <div class="detail-block">
-      <div class="meta-label">${t("secondaryMuscles")}</div>
-      <div class="detail-list">${secondaryMuscles}</div>
+      <div class="meta-label">${t("tips")}</div>
+      <div>${tipsHtml}</div>
     </div>
     <div class="detail-block">
       <div class="meta-label">${t("similar")}</div>

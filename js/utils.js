@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261019d";
+import { i18n } from "./i18n.js?v=20261020c";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
@@ -54,19 +54,16 @@ export function closeModal(id) {
   if (modal) modal.classList.add("hidden");
 }
 
-// Photos libres de droits (free-exercise-db, licence Unlicense) servies par jsDelivr.
-// Chaque exercice a deux photos : 0.jpg (position de départ) et 1.jpg (position finale).
-const FREE_EXERCISE_DB_CDN = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises";
+// Illustrations RepDB (repdb.co) servies depuis assets/exercises :
+// "start" + "peak" (positions de départ et d'arrivée) ou une seule image "main".
+const EXERCISE_IMG_DIR = "./assets/exercises";
 
 export function getExerciseIllustration(exercise) {
-  if (!exercise) return null;
-  const folder = exercise.image_folder;
-  if (folder && !folder.startsWith("wger_")) {
-    const base = `${FREE_EXERCISE_DB_CDN}/${encodeURIComponent(folder)}`;
-    return { start: `${base}/0.jpg`, end: `${base}/1.jpg` };
-  }
-  if (exercise.wger_image) return { start: exercise.wger_image, end: null };
-  return null;
+  const img = exercise?.img;
+  if (!img) return null;
+  const start = img.start || img.main;
+  if (!start) return null;
+  return { start: `${EXERCISE_IMG_DIR}/${start}`, end: img.peak ? `${EXERCISE_IMG_DIR}/${img.peak}` : null };
 }
 
 const ILLU_PLACEHOLDER = `<span class="ex-illu-ph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span>`;
@@ -84,59 +81,17 @@ export function illustrationHtml(exercise, size = "thumb") {
   </div>`;
 }
 
-export function getExerciseImagePaths(exercise) {
-  const folder = exercise?.image_folder || exercise?.id || slugify(exercise?.name || "exercise");
-  // Candidats: image_folder original, puis id en lowercase
-  const candidates = [folder];
-  if (exercise?.id && exercise.id !== folder) candidates.push(exercise.id);
-
-  const start = exercise?.wger_image || `./exercises/${folder}/0.jpg`;
-  const end = `./exercises/${folder}/1.jpg`;
-  return { folder, candidates, start, end, gifUrl: exercise?.gifUrl || null };
-}
-
 export function fallbackImage() {
   const label = i18n.getLanguage() === "en" ? "image unavailable" : "image absente";
-  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="100%" height="100%" fill="#1b1b29"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#6e6e88" font-family="-apple-system, Segoe UI, Arial" font-size="26">${label}</text></svg>`);
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480"><rect width="100%" height="100%" fill="#f1ede8"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#a99ca5" font-family="-apple-system, Segoe UI, Arial" font-size="26">${label}</text></svg>`);
 }
 
-/**
- * Charge une image en testant plusieurs chemins possibles.
- * Retourne un <img> fonctionnel ou le fallback SVG.
- * Si l'exercice a un gifUrl (ExerciseDB), il est prioritaire.
- */
+/** Urls à essayer pour la position de départ ou d'arrivée (l'arrivée retombe sur l'image unique). */
 export function loadExerciseImage(exercise, position = "start") {
   const fb = fallbackImage();
-  if (!exercise) return { urls: [], fallback: fb, gifUrl: null };
-
-  const folder = exercise.image_folder || exercise.id || slugify(exercise.name || "exercise");
-  const folders = [folder];
-  if (exercise.id && exercise.id !== folder) folders.push(exercise.id);
-
-  const fileNames = position === "start"
-    ? ["0.jpg", "0.png", "0.webp", "start.jpg", "start.png"]
-    : ["1.jpg", "1.png", "1.webp", "end.jpg", "end.png"];
-
-  // Construire toutes les urls candidates
-  const urls = [];
-
-  // Source principale : free-exercise-db via CDN
   const illu = getExerciseIllustration(exercise);
-  const cdnUrl = illu && (position === "start" ? illu.start : illu.end);
-  if (cdnUrl) urls.push(cdnUrl);
-
-  // Puis l'image wger externe éventuelle
-  if (exercise.wger_image) {
-    urls.push(exercise.wger_image);
-  }
-
-  for (const f of folders) {
-    for (const name of fileNames) {
-      urls.push(`./exercises/${f}/${name}`);
-    }
-  }
-
-  return { urls, fallback: fb, gifUrl: exercise.gifUrl || null };
+  const url = illu && (position === "start" ? illu.start : illu.end || illu.start);
+  return { urls: url ? [url] : [], fallback: fb, gifUrl: null };
 }
 
 /**
@@ -151,7 +106,6 @@ export function applyImageFallback(imgElement, urls, fb) {
   let idx = 0;
   function tryNext() {
     if (idx >= urls.length) {
-      console.warn(`[TrackLift] aucune image trouvee, essais: ${urls.join(", ")}`);
       imgElement.src = fb;
       return;
     }

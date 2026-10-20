@@ -7,18 +7,29 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <meta name="theme-color" content="#07070d">
+  <meta name="theme-color" content="#eef3e8">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <!-- Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261019d">
+  <link rel="stylesheet" href="./styles.css?v=20261020c">
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="flame-grad" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#ff4d2e"/><stop offset="0.55" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffc23d"/>
+      </linearGradient>
+      <symbol id="flame-icon" viewBox="0 0 24 24">
+        <path style="fill: var(--flame-outer, url(#flame-grad))" d="M12 2.5c.6 3.1-1 4.9-2.6 6.6C7.8 10.8 6 12.7 6 15.6 6 19 8.7 21.5 12 21.5s6-2.5 6-5.9c0-2.4-1.2-4.3-2.4-5.6-.3 1.4-1 2.5-2.1 3.1.4-3.9-.9-7.8-1.5-10.6Z"/>
+        <path style="fill: var(--flame-inner, #ffe08a)" d="M12 21.5c-1.9 0-3.3-1.4-3.3-3.2 0-1.9 1.6-2.9 2.5-4.4.6 1.2 1.6 1.7 2.4 2.3.9.7 1.7 1.3 1.7 2.3 0 1.7-1.5 3-3.3 3Z"/>
+      </symbol>
+    </defs>
+  </svg>
   <div id="loading-overlay" class="loading-overlay hidden">
     <div class="spinner"></div>
     <div class="loading-text" data-i18n="loading">chargement</div>
@@ -62,6 +73,9 @@
     <header class="topbar">
       <div class="topbar-brand">TrackLift</div>
       <div class="topbar-right">
+        <button id="streak-pill" class="streak-pill off" type="button" title="flamme" aria-label="flamme de pesée">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg><span id="streak-pill-count">0</span>
+        </button>
         <span id="sync-badge" class="sync-badge">local</span>
         <button id="profile-btn" class="avatar-btn" title="profil" data-i18n-title="profile">t</button>
       </div>
@@ -146,6 +160,8 @@
           </div>
           <button id="open-launcher-btn" class="btn btn-primary" data-i18n="startWorkout">demarrer</button>
         </div>
+
+        <div id="streak-card" class="card streak-card mb-12"></div>
 
         <div id="perf-card" class="card perf-card mb-12"></div>
 
@@ -234,6 +250,7 @@
         </div>
 
         <div id="exercise-list"></div>
+        <p class="data-credit"><span data-i18n="exerciseCredit">Exercise data by</span> <a href="https://repdb.co" target="_blank" rel="noopener">RepDB (repdb.co)</a></p>
       </section>
 
       <section id="view-progress" class="view">
@@ -525,7 +542,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261019d"></script>
+  <script type="module" src="./js/app.js?v=20261020c"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

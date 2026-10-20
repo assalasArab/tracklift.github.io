@@ -1,39 +1,15 @@
 /* ═══════════════════════════════════════════════════════════
    Carte musculaire — silhouette de face / de dos avec les muscles
-   sollicités en surbrillance (principal en rouge, secondaires en orange).
+   sollicités en surbrillance (principal en rouge, secondaires en orange),
+   et liste des muscles avec leur vignette.
    Schémas : wger.de, licence CC-BY-SA 3.0 (copiés dans assets/muscles).
+   Vignettes et données musculaires : RepDB (repdb.co).
    ═══════════════════════════════════════════════════════════ */
+import { muscleName, muscleThumb, muscleWgerIds } from "./muscles.js?v=20261020c";
 
 const BASE = "./assets/muscles";
 
-/* identifiants wger : 1 biceps, 2 deltoïde antérieur, 3 dentelé, 4 pectoraux, 5 triceps, 6 grand droit,
-   7 gastrocnémien, 8 grand fessier, 9 trapèze, 10 quadriceps, 11 ischios, 12 grand dorsal,
-   13 brachial, 14 obliques, 15 soléaire */
 const FRONT = new Set([1, 2, 3, 4, 6, 10, 13, 14]);
-
-const MUSCLE_IDS = {
-  pectoraux: [4],
-  epaules: [2],
-  triceps: [5],
-  biceps: [1, 13],
-  avant_bras: [13],
-  abdominaux: [6, 14],
-  quadriceps: [10],
-  ischio_jambiers: [11],
-  fessiers: [8],
-  mollets: [7, 15],
-  dos: [12],
-  trapeces: [9],
-  bas_dos: [12],
-  adducteurs: [10],
-  abducteurs: [8]
-};
-
-function idsFor(keys) {
-  const out = new Set();
-  (keys || []).forEach(key => (MUSCLE_IDS[key] || []).forEach(id => out.add(id)));
-  return out;
-}
 
 function figure(side, main, secondary) {
   const keep = id => (side === "front") === FRONT.has(id);
@@ -46,17 +22,17 @@ function figure(side, main, secondary) {
 
 /** true si au moins un muscle de l'exercice peut être dessiné */
 export function hasMuscleMap(exercise) {
-  return idsFor([exercise?.muscle_focus]).size > 0;
+  return muscleWgerIds(exercise?.primary_muscles).size > 0;
 }
 
 /**
  * Silhouettes face + dos. size : "sm" (encart de séance) ou "md" (fiche exercice).
- * labels : texte accessible déjà traduit, ex. "Pectoraux · Triceps".
+ * label : texte accessible déjà traduit, ex. "Grand pectoral · Triceps".
  */
 export function muscleMapHtml(exercise, { size = "md", label = "" } = {}) {
-  const main = idsFor([exercise?.muscle_focus]);
+  const main = muscleWgerIds(exercise?.primary_muscles);
   if (!main.size) return "";
-  const secondary = idsFor(exercise.secondary_muscles);
+  const secondary = muscleWgerIds(exercise.secondary_detail);
   main.forEach(id => secondary.delete(id));
   const needsBack = [...main, ...secondary].some(id => !FRONT.has(id));
   const needsFront = [...main, ...secondary].some(id => FRONT.has(id));
@@ -64,4 +40,31 @@ export function muscleMapHtml(exercise, { size = "md", label = "" } = {}) {
     ${needsFront || size === "md" ? figure("front", main, secondary) : ""}
     ${needsBack || size === "md" ? figure("back", main, secondary) : ""}
   </div>`;
+}
+
+/** Libellé court des muscles principaux, ex. "Grand pectoral · Triceps" */
+export function primaryMusclesLabel(exercise, lang = "fr") {
+  return (exercise?.primary_muscles || []).map(key => muscleName(key, lang)).join(" · ");
+}
+
+/**
+ * Grille de vignettes : muscles principaux puis secondaires.
+ * labels : { primary, secondary } déjà traduits.
+ */
+export function muscleChipsHtml(exercise, { lang = "fr", labels = {} } = {}) {
+  const chip = (key, role) => {
+    const thumb = muscleThumb(key);
+    return `<div class="mchip mchip-${role}">
+      ${thumb ? `<img src="${thumb}" alt="" loading="lazy">` : `<span class="mchip-ph"></span>`}
+      <span>${muscleName(key, lang)}</span>
+    </div>`;
+  };
+  const primary = exercise?.primary_muscles || [];
+  const secondary = exercise?.secondary_detail || [];
+  if (!primary.length) return "";
+  return `
+    <div class="mchips-group"><div class="mchips-title"><i class="mm-main"></i>${labels.primary || ""}</div>
+      <div class="mchips">${primary.map(key => chip(key, "main")).join("")}</div></div>
+    ${secondary.length ? `<div class="mchips-group"><div class="mchips-title"><i class="mm-sec"></i>${labels.secondary || ""}</div>
+      <div class="mchips">${secondary.map(key => chip(key, "sec")).join("")}</div></div>` : ""}`;
 }

@@ -1,6 +1,6 @@
-import { uid } from "./utils.js?v=20261019d";
-import { EXERCISE_SEED } from "./exercises.js?v=20261019d";
-import { firestore } from "./firebase-config.js?v=20261019d";
+import { uid } from "./utils.js?v=20261020c";
+import { EXERCISE_SEED } from "./exercises.js?v=20261020c";
+import { firestore } from "./firebase-config.js?v=20261020c";
 
 export const DB = {
   currentUserId: null,
@@ -23,6 +23,7 @@ export const DB = {
           sessionLogs: raw.sessionLogs || [],
           weightLog: raw.weightLog || [],
           nutrition: raw.nutrition || null,
+          exerciseDb: raw.exerciseDb || null,
           createdAt: raw.createdAt || Date.now()
         };
         // Nettoyer le document Firestore si exercises etait stocke dedans
@@ -83,6 +84,21 @@ export const DB = {
   addWeight(weight) {
     const data = this.getData();
     data.weightLog.push({ id: uid(), date: Date.now(), weight });
+    this.saveData(data);
+    return data.weightLog;
+  },
+
+  /** Une seule pesée par jour : remplace celle du jour si elle existe déjà */
+  setDayWeight(weight) {
+    const data = this.getData();
+    const today = new Date().toDateString();
+    const existing = data.weightLog.find(item => new Date(item.date).toDateString() === today);
+    if (existing) {
+      existing.weight = weight;
+      existing.date = Date.now();
+    } else {
+      data.weightLog.push({ id: uid(), date: Date.now(), weight });
+    }
     this.saveData(data);
     return data.weightLog;
   },
