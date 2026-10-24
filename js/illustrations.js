@@ -10,7 +10,8 @@ export const ILLU_READY = new Set([
   "intro-01-bienvenue.webp",
   "intro-03-progres.webp",
   "intro-04-flamme.webp",
-  "intro-05-nutrition.webp"
+  "intro-05-nutrition.webp",
+  "nutri-01-objectif.webp"
 ]);
 
 export function illu(file, cls = "illu") {
