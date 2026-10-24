@@ -4,7 +4,7 @@
    une note manuscrite avec une flèche dessinée qui pointe vers un aperçu,
    un emplacement de dessin, puis la création du programme.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261024i";
+import { illu } from "./illustrations.js?v=20261024j";
 
 /* flèches au feutre ; chaque tracé finit par une pointe */
 const ARROWS = {
@@ -22,7 +22,8 @@ const FLAME = `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-ico
 
 const SLIDES = [
   {
-    img: "intro-01-bienvenue.png",
+    img: "intro-01-bienvenue.webp",
+    layout: "side",
     title: `Bienvenue sur <span class="ob-key">TrackLift</span>`,
     hand: "ton carnet de muscu, en mieux",
     text: "Tes séances, tes progrès et ta nutrition au même endroit. Petit tour en une minute ?",
@@ -92,7 +93,7 @@ function slideHtml(s, i) {
       <h1 class="ob-title">${s.title}</h1>
       <p class="ob-hand">${s.hand}</p>
       <p class="ob-text">${s.text}</p>
-      <div class="ob-stage">
+      <div class="ob-stage${s.layout ? ` ob-stage-${s.layout}` : ""}">
         ${illu(s.img, "ob-illu")}
         ${s.mock}
         ${s.note ? `<div class="ob-note ob-note-${s.note.pos}"><span>${s.note.text}</span>${ARROWS[s.note.arrow]}</div>` : ""}

@@ -6,7 +6,9 @@
    La liste complète des dessins attendus est dans assets/illustrations/README.txt.
    ═══════════════════════════════════════════════════════════ */
 export const ILLU_DIR = "assets/illustrations/";
-export const ILLU_READY = new Set([]);
+export const ILLU_READY = new Set([
+  "intro-01-bienvenue.webp"
+]);
 
 export function illu(file, cls = "illu") {
   if (!file || !ILLU_READY.has(file)) return "";

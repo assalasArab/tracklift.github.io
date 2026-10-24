@@ -1519,6 +1519,15 @@ html.ob-open, html.ob-open body { overflow: hidden; }
 .nav-btn.active .nav-icon { opacity: 1; filter: none; transform: scale(1.12) rotate(-6deg); }
 @media (prefers-reduced-motion: reduce) { .nav-icon { transition: none; } }
 
+/* écran avec personnage en pied : dessin à gauche, annotation et étiquettes à droite */
+.ob-stage-side { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "illu note" "illu mock"; align-items: center; column-gap: 16px; row-gap: 4px; }
+.ob-stage-side .ob-illu { grid-area: illu; }
+.ob-stage-side .ob-illu img { max-height: 300px; width: auto; }
+.ob-stage-side .ob-note { grid-area: note; order: 0; margin: 0; align-self: end; }
+.ob-stage-side .ob-mock { grid-area: mock; align-self: start; }
+.ob-stage-side .ob-mock-pills { flex-direction: column; align-items: flex-start; }
+@media (max-height: 700px) { .ob-stage-side .ob-illu img { max-height: 230px; } }
+
 /* ─── Muscles sollicités : vignettes RepDB ────────────── */
 .mchips-group { margin-top: 12px; }
 .mchips-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
