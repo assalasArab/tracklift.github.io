@@ -1513,6 +1513,12 @@ html.ob-open, html.ob-open body { overflow: hidden; }
 @media (max-width: 380px) { .ob-title { font-size: 34px; } .ob-inner { padding-left: 16px; padding-right: 16px; } }
 @media (prefers-reduced-motion: reduce) { .ob-slide { animation: none; } .ob-dot { transition: none; } }
 
+/* icônes dessinées de la barre du bas */
+.nav-icon { width: 30px; height: 30px; object-fit: contain; opacity: 0.72; filter: saturate(0.7); transition: transform 200ms ease-out, opacity 200ms ease-out, filter 200ms ease-out; }
+.nav-btn:active .nav-icon { transform: scale(0.88); }
+.nav-btn.active .nav-icon { opacity: 1; filter: none; transform: scale(1.12) rotate(-6deg); }
+@media (prefers-reduced-motion: reduce) { .nav-icon { transition: none; } }
+
 /* ─── Muscles sollicités : vignettes RepDB ────────────── */
 .mchips-group { margin-top: 12px; }
 .mchips-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }

@@ -6,11 +6,11 @@
       Les appels passent par le relais notion-proxy/worker.js (secret côté serveur).
    2. « Fichier CSV » : export Markdown & CSV de Notion, mêmes deux usages.
    ═══════════════════════════════════════════════════════════ */
-import { NOTION_PROXY_URL } from "./notion-config.js?v=20261024h";
+import { NOTION_PROXY_URL } from "./notion-config.js?v=20261024i";
 import {
   buildIndex, suggest, AUTO_MATCH, guessProgramMapping, parseSessionTable,
   planFromSets, describeSets, guessSessionType, cleanName, norm as normName
-} from "./notion-program.js?v=20261024h";
+} from "./notion-program.js?v=20261024i";
 
 const SETTINGS_KEY = "tracklift_notion";
 const NONCE_KEY = "tracklift_notion_nonce";
