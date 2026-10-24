@@ -1148,7 +1148,7 @@ html, body { font-size: 16px; line-height: 1.5; letter-spacing: 0; }
 :focus-visible { outline: 3px solid var(--p-olive); outline-offset: 2px; }
 
 /* titres : police ronde très grasse */
-.page-title, .hero-title, .section-title, .modal-head h3, .brand, .topbar-brand, .guided-session-name, .stat-value, .drawer-section-title, .wz-q, .perf-value, .perf-title, .streak-count {
+.page-title, .hero-title, .section-title, .modal-head h3, .brand, .topbar-brand, .guided-session-name, .stat-value, .drawer-section-title, .wz-q, .nx-quiz-q, .perf-value, .perf-title, .streak-count {
   font-family: var(--font-title); font-weight: 400; letter-spacing: -0.005em; color: var(--p-brown); font-synthesis: none;
 }
 .perf-title { font-size: 22px; }
@@ -1171,7 +1171,7 @@ html, body { font-size: 16px; line-height: 1.5; letter-spacing: 0; }
 .auth-subtitle { font-family: var(--font-hand); font-size: 22px; color: var(--text2); }
 
 /* étiquettes surlignées, comme un sticker */
-.wz-step, .level-chip {
+.wz-step, .level-chip, .nx-sticker {
   display: inline-block; font-family: var(--font-title); font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.02em;
   color: #3f4a1c; background: var(--p-mint); padding: 4px 10px; border-radius: 6px; box-shadow: none; border: 0; white-space: nowrap; font-synthesis: none;
   transform: rotate(-2deg);
@@ -1271,7 +1271,7 @@ html, body { font-size: 16px; line-height: 1.5; letter-spacing: 0; }
 /* ─── Orange plastique ──────────────────────────────────── */
 /* lettres en plastique : dégradé orange, reflet blanc, bord foncé en relief.
    Le reflet se répète à chaque ligne (taille de fond = hauteur de ligne). */
-.page-title, .brand, .wz-q, .hero-title, .modal-head h3, .topbar-brand, .section-title, .perf-title {
+.page-title, .brand, .wz-q, .nx-quiz-q, .nx-kcal, .hero-title, .modal-head h3, .topbar-brand, .section-title, .perf-title {
   --lh: 1.12em;
   line-height: var(--lh);
   color: var(--p-orange);
@@ -1333,6 +1333,83 @@ html, body { font-size: 16px; line-height: 1.5; letter-spacing: 0; }
 .perf-bar { fill: rgba(255,122,15,0.45); }
 .perf-bar:hover { fill: #ff7a0f; }
 .perf-bar.perf-bar-last { fill: #f56a00; }
+
+/* ─── Nutrition : questionnaire en étapes ───────────────── */
+.nx-mobar { display: none !important; }
+.nx-quiz-head, .nx-quiz-nav, .nx-recap { display: none; }
+
+.nx.nx-mode-quiz .page-head, .nx.nx-mode-quiz .nx-phase, .nx.nx-mode-quiz .nx-out, .nx.nx-mode-quiz .nx-about,
+.nx.nx-mode-quiz .nx-group-h, .nx.nx-mode-quiz .nx-group:not(.is-current) { display: none; }
+.nx.nx-mode-quiz .nx-layout { display: block; max-width: 600px; margin: 0 auto; }
+.nx.nx-mode-quiz .nx-quiz-head { display: block; max-width: 600px; margin: 8px auto 20px; }
+.nx.nx-mode-quiz .nx-quiz-nav {
+  display: flex; gap: 12px; position: sticky; z-index: 5;
+  bottom: calc(var(--tabbar-h) + 8px + env(safe-area-inset-bottom));
+  margin-top: 24px; padding: 16px 0 4px;
+  background: linear-gradient(to bottom, rgba(238,246,234,0), var(--bg) 28%);
+}
+.nx-quiz-nav #nx-next { flex: 1; min-height: 60px; font-size: 21px; border-radius: var(--radius-xl); }
+.nx-quiz-nav #nx-prev { min-height: 60px; border-radius: var(--radius-xl); }
+
+.nx-quiz-top { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; min-height: 40px; }
+.nx-quiz-bar { flex: 1; height: 10px; border-radius: 999px; background: var(--surface); overflow: hidden; }
+.nx-quiz-bar > div { height: 100%; border-radius: 999px; background: var(--bar-orange); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.35); transition: width 0.4s var(--ease); }
+.nx-quiz-q { font-size: 34px; margin: 12px 0 0; }
+.nx-quiz-hand { font-family: var(--font-hand); font-size: 24px; line-height: 1.2; color: var(--accent-ink); margin: 4px 0 0 4px; transform: rotate(-1deg); }
+.nx-quiz-x { font-size: 15px; line-height: 1.6; color: var(--text2); max-width: 60ch; margin: 16px 0 0; }
+.nx-quiz-x b { color: var(--text); font-weight: 600; }
+.nx-illu { margin: 20px 0 4px; display: flex; justify-content: center; }
+.nx-illu img { max-width: 100%; max-height: 220px; object-fit: contain; }
+
+/* choix d'objectif : grandes cartes */
+.nx-choices { display: flex; flex-direction: column; gap: 12px; }
+.nx-choice {
+  display: flex; align-items: center; gap: 16px; width: 100%; min-height: 76px; padding: 16px 20px;
+  border: 0; border-radius: var(--radius-lg); background: var(--surface); color: var(--text); text-align: left; cursor: pointer;
+  font: inherit; transition: background-color 150ms ease-out, transform 150ms ease-out;
+}
+.nx-choice:hover { background: var(--surface3); }
+.nx-choice:active { transform: scale(0.98); }
+.nx-choice[aria-pressed="true"] { background: var(--p-mint); box-shadow: inset 0 0 0 2px var(--p-olive); }
+.nx-choice-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nx-choice-t b { font-size: 18px; font-weight: 600; }
+.nx-choice-t span { font-size: 14px; color: var(--text2); }
+.nx-choice-illu { margin: 0; flex: none; width: 56px; height: 56px; }
+.nx-choice-illu img { width: 100%; height: 100%; object-fit: contain; }
+
+/* options avancées repliées */
+.nx-adv { margin-top: 16px; }
+.nx-adv summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 500; color: var(--text2); }
+.nx-adv[open] summary { margin-bottom: 8px; }
+
+/* écran de résultats */
+.nx.nx-mode-results .nx-in, .nx.nx-mode-results .nx-quiz-head { display: none; }
+.nx.nx-mode-results .nx-layout { display: block; max-width: 760px; margin: 0 auto; }
+.nx.nx-mode-results .nx-sticky { position: static; }
+.nx.nx-mode-results .nx-recap {
+  display: block; background: var(--p-mint); border-radius: var(--radius-xl); padding: 20px; margin-bottom: 16px;
+}
+.nx-recap-t p { margin: 8px 0 0; font-size: 15px; color: var(--text2); max-width: 60ch; }
+.nx-recap-illu { margin: 0 0 12px; display: flex; justify-content: center; }
+.nx-recap-illu img { max-height: 160px; max-width: 100%; object-fit: contain; }
+.nx-recap-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.nx-recap-lab { font-size: 14px; font-weight: 600; margin-right: 4px; }
+.nx-recap-step {
+  min-height: 36px; padding: 6px 14px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--surface2); color: var(--text); font: inherit; font-size: 14px; font-weight: 500;
+  transition: background-color 150ms ease-out;
+}
+.nx-recap-step:hover { background: #fff; }
+@media (max-width: 520px) { .nx-quiz-q { font-size: 30px; } }
+
+.nx-quiz-head [hidden], .nx-quiz-nav [hidden] { display: none !important; }
+.nx-kcal { font-weight: 400; font-synthesis: none; letter-spacing: 0; }
+.nx-kcal small { -webkit-text-fill-color: var(--text2); font-family: var(--font-body); font-weight: 600; font-size: 0.28em; }
+.nx-hero::before, .nx-hero::after { display: none; }
+.nx-phase .nx-seg { background: var(--surface); border-radius: 16px; padding: 4px; }
+.nx-phase .nx-seg button { border-radius: 12px; color: var(--text); }
+.nx-phase .nx-seg button[aria-pressed=true] { background: var(--p-mint); color: var(--text); box-shadow: inset 0 0 0 2px var(--p-olive); font-weight: 600; }
+.nx.nx-mode-results .page-subtitle { font-size: 20px; }
 
 /* ─── Muscles sollicités : vignettes RepDB ────────────── */
 .mchips-group { margin-top: 12px; }

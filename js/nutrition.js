@@ -61,6 +61,7 @@ const SUPPS = [
 
 const DEFAULT_S = () => ({
   sex: "h", bfMode: "known", goal: "rate", protBase: "bw", tab: "wkON", phase: "cut",
+  quizStep: 0, quizDone: false,
   days: [1, 0, 1, 0, 1, 1, 0],
   acts: [
     { n: "Musculation lourde / vigoureuse", min: 75, sess: 4, met: 6.0 },
@@ -79,6 +80,58 @@ const FIELDS = ["age", "height", "weight", "bf", "neck", "waist", "hip", "formul
   "weWake", "weBed", "weTrain", "weDur", "caffSens", "exper", "maintAdj"];
 
 const DNAMES = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+/* ---------- questionnaire ---------- */
+/* Dessins : déposer les PNG dans assets/nutrition/ puis ajouter leur nom ici.
+   Tant qu'un dessin n'est pas listé, son emplacement n'est pas affiché. */
+const ILLU_DIR = "assets/nutrition/";
+const ILLU_READY = new Set([]);
+const RESULT_ILLU = "10-resultat.png";
+function illu(file, cls = "nx-illu") {
+  if (!file || !ILLU_READY.has(file)) return "";
+  return `<figure class="${cls}"><img src="${ILLU_DIR}${file}" alt="" loading="lazy" decoding="async"></figure>`;
+}
+
+const PHASE_CHOICES = [
+  ["cut", "Sèche", "Perdre du gras en gardant mon muscle", "choix-seche.png"],
+  ["maint", "Maintien", "Garder mon poids et continuer à progresser", "choix-maintien.png"],
+  ["gain", "Prise de masse", "Construire du muscle avec un léger surplus", "choix-masse.png"]
+];
+
+const STEPS = [
+  { tag: "Ton objectif", img: "01-objectif.png",
+    q: () => "Qu'est-ce que tu veux faire en ce moment ?", hand: () => "tout le calcul s'adapte à ça",
+    x: () => "<b>Sèche</b> : tu manges un peu moins que ce que tu dépenses, pour perdre du gras sans perdre ton muscle. <b>Maintien</b> : ton poids reste stable pendant que tu progresses. <b>Prise de masse</b> : un léger surplus pour construire du muscle. Tu pourras changer d'objectif plus tard sans tout refaire." },
+  { tag: "Ton profil", img: "02-profil.png",
+    q: () => "Parle-moi un peu de toi", hand: () => "sexe, âge, taille, poids",
+    x: () => "Ces infos servent à calculer ton <b>métabolisme de base</b> : l'énergie que ton corps brûle au repos, juste pour fonctionner (cœur, cerveau, respiration). C'est en général 60 à 70 % de ce que tu dépenses dans une journée. Ton poids est repris de ta dernière pesée." },
+  { tag: "Composition", img: "03-masse-grasse.png",
+    q: () => "Tu connais ton taux de masse grasse ?", hand: () => "pas grave si non",
+    x: () => "Ton muscle brûle bien plus d'énergie que ton gras. Connaître ton % de masse grasse rend le calcul plus précis. Pas d'idée ? Choisis <b>Ruban</b> et mesure ton tour de cou et ton tour de taille au niveau du nombril (2 minutes), ou <b>Aucune idée</b> : l'appli l'estimera." },
+  { tag: "Au quotidien", img: "04-quotidien.png",
+    q: () => "Tu bouges combien en dehors du sport ?", hand: () => "marche, boulot, bougeotte",
+    x: () => "C'est le <b>NEAT</b> : tout ce que tu dépenses hors entraînement, en marchant, en restant debout ou en gigotant. D'une personne à l'autre, l'écart dépasse souvent 500 kcal par jour. Ta moyenne de pas est dans l'appli Santé ou Google Fit de ton téléphone." },
+  { tag: "Entraînement", img: "05-entrainement.png",
+    q: () => "Quelles séances fais-tu chaque semaine ?", hand: () => "muscu, cardio, sports…",
+    x: () => "Ajoute chaque activité avec sa durée et son nombre de séances par semaine. Chaque sport a une intensité (sa valeur <b>MET</b>). L'appli compte seulement l'énergie dépensée en plus de ce que tu aurais brûlé au repos, pour ne rien compter deux fois." },
+  { tag: "Le rythme", img: "06-rythme.png",
+    q: () => S.phase === "cut" ? "À quelle vitesse veux-tu perdre ?" : S.phase === "gain" ? "À quelle vitesse veux-tu prendre ?" : "On garde ton poids stable",
+    hand: () => S.phase === "cut" ? "doucement, c'est plus de muscle gardé" : S.phase === "gain" ? "trop vite, c'est surtout du gras" : "ajuste si besoin",
+    x: () => S.phase === "cut"
+      ? "Le plus simple : une vitesse en % de ton poids par semaine. Entre <b>0,5 et 1 %</b>, tu perds du gras sans sacrifier ton muscle ni ta force. Le <b>%MG visé</b> sert à estimer quand tu atteindras ton objectif. Avec le recalibrage, les calories s'ajustent toutes les 2 semaines, au fur et à mesure que ton poids baisse."
+      : S.phase === "gain"
+        ? "Ton muscle ne peut se construire qu'à une certaine vitesse : au-delà, le surplus part en gras. Entre <b>0,25 et 0,5 %</b> de ton poids par semaine, c'est l'idéal pour la plupart des gens. Ton expérience compte : un débutant progresse plus vite qu'un pratiquant avancé."
+        : "Tes calories sont calées sur ta dépense : ton poids ne bouge pas, ton entraînement continue de progresser. Si ta balance monte ou descend sur 2 à 3 semaines, ajoute ou retire 100 à 200 kcal ici." },
+  { tag: "Macros", img: "07-macros.png",
+    q: () => "Comment répartir tes calories ?", hand: () => "les réglages par défaut sont bons",
+    x: () => "<b>Protéines</b> : 1,8 à 2,4 g par kg de poids, pour garder et construire ton muscle. <b>Lipides</b> : au moins 0,6 à 0,8 g/kg, pour tes hormones. Le reste va aux <b>glucides</b>, ton carburant à l'entraînement. Le <b>cyclage</b> met plus de glucides les jours de séance et moins les jours de repos, sans changer le total de la semaine." },
+  { tag: "Ta journée", img: "08-journee.png",
+    q: () => "À quoi ressemble ta journée type ?", hand: () => "pour placer tes repas",
+    x: () => "Choisis tes jours d'entraînement et tes horaires. Ça ne change pas tes calories : ça sert à construire ton <b>plan de journée</b>, avec les repas placés autour de ta séance et la caféine coupée assez tôt pour que tu dormes bien." },
+  { tag: "Compléments", img: "09-complements.png",
+    q: () => "Tu prends des compléments ?", hand: () => "le café compte aussi",
+    x: () => "Coche ce que tu prends vraiment et ajuste la dose. L'appli les place au bon moment dans ta journée et te prévient en cas de souci, par exemple un pre-workout trop tard pour ton heure de coucher. Rien n'est obligatoire : ton alimentation passe avant." }
+];
 
 /* ---------- état du module ---------- */
 let S = DEFAULT_S();
@@ -126,11 +179,23 @@ function markup() {
 
   <div class="nx-phase">${seg("phaseSeg", [["cut", "Sèche", 1], ["maint", "Maintien"], ["gain", "Prise de masse"]])}</div>
 
+  <div class="nx-quiz-head" id="nx-quizHead"></div>
+
   <div class="nx-layout">
   <!-- ================= ENTRÉES ================= -->
   <div class="nx-in">
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="0">
+      <div class="nx-choices" id="nx-phaseChoices">
+        ${PHASE_CHOICES.map(([v, l, d, img]) => `
+          <button type="button" class="nx-choice" data-phase="${v}" aria-pressed="false">
+            ${illu(img, "nx-choice-illu")}
+            <span class="nx-choice-t"><b>${l}</b><span>${d}</span></span>
+          </button>`).join("")}
+      </div>
+    </div>
+
+    <div class="nx-group" data-step="1">
       <div class="nx-group-h"><h2>Profil</h2></div>
       <div class="nx-card">
         <label class="nx-f" style="margin-bottom:12px"><span class="nx-lab">Sexe</span>${seg("sexSeg", [["h", "Homme", 1], ["f", "Femme"]])}</label>
@@ -142,7 +207,7 @@ function markup() {
       </div>
     </div>
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="2">
       <div class="nx-group-h"><h2>Composition corporelle</h2><span class="nx-hint" id="nx-lbmHint"></span></div>
       <div class="nx-card">
         ${seg("bfSeg", [["known", "%MG connu", 1], ["tape", "Ruban"], ["none", "Aucune idée"]])}
@@ -162,7 +227,8 @@ function markup() {
           </div>
           <p id="nx-bfNone" class="nx-note" hidden>Sans %MG, le moteur bascule automatiquement sur Mifflin-St Jeor et estime la masse maigre pour les protéines. Une simple mesure au ruban gagne en précision.</p>
         </div>
-        <div class="nx-sep"></div>
+        <details class="nx-adv">
+        <summary>Options avancées</summary>
         <label class="nx-f"><span class="nx-lab">Formule de métabolisme de base</span>
           <select id="nx-formula">
             <option value="auto" selected>Auto — Katch-McArdle si %MG connu, sinon Mifflin</option>
@@ -173,10 +239,11 @@ function markup() {
             <option value="avg">Moyenne des formules applicables</option>
           </select>
         </label>
+        </details>
       </div>
     </div>
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="3">
       <div class="nx-group-h"><h2>Vie quotidienne — NEAT</h2><span class="nx-hint" id="nx-neatHint"></span></div>
       <div class="nx-card">
         <div class="nx-slider">
@@ -204,7 +271,7 @@ function markup() {
       </div>
     </div>
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="4">
       <div class="nx-group-h"><h2>Entraînement — EAT</h2><span class="nx-hint" id="nx-eatHint"></span></div>
       <div class="nx-card">
         <div class="nx-act-head"><span>Activité (MET)</span><span>Min</span><span>×/sem</span><span></span></div>
@@ -214,7 +281,7 @@ function markup() {
       <p class="nx-foot">Chaque séance est comptée en <b>MET net</b> — la dépense de repos est déduite pour ne pas la compter deux fois. Les séances ≥ 8 MET reçoivent +6 % d'EPOC.</p>
     </div>
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="5">
       <div class="nx-group-h"><h2>Objectif</h2><span class="nx-hint" id="nx-phaseHint"></span></div>
       <div class="nx-card">
         <div id="nx-expWrap" hidden style="margin-bottom:16px">
@@ -267,7 +334,7 @@ function markup() {
       </div>
     </div>
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="6">
       <div class="nx-group-h"><h2>Macros &amp; répartition</h2></div>
       <div class="nx-card">
         <label class="nx-f" style="margin-bottom:16px"><span class="nx-lab">Base de calcul des protéines</span>
@@ -293,7 +360,7 @@ function markup() {
       </div>
     </div>
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="7">
       <div class="nx-group-h"><h2>Rythme de journée</h2><span class="nx-hint" id="nx-dayHint"></span></div>
       <div class="nx-card">
         <span class="nx-lab">Jours d'entraînement</span>
@@ -326,16 +393,30 @@ function markup() {
       </div>
     </div>
 
-    <div class="nx-group">
+    <div class="nx-group" data-step="8">
       <div class="nx-group-h"><h2>Ce que tu consommes</h2><span class="nx-hint" id="nx-suppHint"></span></div>
       <div class="nx-card"><div class="nx-supps" id="nx-supps"></div></div>
       <p class="nx-foot">Active ce que tu prends réellement. Le plan de journée place chaque produit au bon moment et signale les conflits — typiquement une dose de caféine trop tardive pour ton heure de coucher.</p>
+    </div>
+
+    <div class="nx-quiz-nav">
+      <button type="button" class="btn btn-ghost" id="nx-prev">Retour</button>
+      <button type="button" class="btn btn-primary" id="nx-next">Continuer</button>
     </div>
   </div>
 
   <!-- ================= RÉSULTATS ================= -->
   <div class="nx-out">
    <div class="nx-sticky">
+
+    <div class="nx-recap" id="nx-recap">
+      ${illu(RESULT_ILLU, "nx-recap-illu")}
+      <div class="nx-recap-t">
+        <span class="nx-sticker">Ton plan est prêt</span>
+        <p>Calculé à partir de tes réponses. Change une réponse et tout se recalcule.</p>
+      </div>
+      <div class="nx-recap-steps" id="nx-recapSteps"></div>
+    </div>
 
     <div class="nx-hero">
       <span class="nx-hero-lab">Cible quotidienne</span>
@@ -1289,9 +1370,55 @@ function copySummary() {
   else fallback();
 }
 
+/* ---------- questionnaire : une étape à la fois, puis les résultats ---------- */
+function renderQuiz() {
+  if (!root) return;
+  const quiz = !S.quizDone;
+  root.classList.toggle("nx-mode-quiz", quiz);
+  root.classList.toggle("nx-mode-results", !quiz);
+  const step = clamp(S.quizStep || 0, 0, STEPS.length - 1);
+  S.quizStep = step;
+  root.querySelectorAll(".nx-group[data-step]").forEach(g => g.classList.toggle("is-current", +g.dataset.step === step));
+  root.querySelectorAll("[data-phase]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.phase === S.phase)));
+
+  if (quiz) {
+    const st = STEPS[step];
+    $("quizHead").innerHTML = `
+      <div class="nx-quiz-top">
+        <button type="button" class="icon-btn nx-quiz-back" data-quiz="prev" aria-label="Étape précédente" ${step ? "" : "hidden"}>←</button>
+        <div class="nx-quiz-bar" role="progressbar" aria-valuemin="1" aria-valuemax="${STEPS.length}" aria-valuenow="${step + 1}"><div style="width:${(step + 1) / STEPS.length * 100}%"></div></div>
+      </div>
+      <span class="nx-sticker">${st.tag} · ${step + 1}/${STEPS.length}</span>
+      <h1 class="nx-quiz-q">${st.q()}</h1>
+      <p class="nx-quiz-hand">${st.hand()}</p>
+      ${illu(st.img)}
+      <p class="nx-quiz-x">${st.x()}</p>`;
+    $("prev").hidden = step === 0;
+    $("next").textContent = step === STEPS.length - 1 ? "Voir mon plan" : "Continuer";
+  } else {
+    $("recapSteps").innerHTML = `<span class="nx-recap-lab">Modifier :</span>` +
+      STEPS.map((st, i) => `<button type="button" class="nx-recap-step" data-goto="${i}">${st.tag}</button>`).join("");
+  }
+}
+
+function goStep(step) {
+  S.quizDone = false;
+  S.quizStep = clamp(step, 0, STEPS.length - 1);
+  renderQuiz();
+  save();
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function finishQuiz() {
+  S.quizDone = true;
+  renderQuiz();
+  run();
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
 /* ---------- persistance (via callbacks de l'appli) ---------- */
 function snapshot() {
-  const d = { s: { sex: S.sex, bfMode: S.bfMode, goal: S.goal, protBase: S.protBase, acts: S.acts, days: S.days, tab: S.tab, phase: S.phase }, f: {}, sup: SUP };
+  const d = { s: { sex: S.sex, bfMode: S.bfMode, goal: S.goal, protBase: S.protBase, acts: S.acts, days: S.days, tab: S.tab, phase: S.phase, quizStep: S.quizStep, quizDone: S.quizDone }, f: {}, sup: SUP };
   FIELDS.forEach(k => { d.f[k] = val(k); });
   return JSON.parse(JSON.stringify(d));
 }
@@ -1303,6 +1430,7 @@ function save() {
 function restore(d) {
   if (!d) return false;
   Object.assign(S, d.s || {});
+  if (d.s && d.s.quizDone === undefined) S.quizDone = true;
   if (d.sup) Object.keys(SUP).forEach(k => { if (d.sup[k]) SUP[k] = { ...d.sup[k] }; });
   if (d.f) FIELDS.forEach(k => { if (d.f[k] !== undefined && d.f[k] !== null) $(k).value = d.f[k]; });
   return true;
@@ -1311,6 +1439,7 @@ function refreshAll() {
   syncAllSegs(); syncVisibility(); applyPhase();
   renderActs(); renderDays(); renderSupps();
   run();
+  renderQuiz();
 }
 function reset() {
   clearTimeout(saveT);
@@ -1366,6 +1495,22 @@ export function mountNutrition(container, options = {}) {
   });
   bindHover("chartW");
   bindHover("chartBf");
+
+  // questionnaire
+  $("phaseChoices").addEventListener("click", e => {
+    const b = e.target.closest("[data-phase]"); if (!b) return;
+    S.phase = b.dataset.phase; syncSeg("phaseSeg", "phase"); applyPhase(); run(); renderQuiz();
+    setTimeout(() => { if (!S.quizDone && S.quizStep === 0) goStep(1); }, 180);
+  });
+  $("phaseSeg").addEventListener("click", () => setTimeout(renderQuiz, 0));
+  $("next").addEventListener("click", () => {
+    if (S.quizStep >= STEPS.length - 1) finishQuiz(); else goStep(S.quizStep + 1);
+  });
+  $("prev").addEventListener("click", () => goStep(S.quizStep - 1));
+  $("quizHead").addEventListener("click", e => { if (e.target.closest("[data-quiz=prev]")) goStep(S.quizStep - 1); });
+  $("recapSteps").addEventListener("click", e => {
+    const b = e.target.closest("[data-goto]"); if (b) goStep(+b.dataset.goto);
+  });
 
   $("pdfBtn").addEventListener("click", () => {
     if (!lastR) return;
