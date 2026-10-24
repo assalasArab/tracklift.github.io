@@ -1526,7 +1526,33 @@ html.ob-open, html.ob-open body { overflow: hidden; }
 .ob-stage-side .ob-note { grid-area: note; order: 0; margin: 0 0 -6px; align-self: end; }
 .ob-stage-side .ob-mock { grid-area: mock; align-self: start; }
 .ob-stage-side .ob-mock-pills { flex-direction: column; align-items: flex-start; }
-@media (max-height: 700px) { .ob-stage-side .ob-illu img { max-height: 230px; } }
+
+
+/* écran 3 : le graphique à côté du personnage reste compact */
+.ob-stage-side .ob-mock-bars { width: 140px; padding: 12px; }
+.ob-stage-side .ob-illu img { height: 270px; max-height: none; max-width: none; }
+.ob-stage-side .ob-mock-chip { white-space: normal; line-height: 1.2; }
+.ob-stage-side .ob-bars { height: 80px; gap: 5px; }
+/* écran 4 : dessin plus petit au-dessus des flammes */
+.ob-stage-small .ob-illu img { max-height: 180px; }
+/* écran 5 : le personnage passe la tête au-dessus de la carte, mains sur le bord */
+.ob-stage-peek { gap: 0; }
+.ob-stage-peek .ob-illu { position: relative; z-index: 1; margin-bottom: -24px; }
+.ob-stage-peek .ob-illu img { height: 175px; max-height: none; width: auto; }
+.ob-stage-peek .ob-mock { padding-top: 28px; }
+.ob-stage-peek .ob-note { margin-top: 8px; }
+@media (max-height: 700px) {
+  .ob-viewport { padding: 12px 0 8px; }
+  .ob-title { font-size: 32px; }
+  .ob-hand { font-size: 22px; }
+  .ob-text { font-size: 15px; margin-top: 10px; }
+  .ob-stage { margin-top: 16px; }
+  .ob-stage-side .ob-illu img { height: 210px; }
+  .ob-stage-small .ob-illu img { max-height: 130px; }
+  .ob-stage-peek .ob-note { display: none; }
+  .ob-stage-peek .ob-illu img { height: 130px; }
+  .ob-stage-peek .ob-illu { margin-bottom: -18px; }
+}
 
 /* ─── Muscles sollicités : vignettes RepDB ────────────── */
 .mchips-group { margin-top: 12px; }

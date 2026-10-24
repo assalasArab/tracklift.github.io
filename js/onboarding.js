@@ -4,7 +4,7 @@
    une note manuscrite avec une flèche dessinée qui pointe vers un aperçu,
    un emplacement de dessin, puis la création du programme.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261024k";
+import { illu } from "./illustrations.js?v=20261024l";
 
 /* flèches au feutre ; chaque tracé finit par une pointe */
 const ARROWS = {
@@ -45,7 +45,8 @@ const SLIDES = [
     note: { text: "elle calcule tes charges", arrow: "dr", pos: "left" }
   },
   {
-    img: "intro-03-progres.png",
+    img: "intro-03-progres.webp",
+    layout: "side",
     title: `Regarde-toi <span class="ob-key">progresser</span>`,
     hand: "les chiffres ne mentent pas",
     text: "Volume, régularité, charges : tout est suivi séance après séance. Ton niveau, de Débutant à Élite, se met à jour avec tes perfs.",
@@ -53,10 +54,11 @@ const SLIDES = [
       <span class="ob-mock-chip">Niveau intermédiaire</span>
       <div class="ob-bars">${[38, 46, 44, 58, 63, 72, 86].map(h => `<i style="height:${h}%"></i>`).join("")}</div>
     </div>`,
-    note: { text: "ton niveau monte ici", arrow: "ur", pos: "right" }
+    note: { text: "ton niveau monte ici", arrow: "dl", pos: "left" }
   },
   {
-    img: "intro-04-flamme.png",
+    img: "intro-04-flamme.webp",
+    layout: "small",
     title: `Garde ta <span class="ob-key">flamme</span> allumée`,
     hand: "une pesée par jour suffit",
     text: "Pèse-toi chaque matin : ta série de jours grandit et ta courbe de poids devient fiable. Un oubli, et la flamme s'éteint.",
@@ -66,7 +68,8 @@ const SLIDES = [
     note: { text: "ne la laisse pas s'éteindre", arrow: "ul", pos: "right" }
   },
   {
-    img: "intro-05-nutrition.png",
+    img: "intro-05-nutrition.webp",
+    layout: "peek",
     title: `Mange au <span class="ob-circle">bon calibre</span>`,
     hand: "sèche, maintien ou prise de masse",
     text: "Un questionnaire en 9 étapes calcule tes calories et tes macros, puis te construit un plan de journée.",
@@ -74,7 +77,7 @@ const SLIDES = [
       <b class="ob-kcal">2 144</b><span>kcal par jour</span>
       <div class="ob-macro"><i style="width:30%"></i><i style="width:45%"></i><i style="width:25%"></i></div>
     </div>`,
-    note: { text: "calculé pour toi, pas au pif", arrow: "dr", pos: "left" }
+    note: { text: "calculé pour toi, pas au pif", arrow: "ul", pos: "right" }
   },
   {
     img: "intro-06-go.png",

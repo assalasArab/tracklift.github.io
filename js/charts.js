@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261024k";
+import { i18n } from "./i18n.js?v=20261024l";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];

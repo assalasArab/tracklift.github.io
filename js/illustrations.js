@@ -7,7 +7,10 @@
    ═══════════════════════════════════════════════════════════ */
 export const ILLU_DIR = "assets/illustrations/";
 export const ILLU_READY = new Set([
-  "intro-01-bienvenue.webp"
+  "intro-01-bienvenue.webp",
+  "intro-03-progres.webp",
+  "intro-04-flamme.webp",
+  "intro-05-nutrition.webp"
 ]);
 
 export function illu(file, cls = "illu") {
