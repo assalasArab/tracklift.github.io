@@ -4,6 +4,8 @@
    Monté à la demande dans #view-nutrition. IDs et classes préfixés nx-.
    ═══════════════════════════════════════════════════════════ */
 
+import { illu as illuHtml } from "./illustrations.js?v=20261024h";
+
 /* ---------- catalogue MET (Compendium of Physical Activities 2024) ---------- */
 const MET = [
   { g: "Musculation", items: [
@@ -82,39 +84,32 @@ const FIELDS = ["age", "height", "weight", "bf", "neck", "waist", "hip", "formul
 const DNAMES = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 /* ---------- questionnaire ---------- */
-/* Dessins : déposer les PNG dans assets/nutrition/ puis ajouter leur nom ici.
-   Tant qu'un dessin n'est pas listé, son emplacement n'est pas affiché. */
-const ILLU_DIR = "assets/nutrition/";
-const ILLU_READY = new Set([]);
-const RESULT_ILLU = "10-resultat.png";
-function illu(file, cls = "nx-illu") {
-  if (!file || !ILLU_READY.has(file)) return "";
-  return `<figure class="${cls}"><img src="${ILLU_DIR}${file}" alt="" loading="lazy" decoding="async"></figure>`;
-}
+const RESULT_ILLU = "nutri-10-resultat.png";
+const illu = (file, cls = "nx-illu") => illuHtml(file, cls);
 
 const PHASE_CHOICES = [
-  ["cut", "Sèche", "Perdre du gras en gardant mon muscle", "choix-seche.png"],
-  ["maint", "Maintien", "Garder mon poids et continuer à progresser", "choix-maintien.png"],
-  ["gain", "Prise de masse", "Construire du muscle avec un léger surplus", "choix-masse.png"]
+  ["cut", "Sèche", "Perdre du gras en gardant mon muscle", "nutri-choix-seche.png"],
+  ["maint", "Maintien", "Garder mon poids et continuer à progresser", "nutri-choix-maintien.png"],
+  ["gain", "Prise de masse", "Construire du muscle avec un léger surplus", "nutri-choix-masse.png"]
 ];
 
 const STEPS = [
-  { tag: "Ton objectif", img: "01-objectif.png",
+  { tag: "Ton objectif", img: "nutri-01-objectif.png",
     q: () => "Qu'est-ce que tu veux faire en ce moment ?", hand: () => "tout le calcul s'adapte à ça",
     x: () => "<b>Sèche</b> : tu manges un peu moins que ce que tu dépenses, pour perdre du gras sans perdre ton muscle. <b>Maintien</b> : ton poids reste stable pendant que tu progresses. <b>Prise de masse</b> : un léger surplus pour construire du muscle. Tu pourras changer d'objectif plus tard sans tout refaire." },
-  { tag: "Ton profil", img: "02-profil.png",
+  { tag: "Ton profil", img: "nutri-02-profil.png",
     q: () => "Parle-moi un peu de toi", hand: () => "sexe, âge, taille, poids",
     x: () => "Ces infos servent à calculer ton <b>métabolisme de base</b> : l'énergie que ton corps brûle au repos, juste pour fonctionner (cœur, cerveau, respiration). C'est en général 60 à 70 % de ce que tu dépenses dans une journée. Ton poids est repris de ta dernière pesée." },
-  { tag: "Composition", img: "03-masse-grasse.png",
+  { tag: "Composition", img: "nutri-03-masse-grasse.png",
     q: () => "Tu connais ton taux de masse grasse ?", hand: () => "pas grave si non",
     x: () => "Ton muscle brûle bien plus d'énergie que ton gras. Connaître ton % de masse grasse rend le calcul plus précis. Pas d'idée ? Choisis <b>Ruban</b> et mesure ton tour de cou et ton tour de taille au niveau du nombril (2 minutes), ou <b>Aucune idée</b> : l'appli l'estimera." },
-  { tag: "Au quotidien", img: "04-quotidien.png",
+  { tag: "Au quotidien", img: "nutri-04-quotidien.png",
     q: () => "Tu bouges combien en dehors du sport ?", hand: () => "marche, boulot, bougeotte",
     x: () => "C'est le <b>NEAT</b> : tout ce que tu dépenses hors entraînement, en marchant, en restant debout ou en gigotant. D'une personne à l'autre, l'écart dépasse souvent 500 kcal par jour. Ta moyenne de pas est dans l'appli Santé ou Google Fit de ton téléphone." },
-  { tag: "Entraînement", img: "05-entrainement.png",
+  { tag: "Entraînement", img: "nutri-05-entrainement.png",
     q: () => "Quelles séances fais-tu chaque semaine ?", hand: () => "muscu, cardio, sports…",
     x: () => "Ajoute chaque activité avec sa durée et son nombre de séances par semaine. Chaque sport a une intensité (sa valeur <b>MET</b>). L'appli compte seulement l'énergie dépensée en plus de ce que tu aurais brûlé au repos, pour ne rien compter deux fois." },
-  { tag: "Le rythme", img: "06-rythme.png",
+  { tag: "Le rythme", img: "nutri-06-rythme.png",
     q: () => S.phase === "cut" ? "À quelle vitesse veux-tu perdre ?" : S.phase === "gain" ? "À quelle vitesse veux-tu prendre ?" : "On garde ton poids stable",
     hand: () => S.phase === "cut" ? "doucement, c'est plus de muscle gardé" : S.phase === "gain" ? "trop vite, c'est surtout du gras" : "ajuste si besoin",
     x: () => S.phase === "cut"
@@ -122,13 +117,13 @@ const STEPS = [
       : S.phase === "gain"
         ? "Ton muscle ne peut se construire qu'à une certaine vitesse : au-delà, le surplus part en gras. Entre <b>0,25 et 0,5 %</b> de ton poids par semaine, c'est l'idéal pour la plupart des gens. Ton expérience compte : un débutant progresse plus vite qu'un pratiquant avancé."
         : "Tes calories sont calées sur ta dépense : ton poids ne bouge pas, ton entraînement continue de progresser. Si ta balance monte ou descend sur 2 à 3 semaines, ajoute ou retire 100 à 200 kcal ici." },
-  { tag: "Macros", img: "07-macros.png",
+  { tag: "Macros", img: "nutri-07-macros.png",
     q: () => "Comment répartir tes calories ?", hand: () => "les réglages par défaut sont bons",
     x: () => "<b>Protéines</b> : 1,8 à 2,4 g par kg de poids, pour garder et construire ton muscle. <b>Lipides</b> : au moins 0,6 à 0,8 g/kg, pour tes hormones. Le reste va aux <b>glucides</b>, ton carburant à l'entraînement. Le <b>cyclage</b> met plus de glucides les jours de séance et moins les jours de repos, sans changer le total de la semaine." },
-  { tag: "Ta journée", img: "08-journee.png",
+  { tag: "Ta journée", img: "nutri-08-journee.png",
     q: () => "À quoi ressemble ta journée type ?", hand: () => "pour placer tes repas",
     x: () => "Choisis tes jours d'entraînement et tes horaires. Ça ne change pas tes calories : ça sert à construire ton <b>plan de journée</b>, avec les repas placés autour de ta séance et la caféine coupée assez tôt pour que tu dormes bien." },
-  { tag: "Compléments", img: "09-complements.png",
+  { tag: "Compléments", img: "nutri-09-complements.png",
     q: () => "Tu prends des compléments ?", hand: () => "le café compte aussi",
     x: () => "Coche ce que tu prends vraiment et ajuste la dose. L'appli les place au bon moment dans ta journée et te prévient en cas de souci, par exemple un pre-workout trop tard pour ton heure de coucher. Rien n'est obligatoire : ton alimentation passe avant." }
 ];

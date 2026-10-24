@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261024g";
-import { getExerciseById } from "./exercises.js?v=20261024g";
+import { uid } from "./utils.js?v=20261024h";
+import { getExerciseById } from "./exercises.js?v=20261024h";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;

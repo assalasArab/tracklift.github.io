@@ -1,19 +1,20 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261024g";
-import { DB } from "./db.js?v=20261024g";
-import { Auth } from "./auth.js?v=20261024g";
-import { i18n } from "./i18n.js?v=20261024g";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261024g";
-import { muscleName } from "./muscles.js?v=20261024g";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261024g";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261024g";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261024g";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261024g";
-import { renderWeightChart } from "./charts.js?v=20261024g";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261024g";
-import { openProgramWizard } from "./program-wizard.js?v=20261024g";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261024g";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261024g";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261024g";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261024h";
+import { DB } from "./db.js?v=20261024h";
+import { Auth } from "./auth.js?v=20261024h";
+import { i18n } from "./i18n.js?v=20261024h";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261024h";
+import { muscleName } from "./muscles.js?v=20261024h";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261024h";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261024h";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261024h";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261024h";
+import { renderWeightChart } from "./charts.js?v=20261024h";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261024h";
+import { openProgramWizard } from "./program-wizard.js?v=20261024h";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261024h";
+import { openIntro } from "./onboarding.js?v=20261024h";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261024h";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261024h";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -204,6 +205,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#guided-program-btn").addEventListener("click", openWizard);
   $("#drawer-wizard-btn").addEventListener("click", () => { closeProfileDrawer(); openWizard(); });
   $("#drawer-notion-btn").addEventListener("click", () => { closeProfileDrawer(); openNotion(); });
+  $("#drawer-intro-btn").addEventListener("click", () => { closeProfileDrawer(); openIntroFlow({ replay: true }); });
 
   $("#perf-card").addEventListener("change", event => {
     if (event.target.id !== "perf-program") return;
@@ -564,7 +566,8 @@ async function loadApp(firebaseUser) {
       photoURL: firebaseUser.photoURL || null,
       createdAt: data.profile?.createdAt || Date.now(),
       onboardingDone: data.profile?.onboardingDone || false,
-      trainingProfile: data.profile?.trainingProfile || null
+      trainingProfile: data.profile?.trainingProfile || null,
+      introSeen: data.profile?.introSeen || false
     };
     DB.saveData(data);
 
@@ -604,8 +607,8 @@ async function loadApp(firebaseUser) {
       if (!state.profile?.onboardingDone) state.profile = DB.updateProfile({ onboardingDone: true });
       setTimeout(() => openNotion(back.ok ? "" : back.error), 300);
     } else if (!state.sessionLogs.length && !state.programs.length && !state.profile?.onboardingDone) {
-      // premier lancement : on guide la création du programme avant la première séance
-      setTimeout(openWizard, 450);
+      // première connexion : présentation de l'appli, puis création du programme
+      setTimeout(() => (state.profile?.introSeen ? openWizard() : openIntroFlow()), 450);
     } else {
       const streak = computeStreak(state.weightLog);
       if (streak.atRisk) setTimeout(() => showToast(t("streakRisk", { count: streak.current })), 900);
@@ -873,6 +876,17 @@ function openCustomExercise(opts = {}) {
         if (program) renderProgSessions(program);
       }
       showToast(t("customDeleted"));
+    }
+  });
+}
+
+/** Présentation de l'appli ; « Créer mon programme » ou « Passer » enchaînent sur le questionnaire */
+function openIntroFlow({ replay = false } = {}) {
+  openIntro({
+    onFinish: result => {
+      state.profile = DB.updateProfile({ introSeen: true });
+      if (result === "start" || (result === "skip" && !replay && !state.programs.length)) setTimeout(openWizard, 150);
+      else if (!state.profile?.onboardingDone) state.profile = DB.updateProfile({ onboardingDone: true });
     }
   });
 }
