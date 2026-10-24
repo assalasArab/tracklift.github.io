@@ -1574,6 +1574,24 @@ html.ob-open, html.ob-open body { overflow: hidden; }
 .nav-btn.active .nav-icon { filter: drop-shadow(0 2px 3px rgba(43,38,32,0.22)); }
 @media (prefers-reduced-motion: reduce) { .loading-logo { animation: none; } }
 
+/* questionnaire programme : charges avec choix de la variante */
+.wz-lifts { gap: 10px; }
+.wz-liftcard { background: var(--surface); border-radius: var(--radius-lg); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.wz-liftcard-h { display: flex; flex-direction: column; gap: 6px; }
+.wz-liftcard-h b { font-size: 15px; font-weight: 600; }
+.wz-alt { font-size: 14px; min-height: 44px; }
+.wz-liftcard-in { display: flex; align-items: center; gap: 8px; }
+.wz-liftcard-in .wz-lift { flex: 1; min-width: 0; background: var(--surface2); box-shadow: none; border-radius: var(--radius); }
+.wz-liftcard-in .wz-lift input { width: 100%; flex: 1; text-align: left; }
+.wz-liftcard-in .wz-lift em { width: auto; }
+.wz-times { font-size: 18px; color: var(--text2); }
+.wz-liftcard-note { font-size: 12px; color: var(--text2); }
+
+/* flèche des listes déroulantes, aussi dans les fenêtres et les cartes */
+.modal-card select.input, .card select.input, select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%232b2620' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px;
+}
+
 /* ─── Muscles sollicités : vignettes RepDB ────────────── */
 .mchips-group { margin-top: 12px; }
 .mchips-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }

@@ -4,7 +4,7 @@
    matériel, durée, charges de référence) puis construit un
    programme complet avec séries, répétitions et charges de départ.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261024n";
+import { illu } from "./illustrations.js?v=20261024o";
 
 /* ---------- bibliothèque de mouvements ----------
    gym / db / bw : exercice pour salle complète, haltères seuls, poids du corps (null = pas d'équivalent)
@@ -100,18 +100,82 @@ function roundLoad(kg) {
 function referenceLoads(answers) {
   const bw = Number(answers.bodyweight) || 75;
   const f = BW_FACTORS[answers.level] || BW_FACTORS.intermediaire;
-  const given = answers.lifts || {};
-  const ref = {
-    bench: Number(given.bench) || 0,
-    squat: Number(given.squat) || 0,
-    deadlift: Number(given.deadlift) || 0,
-    ohp: Number(given.ohp) || 0
-  };
+  const ref = { bench: 0, squat: 0, deadlift: 0, ohp: 0 };
+  Object.keys(ref).forEach(k => { ref[k] = barbellEquivalent(answers, k); });
   if (!ref.ohp && ref.bench) ref.ohp = ref.bench * 0.62;
   if (!ref.deadlift && ref.squat) ref.deadlift = ref.squat * 1.2;
   if (!ref.squat && ref.deadlift) ref.squat = ref.deadlift * 0.82;
   Object.keys(ref).forEach(k => { if (!ref[k]) ref[k] = bw * f[k]; });
   return ref;
+}
+
+/* ═══════════ Mouvements de référence et leurs variantes ═══════════
+   [identifiant, nom, précision de la charge] — la charge saisie est convertie
+   en équivalent barre grâce aux ratios de LEVEL_REFS. */
+const LIFT_ALTS = {
+  bench: { label: "Poussée (pecs)", options: [
+    ["bench-press", "Développé couché à la barre"],
+    ["db-bench-press", "Développé couché aux haltères", "poids d'un haltère"],
+    ["smith-machine-bench-press", "Développé couché à la Smith"],
+    ["chest-press-machine", "Presse pectoraux à la machine"],
+    ["incline-bench-press", "Développé incliné à la barre"],
+    ["incline-db-press", "Développé incliné aux haltères", "poids d'un haltère"]] },
+  squat: { label: "Jambes", options: [
+    ["squat", "Squat à la barre"],
+    ["smith-machine-squat", "Squat à la Smith"],
+    ["hack-squat", "Hack squat"],
+    ["leg-press", "Presse à cuisses"],
+    ["front-squat", "Squat avant"],
+    ["goblet-squat", "Goblet squat", "poids de l'haltère"]] },
+  deadlift: { label: "Chaîne arrière", options: [
+    ["deadlift", "Soulevé de terre"],
+    ["sumo-deadlift", "Soulevé de terre sumo"],
+    ["hex-bar-deadlift", "Soulevé de terre à la hex bar"],
+    ["romanian-deadlift", "Soulevé de terre roumain à la barre"],
+    ["dumbbell-romanian-deadlift", "Soulevé de terre roumain aux haltères", "poids d'un haltère"]] },
+  ohp: { label: "Épaules", options: [
+    ["ohp", "Développé militaire à la barre"],
+    ["dumbbell-shoulder-press", "Développé épaules aux haltères", "poids d'un haltère"],
+    ["machine-shoulder-press", "Développé épaules à la machine"],
+    ["smith-machine-shoulder-press", "Développé épaules à la Smith"]] },
+  pull: { label: "Tirage (dos)", options: [
+    ["pull-up", "Tractions", "lest ajouté (0 au poids du corps)"],
+    ["lat-pulldown", "Tirage vertical à la poulie"],
+    ["barbell-row", "Rowing à la barre"],
+    ["seated-cable-row", "Rowing assis à la poulie"],
+    ["single-arm-db-row", "Rowing à un bras à l'haltère", "poids de l'haltère"]] }
+};
+const LIFT_DEFAULTS = {
+  gym: { bench: "bench-press", squat: "squat", deadlift: "deadlift", ohp: "ohp", pull: "pull-up" },
+  dumbbells: { bench: "db-bench-press", squat: "goblet-squat", deadlift: "dumbbell-romanian-deadlift", ohp: "dumbbell-shoulder-press", pull: "single-arm-db-row" }
+};
+
+function liftAlt(answers, key) {
+  const chosen = answers.liftAlt && answers.liftAlt[key];
+  if (chosen && LIFT_ALTS[key].options.some(o => o[0] === chosen)) return chosen;
+  return (LIFT_DEFAULTS[answers.equipment] || LIFT_DEFAULTS.gym)[key];
+}
+function liftReps(answers, key) {
+  return Math.max(1, Math.min(20, Number(answers.liftReps && answers.liftReps[key]) || 8));
+}
+/** Charge à la barre équivalente pour ~8 répétitions (0 si rien de saisi) */
+function barbellEquivalent(answers, key) {
+  const weight = Number(answers.lifts && answers.lifts[key]) || 0;
+  const ref = LEVEL_REFS[liftAlt(answers, key)];
+  if (!weight || !ref || ref.reps) return 0;
+  return estimate1RM(weight, liftReps(answers, key)) / ref.ratio / (1 + 8 / 30);
+}
+/** Séries saisies, au format attendu par assessLevel */
+function liftEntries(answers) {
+  return Object.keys(LIFT_ALTS).map(key => {
+    const id = liftAlt(answers, key);
+    const raw = answers.lifts && answers.lifts[key];
+    const weight = Number(raw) || 0;
+    const repsGiven = Number(answers.liftReps && answers.liftReps[key]) || 0;
+    const ref = LEVEL_REFS[id];
+    if (ref && ref.reps) return repsGiven > 0 || weight > 0 ? { id, weight, reps: liftReps(answers, key) } : null;
+    return weight > 0 ? { id, weight, reps: liftReps(answers, key) } : null;
+  }).filter(Boolean);
 }
 
 export function resolveSplit(answers) {
@@ -199,6 +263,7 @@ const LEVEL_REFS = {
   "close-grip-bench-press": { lift: "bench", ratio: 0.9 },
   "incline-bench-press": { lift: "bench", ratio: 0.8 },
   "db-bench-press": { lift: "bench", ratio: 0.38 },
+  "chest-press-machine": { lift: "bench", ratio: 0.9 },
   "incline-db-press": { lift: "bench", ratio: 0.32 },
   "squat": { lift: "squat", ratio: 1 },
   "pause-squat": { lift: "squat", ratio: 0.9 },
@@ -216,6 +281,8 @@ const LEVEL_REFS = {
   "seated-barbell-overhead-press": { lift: "ohp", ratio: 0.95 },
   "dumbbell-shoulder-press": { lift: "ohp", ratio: 0.4 },
   "seated-db-press": { lift: "ohp", ratio: 0.4 },
+  "machine-shoulder-press": { lift: "ohp", ratio: 0.85 },
+  "smith-machine-shoulder-press": { lift: "ohp", ratio: 0.95 },
   "barbell-row": { lift: "pull", ratio: 1 },
   "pendlay-row": { lift: "pull", ratio: 0.95 },
   "t-bar-row": { lift: "pull", ratio: 1 },
@@ -316,13 +383,6 @@ const MODE_STEP = { key: "mode", kind: "options", q: "Comment tu veux commencer 
 
 const CUSTOM_GOAL_STEP = { ...GENERATE_STEPS[0], q: "Ton objectif en ce moment ?" };
 
-const LIFT_FIELDS = [
-  ["bench", "Développé couché"],
-  ["squat", "Squat"],
-  ["deadlift", "Soulevé de terre"],
-  ["ohp", "Développé militaire"]
-];
-const LIFT_FIELD_IDS = { bench: "bench-press", squat: "squat", deadlift: "deadlift", ohp: "ohp" };
 
 /* semaines types : [nom, type, séance de suggestions] */
 const WEEK_PRESETS = {
@@ -616,17 +676,35 @@ function renderStep() {
       <button type="button" class="wz-chip${Number(a[step.key]) === v ? " on" : ""}" data-v="${v}">${v}<small>${step.unit || (v > 1 ? "séances" : "séance")}</small></button>`).join("")}</div>`;
   } else if (step.kind === "lifts") {
     const lifts = a.lifts || {};
+    const reps = a.liftReps || {};
     body = `
-      <p class="wz-help">Indique la charge que tu fais pour <b>environ 8 répétitions</b>. Laisse vide si tu ne sais pas : on l'estimera à partir de ton poids et de ton niveau.</p>
+      <p class="wz-help">Pour chaque mouvement, choisis <b>la variante que tu fais vraiment</b>, puis la charge et les répétitions d'une bonne série. Tu ne le fais pas ? Laisse vide : on l'estimera.</p>
       <div class="wz-lifts">
         <label class="wz-lift"><span>Poids de corps</span><input type="number" inputmode="decimal" data-lift="bodyweight" value="${esc(a.bodyweight)}" placeholder="75" min="30" max="250" step="0.5"><em>kg</em></label>
-        ${LIFT_FIELDS.map(([k, l]) => `<label class="wz-lift"><span>${l}</span><input type="number" inputmode="decimal" data-lift="${k}" value="${esc(lifts[k])}" placeholder="—" min="0" max="500" step="2.5"><em>kg</em></label>`).join("")}
+        ${Object.entries(LIFT_ALTS).map(([k, def]) => {
+          const alt = liftAlt(a, k);
+          const opt = def.options.find(o => o[0] === alt);
+          return `
+          <div class="wz-liftcard">
+            <div class="wz-liftcard-h">
+              <b>${def.label}</b>
+              <select class="input wz-alt" data-alt="${k}" aria-label="Variante pour ${def.label}">
+                ${def.options.map(([id, label]) => `<option value="${id}" ${id === alt ? "selected" : ""}>${label}</option>`).join("")}
+              </select>
+            </div>
+            <div class="wz-liftcard-in">
+              <label class="wz-lift"><input type="number" inputmode="decimal" data-lift="${k}" value="${esc(lifts[k])}" placeholder="${LEVEL_REFS[alt] && LEVEL_REFS[alt].reps ? "0" : "—"}" min="0" max="500" step="0.5" aria-label="Charge"><em>kg</em></label>
+              <span class="wz-times">×</span>
+              <label class="wz-lift"><input type="number" inputmode="numeric" data-reps="${k}" value="${esc(reps[k])}" placeholder="8" min="1" max="20" step="1" aria-label="Répétitions"><em>reps</em></label>
+            </div>
+            ${opt && opt[2] ? `<small class="wz-liftcard-note">${opt[2]}</small>` : ""}
+          </div>`;
+        }).join("")}
       </div>`;
   } else if (step.kind === "recap") {
     const program = generateProgram(a, wiz.exercises);
     wiz.program = program;
-    const entries = Object.entries(a.lifts || {}).map(([k, w]) => ({ id: LIFT_FIELD_IDS[k], weight: w, reps: 8 }));
-    wiz.level = assessLevel(entries, a.bodyweight, a.sex);
+    wiz.level = assessLevel(liftEntries(a), a.bodyweight, a.sex);
     body = `
       ${wiz.level ? levelHtml(wiz.level) : ""}
       <div class="wz-recap-head"><b>${esc(program.name)}</b><span>${esc(program.description)}</span></div>
@@ -717,7 +795,7 @@ export function openProgramWizard(opts) {
     exercises: opts.exercises || [],
     nameOf: opts.nameOf || (ex => ex?.name),
     onCreate: opts.onCreate, onDismiss: opts.onDismiss, createExercise: opts.createExercise, onNotion: opts.onNotion,
-    answers: { bodyweight: opts.bodyweight || "", lifts: {}, sex: "male" },
+    answers: { bodyweight: opts.bodyweight || "", lifts: {}, liftReps: {}, liftAlt: {}, sex: "male" },
     custom: { preset: null, name: "", sessions: [] }
   };
   applyPreset("ppl_upper");
@@ -768,6 +846,13 @@ export function openProgramWizard(opts) {
     if (d.lift) {
       if (d.lift === "bodyweight") wiz.answers.bodyweight = t.value;
       else wiz.answers.lifts[d.lift] = t.value;
+      return;
+    }
+    if (d.reps) { (wiz.answers.liftReps ||= {})[d.reps] = t.value; return; }
+    if (d.alt) {
+      (wiz.answers.liftAlt ||= {})[d.alt] = t.value;
+      renderStep();
+      wiz.el.querySelector(`[data-lift="${d.alt}"]`)?.focus();
       return;
     }
     if (d.search !== undefined) { renderSearchResults(t.value); return; }
