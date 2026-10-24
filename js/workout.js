@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261020e";
-import { getExerciseById } from "./exercises.js?v=20261020e";
+import { uid } from "./utils.js?v=20261024a";
+import { getExerciseById } from "./exercises.js?v=20261024a";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -30,11 +30,17 @@ function suggestWeight(previousExerciseLog, fallback) {
 }
 function buildSuggestedSets(exercise, previousExerciseLog, planned) {
   const previousSets = previousExerciseLog?.sets || [];
+  if (!previousSets.length && planned?.setList?.length) {
+    // séries détaillées (import Notion) : chauffe, travail et baisses de charge
+    return planned.setList.map(item => ({ targetReps: item.reps || planned.reps || 10, reps: item.reps || planned.reps || 10, weight: item.weight || 0, status: "pending", ...(item.kind && item.kind !== "work" ? { kind: item.kind } : {}) }));
+  }
   if (!previousSets.length && planned) {
     return Array.from({ length: planned.sets || 3 }, () => ({ targetReps: planned.reps || 10, reps: planned.reps || 10, weight: planned.weight || 0, status: "pending" }));
   }
   if (previousSets.length) {
-    return previousSets.map(item => ({ targetReps: suggestReps(previousExerciseLog, item.reps), reps: item.reps, weight: suggestWeight(previousExerciseLog, item.weight), status: "pending" }));
+    return previousSets.map(item => item.kind === "warmup"
+      ? { targetReps: item.targetReps || item.reps, reps: item.reps, weight: item.weight, status: "pending", kind: "warmup" }
+      : { targetReps: suggestReps(previousExerciseLog, item.reps), reps: item.reps, weight: suggestWeight(previousExerciseLog, item.weight), status: "pending", ...(item.kind ? { kind: item.kind } : {}) });
   }
   const presetByFocus = { quadriceps: { sets: 4, reps: 8, weight: 20 }, pectoraux: { sets: 4, reps: 8, weight: 20 }, dos: { sets: 4, reps: 10, weight: 20 }, epaules: { sets: 3, reps: 12, weight: 10 }, triceps: { sets: 3, reps: 12, weight: 10 }, biceps: { sets: 3, reps: 12, weight: 10 }, ischio_jambiers: { sets: 4, reps: 10, weight: 20 }, fessiers: { sets: 4, reps: 10, weight: 20 }, abdominaux: { sets: 3, reps: 15, weight: 0 } };
   const preset = presetByFocus[exercise?.muscle_focus] || { sets: 3, reps: 10, weight: 10 };
@@ -65,6 +71,6 @@ export function skipCurrentSet(workout) { const set = getCurrentSet(workout); if
 export function skipCurrentExercise(workout) { const block = getCurrentBlock(workout); if (!block) return workout; for (let index = workout.currentSetIndex; index < block.sets.length; index += 1) { if (block.sets[index].status === "pending") block.sets[index].status = "skipped"; } workout.currentExerciseIndex += 1; workout.currentSetIndex = 0; return workout; }
 export function replaceCurrentExercise(workout, newExerciseId, exercises, sessionLogs) { const nextExercise = getExerciseById(newExerciseId, exercises); const currentBlock = getCurrentBlock(workout); if (!nextExercise || !currentBlock) return workout; const previousExerciseLog = findLatestExerciseLog(nextExercise.id, sessionLogs); currentBlock.exerciseId = nextExercise.id; currentBlock.restSeconds = getRestBase(nextExercise); currentBlock.sets = buildSuggestedSets(nextExercise, previousExerciseLog); workout.currentSetIndex = 0; return workout; }
 export function buildSessionLogFromWorkout(workout, exercises) {
-  const completedExercises = workout.blocks.map(block => { const exercise = getExerciseById(block.exerciseId, exercises); return { exerciseId: block.exerciseId, exerciseName: exercise?.name || "exercice", muscleFocus: exercise?.muscle_focus || "other", type: exercise?.type || "other", sets: block.sets.map(item => ({ reps: item.reps, weight: item.weight, targetReps: item.targetReps, status: item.status })), restSeconds: block.restSeconds }; });
+  const completedExercises = workout.blocks.map(block => { const exercise = getExerciseById(block.exerciseId, exercises); return { exerciseId: block.exerciseId, exerciseName: exercise?.name || "exercice", muscleFocus: exercise?.muscle_focus || "other", type: exercise?.type || "other", sets: block.sets.map(item => ({ reps: item.reps, weight: item.weight, targetReps: item.targetReps, status: item.status, ...(item.kind ? { kind: item.kind } : {}) })), restSeconds: block.restSeconds }; });
   return { id: uid(), sessionName: workout.sessionName, type: workout.type, programId: workout.programId || null, date: Date.now(), durationMs: Date.now() - workout.startedAt, exercises: completedExercises };
 }

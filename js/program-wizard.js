@@ -310,7 +310,8 @@ const GENERATE_STEPS = [
 
 const MODE_STEP = { key: "mode", kind: "options", q: "Comment tu veux commencer ?", options: [
   ["generate", "Génère-moi un programme", "Quelques questions et l'appli construit tout, charges comprises"],
-  ["custom", "J'ai déjà mon programme", "Tu remplis ta semaine type, tes exos et tes charges : l'appli calcule ton niveau"]] };
+  ["custom", "J'ai déjà mon programme", "Tu remplis ta semaine type, tes exos et tes charges : l'appli calcule ton niveau"],
+  ["notion", "Il est dans Notion", "Connecte ton compte Notion : l'appli reprend tes séances, tes exos et tes charges"]] };
 
 const CUSTOM_GOAL_STEP = { ...GENERATE_STEPS[0], q: "Ton objectif en ce moment ?" };
 
@@ -680,7 +681,7 @@ export function openProgramWizard(opts) {
     el, index: 0, program: null, level: null,
     exercises: opts.exercises || [],
     nameOf: opts.nameOf || (ex => ex?.name),
-    onCreate: opts.onCreate, onDismiss: opts.onDismiss, createExercise: opts.createExercise,
+    onCreate: opts.onCreate, onDismiss: opts.onDismiss, createExercise: opts.createExercise, onNotion: opts.onNotion,
     answers: { bodyweight: opts.bodyweight || "", lifts: {}, sex: "male" },
     custom: { preset: null, name: "", sessions: [] }
   };
@@ -697,6 +698,12 @@ export function openProgramWizard(opts) {
     const step = steps[wiz.index];
     if (choice) {
       const raw = choice.dataset.v;
+      if (step.key === "mode" && raw === "notion" && wiz.onNotion) {
+        const go = wiz.onNotion;
+        close(false);
+        go();
+        return;
+      }
       wiz.answers[step.key] = step.kind === "chips" ? Number(raw) : raw;
       // une réponse fermée fait avancer directement, comme un formulaire iOS
       wiz.index = Math.min(wiz.index + 1, visibleSteps().length - 1);

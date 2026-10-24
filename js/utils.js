@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261020e";
+import { i18n } from "./i18n.js?v=20261024a";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);

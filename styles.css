@@ -920,17 +920,60 @@ body:not(:has(#view-nutrition.active)) .nx-mobar { display: none; }
 .mm-sm .mm-fig { width: 46px; }
 
 /* ─── Import Notion ───────────────────────────────────── */
-.ni-help { font-size: 13px; color: var(--text2); line-height: 1.5; margin: 0 0 12px; }
-.ni-help b { color: var(--text); }
-.ni-help a { color: var(--accent-ink); }
+.ni-card { max-width: 640px; }
+.ni-help { font-size: 14px; color: var(--text2); line-height: 1.5; margin: 0 0 16px; max-width: 65ch; }
+.ni-help b { color: var(--text); font-weight: 600; }
 .ni-file { cursor: pointer; }
-.ni-status { text-align: center; color: var(--text2); padding: 16px; font-size: 14px; }
-.ni-section { font-size: 13px; color: var(--text2); margin: 16px 0 8px; }
-.ni-map { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ni-status { color: var(--text2); padding: 16px 0; font-size: 14px; }
+.ni-empty { font-size: 14px; color: var(--text2); line-height: 1.5; margin: 8px 0 0; }
+.ni-note { font-size: 12px; color: var(--text2); margin: 8px 0 0; line-height: 1.5; }
+.ni-link {
+  border: 0; background: none; padding: 4px 0; min-height: 32px; cursor: pointer;
+  color: var(--accent-ink); font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px;
+}
+.ni-link:hover { color: var(--text); }
+.ni-link:focus-visible, .ni-check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.ni-back { margin: 0 0 12px; text-decoration: none; }
+.ni-conn {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 12px 0; margin: 0 0 16px; border-bottom: 1px solid var(--separator); font-size: 14px;
+}
+.ni-conn b { font-weight: 600; }
+.ni-conn-actions { display: flex; gap: 16px; }
+.ni-group { border: 1px solid var(--border); border-radius: 8px; padding: 4px 12px 8px; margin: 0 0 12px; min-width: 0; }
+.ni-group legend { padding: 0 4px; font-size: 12px; font-weight: 600; color: var(--text2); }
+.ni-check { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; font-size: 16px; }
+.ni-check + .ni-check { border-top: 1px solid var(--separator); }
+.ni-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent-ink); flex: none; }
+.ni-check span { flex: 1; min-width: 0; }
+.ni-check small { font-size: 12px; color: var(--text2); }
+.ni-check-inline { min-height: 44px; flex: none; }
+.ni-session { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0 0 16px; }
+.ni-session.is-off { opacity: 0.55; }
+.ni-session-head { display: flex; align-items: center; gap: 8px; }
+.ni-session-head .input { flex: 1; min-width: 0; font-weight: 600; }
+.ni-session-head .ni-type { flex: 0 0 136px; font-weight: 400; }
+.ni-ex-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.ni-ex { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--separator); }
+.ni-ex-name { min-width: 0; }
+.ni-ex-name b { display: block; font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+.ni-ex-name small { display: block; font-size: 12px; color: var(--text2); margin-top: 4px; }
+.ni-ex .input { font-size: 14px; }
+.ni-details { margin: 16px 0 0; font-size: 14px; }
+.ni-details summary { cursor: pointer; color: var(--text2); min-height: 44px; display: flex; align-items: center; }
+.ni-details[open] summary { margin-bottom: 8px; }
+.ni-map { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .ni-map-row span { display: block; font-size: 12px; color: var(--text2); margin: 0 0 4px 2px; }
-.ni-summary { margin: 14px 0 12px; padding: 10px 12px; border-radius: var(--radius); background: var(--grad-soft); box-shadow: inset 0 0 0 1px rgba(169,111,156,0.25); font-size: 13.5px; line-height: 1.5; }
-.ni-unmatched { font-size: 12px; color: var(--text2); margin-top: 4px; }
-@media (max-width: 520px) { .ni-map { grid-template-columns: 1fr; } }
+.ni-footer { margin: 24px 0 0; padding: 16px 0 0; border-top: 1px solid var(--separator); }
+.ni-total { font-size: 14px; color: var(--text); margin: 0 0 12px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (max-width: 520px) {
+  .ni-map { grid-template-columns: 1fr; }
+  .ni-ex { grid-template-columns: 1fr; gap: 8px; }
+  .ni-session-head { flex-wrap: wrap; }
+  .ni-session-head .input { flex-basis: calc(100% - 56px); }
+  .ni-session-head .ni-type { flex: 1 1 100%; }
+}
 
 /* ─── Assistant : constructeur de programme ───────────── */
 .wz-help-sm { font-size: 12px; margin: 10px 0 0; }

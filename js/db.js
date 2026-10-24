@@ -1,6 +1,6 @@
-import { uid } from "./utils.js?v=20261020e";
-import { EXERCISE_SEED } from "./exercises.js?v=20261020e";
-import { firestore } from "./firebase-config.js?v=20261020e";
+import { uid } from "./utils.js?v=20261024a";
+import { EXERCISE_SEED } from "./exercises.js?v=20261024a";
+import { firestore } from "./firebase-config.js?v=20261024a";
 
 export const DB = {
   currentUserId: null,
@@ -25,6 +25,7 @@ export const DB = {
           nutrition: raw.nutrition || null,
           exerciseDb: raw.exerciseDb || null,
           customExercises: raw.customExercises || [],
+          notion: raw.notion || null,
           createdAt: raw.createdAt || Date.now()
         };
         // Nettoyer le document Firestore si exercises etait stocke dedans
@@ -76,6 +77,7 @@ export const DB = {
   getSessionLogs(){ return [...(this._cache?.sessionLogs || [])].sort((a, b) => b.date - a.date); },
   getWeightLog()  { return [...(this._cache?.weightLog || [])].sort((a, b) => a.date - b.date); },
   getNutrition()  { return this._cache?.nutrition || null; },
+  getNotion()     { return this._cache?.notion || null; },
 
   // ─── Ecriture (cache + Firestore) ─────────────────────
   saveData(data) {
@@ -103,6 +105,14 @@ export const DB = {
     }
     this.saveData(data);
     return data.weightLog;
+  },
+
+  /** Connexion Notion de l'utilisateur (jeton OAuth) ; null = déconnecté. Exclue de l'export JSON. */
+  setNotion(connection) {
+    const data = this.getData();
+    if (!data) return;
+    data.notion = connection || null;
+    this.saveData(data);
   },
 
   saveNutrition(profile) {

@@ -1,19 +1,22 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261020e";
-import { DB } from "./db.js?v=20261020e";
-import { Auth } from "./auth.js?v=20261020e";
-import { i18n } from "./i18n.js?v=20261020e";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261020e";
-import { muscleName } from "./muscles.js?v=20261020e";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261020e";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261020e";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261020e";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261020e";
-import { renderWeightChart } from "./charts.js?v=20261020e";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261020e";
-import { openProgramWizard } from "./program-wizard.js?v=20261020e";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261020e";
-import { openNotionImport } from "./notion-import.js?v=20261020e";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261020e";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261024a";
+import { DB } from "./db.js?v=20261024a";
+import { Auth } from "./auth.js?v=20261024a";
+import { i18n } from "./i18n.js?v=20261024a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261024a";
+import { muscleName } from "./muscles.js?v=20261024a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261024a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261024a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261024a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261024a";
+import { renderWeightChart } from "./charts.js?v=20261024a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261024a";
+import { openProgramWizard } from "./program-wizard.js?v=20261024a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261024a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261024a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261024a";
+
+// Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
+let notionReturn = captureNotionRedirect();
 
 const state = {
   user: null,
@@ -591,8 +594,17 @@ async function loadApp(firebaseUser) {
     applyStaticTranslations();
     renderAll();
 
-    // Premier lancement : on guide la création du programme avant la première séance
-    if (!state.sessionLogs.length && !state.programs.length && !state.profile?.onboardingDone) {
+    if (notionReturn) {
+      const back = notionReturn;
+      notionReturn = null;
+      if (back.ok) {
+        DB.setNotion(back.connection);
+        showToast(t("notionConnected"));
+      }
+      if (!state.profile?.onboardingDone) state.profile = DB.updateProfile({ onboardingDone: true });
+      setTimeout(() => openNotion(back.ok ? "" : back.error), 300);
+    } else if (!state.sessionLogs.length && !state.programs.length && !state.profile?.onboardingDone) {
+      // premier lancement : on guide la création du programme avant la première séance
       setTimeout(openWizard, 450);
     } else {
       const streak = computeStreak(state.weightLog);
@@ -797,6 +809,7 @@ function openWizard() {
     nameOf: getExerciseName,
     bodyweight: last ? last.weight : "",
     createExercise: (name, done) => openCustomExercise({ name, onCreated: done }),
+    onNotion: () => setTimeout(() => openNotion(), 50),
     onCreate: (generated, answers) => {
       const program = {
         id: uid(),
@@ -864,18 +877,72 @@ function openCustomExercise(opts = {}) {
   });
 }
 
-function openNotion() {
+function openNotion(error = "") {
   openNotionImport({
     exercises: state.exercises,
     nameOf: getExerciseName,
     existingIds: new Set(state.sessionLogs.map(log => log.id)),
+    connection: DB.getNotion(),
+    saveConnection: connection => DB.setNotion(connection),
+    error,
     onImport: logs => {
       DB.addSessionLogs(logs);
       state.sessionLogs = DB.getSessionLogs();
       renderHome();
       showToast(t("importSuccess", { count: logs.length }));
-    }
+    },
+    onCreateProgram: createProgramFromNotion
   });
+}
+
+/** Programme lu dans Notion : crée les exercices perso manquants puis le programme */
+function createProgramFromNotion({ program, customs }) {
+  const idFor = {};
+  for (const item of customs) {
+    const existing = DB.getCustomExercises().find(ex => normalizeText(ex.name).replace(/[^a-z0-9]+/g, " ").trim() === item.key);
+    const exercise = existing || DB.saveCustomExercise({
+      id: `custom-${uid()}`,
+      name: item.name,
+      name_fr: item.name,
+      type: item.type || "other",
+      muscle_focus: "autre",
+      muscle_portion: null,
+      contraction_type: null,
+      primary_muscles: [],
+      secondary_muscles: [],
+      secondary_detail: [],
+      equipment: "autre",
+      difficulty: "intermediaire",
+      bodyweight: false,
+      unilateral: false,
+      description: "Importé de Notion",
+      instructions: [],
+      tips: [],
+      img: null,
+      similar_exercises: [],
+      custom: true,
+      source: "notion",
+      createdAt: Date.now()
+    });
+    idFor[`custom:${item.key}`] = exercise.id;
+  }
+  const sessions = program.sessions.map(session => {
+    const plan = {};
+    const exerciseIds = session.exerciseIds.map(id => {
+      const realId = idFor[id] || id;
+      plan[realId] = session.plan[id];
+      return realId;
+    });
+    return { id: uid(), name: session.name, type: session.type, exerciseIds, plan };
+  });
+  const saved = { id: uid(), name: program.name, description: program.description, createdAt: Date.now(), source: "notion", sessions };
+  DB.addProgram(saved);
+  state.exercises = DB.getExercises();
+  state.programs = DB.getPrograms();
+  if (!state.profile?.onboardingDone) state.profile = DB.updateProfile({ onboardingDone: true });
+  setPerfProgramId(saved.id);
+  renderAll();
+  showToast(t("notionProgramCreated", { name: saved.name }));
 }
 
 function renderHome() {
@@ -2048,10 +2115,11 @@ function renderWorkout() {
     illuBox.innerHTML = illustrationHtml(exercise, "hero") + muscleMapHtml(exercise, { size: "sm", label: primaryMusclesLabel(exercise, i18n.getLanguage()) });
   }
   $("#guided-exercise-tip").textContent = displayTip;
+  const setKind = currentSet?.kind === "warmup" ? ` · ${t("setWarmup")}` : currentSet?.kind === "drop" ? ` · ${t("setDrop")}` : "";
   $("#guided-set-progress").textContent = t("setProgress", {
     current: state.workout.currentSetIndex + 1,
     total: block.sets.length
-  });
+  }) + setKind;
   $("#guided-target-reps").textContent = currentSet?.targetReps ?? currentSet?.reps ?? "-";
   $("#rest-time-value").textContent = `${block.restSeconds}s`;
   $("#guided-reps-input").value = currentSet?.reps ?? currentSet?.targetReps ?? 0;
@@ -2064,7 +2132,9 @@ function handleNext() {
   const reps = Number($("#guided-reps-input").value);
   const weight = Number($("#guided-weight-input").value);
   completeCurrentSet(state.workout, reps, weight);
-  startRest(getCurrentBlock(state.workout)?.restSeconds || 60);
+  // une baisse de charge s'enchaîne sans repos
+  if (getCurrentSet(state.workout)?.kind === "drop") stopRest();
+  else startRest(getCurrentBlock(state.workout)?.restSeconds || 60);
   renderWorkout();
 }
 
