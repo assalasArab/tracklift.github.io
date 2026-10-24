@@ -4,7 +4,7 @@
    une note manuscrite avec une flèche dessinée qui pointe vers un aperçu,
    un emplacement de dessin, puis la création du programme.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261024j";
+import { illu } from "./illustrations.js?v=20261024k";
 
 /* flèches au feutre ; chaque tracé finit par une pointe */
 const ARROWS = {
@@ -14,6 +14,8 @@ const ARROWS = {
   ur: `<svg viewBox="0 0 90 70" aria-hidden="true"><path d="M6 62 C 22 64, 48 58, 62 36 C 68 26, 72 18, 76 8" /><path d="M64 14 L 77 6 L 82 21" /></svg>`,
   // vers le haut à gauche
   ul: `<svg viewBox="0 0 90 70" aria-hidden="true"><path d="M84 62 C 68 64, 42 58, 28 36 C 22 26, 18 18, 14 8" /><path d="M26 14 L 13 6 L 8 21" /></svg>`,
+  // part à droite puis revient vers le bas à gauche (vise ce qui est sous le texte)
+  dl: `<svg viewBox="0 0 90 70" aria-hidden="true"><path d="M4 14 C 40 2, 80 8, 72 34 C 66 52, 44 58, 24 62" /><path d="M35 53 L 23 62 L 36 69" /></svg>`,
   // vers le bas, en boucle
   d: `<svg viewBox="0 0 70 90" aria-hidden="true"><path d="M10 6 C 50 2, 62 30, 40 40 C 22 48, 26 70, 38 82" /><path d="M26 74 L 38 84 L 46 70" /></svg>`
 };
@@ -28,7 +30,7 @@ const SLIDES = [
     hand: "ton carnet de muscu, en mieux",
     text: "Tes séances, tes progrès et ta nutrition au même endroit. Petit tour en une minute ?",
     mock: `<div class="ob-mock ob-mock-pills"><span>Séances</span><span>Progrès</span><span>Flamme</span><span>Nutrition</span></div>`,
-    note: { text: "tout est là", arrow: "dr", pos: "left" }
+    note: { text: "tout est là", arrow: "dl", pos: "left" }
   },
   {
     img: "intro-02-seance.png",
