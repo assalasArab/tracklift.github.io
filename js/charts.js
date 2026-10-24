@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261024c";
+import { i18n } from "./i18n.js?v=20261024d";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];
@@ -115,12 +115,12 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
       labels: points.map(point => point.date),
       datasets: [{
         data: points.map(point => point.maxWeight),
-        borderColor: "#4c2e05",
+        borderColor: "#ff7a00",
         backgroundColor: "rgba(174,189,147,0.3)",
         fill: true,
         tension: 0.4,
         pointRadius: 4,
-        pointBackgroundColor: "#4c2e05",
+        pointBackgroundColor: "#ff7a00",
         borderWidth: 2
       }]
     },

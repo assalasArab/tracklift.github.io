@@ -1,19 +1,19 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261024c";
-import { DB } from "./db.js?v=20261024c";
-import { Auth } from "./auth.js?v=20261024c";
-import { i18n } from "./i18n.js?v=20261024c";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261024c";
-import { muscleName } from "./muscles.js?v=20261024c";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261024c";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261024c";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261024c";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261024c";
-import { renderWeightChart } from "./charts.js?v=20261024c";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261024c";
-import { openProgramWizard } from "./program-wizard.js?v=20261024c";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261024c";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261024c";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261024c";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261024d";
+import { DB } from "./db.js?v=20261024d";
+import { Auth } from "./auth.js?v=20261024d";
+import { i18n } from "./i18n.js?v=20261024d";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261024d";
+import { muscleName } from "./muscles.js?v=20261024d";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261024d";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261024d";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261024d";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261024d";
+import { renderWeightChart } from "./charts.js?v=20261024d";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261024d";
+import { openProgramWizard } from "./program-wizard.js?v=20261024d";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261024d";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261024d";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261024d";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -506,8 +506,8 @@ function renderRadarChart() {
         backgroundColor: "rgba(122,132,80,0.3)",
         borderColor: "#7a8450",
         borderWidth: 2,
-        pointBackgroundColor: "#4c2e05",
-        pointBorderColor: "#4c2e05",
+        pointBackgroundColor: "#ff7a00",
+        pointBorderColor: "#ff7a00",
         pointRadius: 4
       }]
     },
@@ -1782,7 +1782,7 @@ function renderExerciseList() {
 }
 
 const CHART_COLORS = [
-  "#7a8450", "#4c2e05", "#5aa86a", "#95969d", "#b5762c",
+  "#7a8450", "#ff7a00", "#5aa86a", "#95969d", "#b5762c",
   "#aebd93", "#3f6b3a", "#6d6e75", "#c9a227", "#8fa36a"
 ];
 
