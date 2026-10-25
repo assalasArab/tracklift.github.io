@@ -1,20 +1,20 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025e";
-import { DB } from "./db.js?v=20261025e";
-import { Auth } from "./auth.js?v=20261025e";
-import { i18n } from "./i18n.js?v=20261025e";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025e";
-import { muscleName } from "./muscles.js?v=20261025e";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025e";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025e";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025e";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025e";
-import { renderWeightChart } from "./charts.js?v=20261025e";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025e";
-import { openProgramWizard } from "./program-wizard.js?v=20261025e";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025e";
-import { openIntro } from "./onboarding.js?v=20261025e";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025e";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025e";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025f";
+import { DB } from "./db.js?v=20261025f";
+import { Auth } from "./auth.js?v=20261025f";
+import { i18n } from "./i18n.js?v=20261025f";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025f";
+import { muscleName } from "./muscles.js?v=20261025f";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025f";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025f";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025f";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025f";
+import { renderWeightChart } from "./charts.js?v=20261025f";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025f";
+import { openProgramWizard } from "./program-wizard.js?v=20261025f";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025f";
+import { openIntro } from "./onboarding.js?v=20261025f";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025f";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025f";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -2223,7 +2223,8 @@ function renderWorkout() {
   const illuBox = $("#guided-illu");
   if (illuBox && illuBox.dataset.exerciseId !== (exercise?.id || "")) {
     illuBox.dataset.exerciseId = exercise?.id || "";
-    illuBox.innerHTML = illustrationHtml(exercise, "hero") + muscleMapHtml(exercise, { size: "sm", label: primaryMusclesLabel(exercise, i18n.getLanguage()) });
+    // petite vignette : l'image en grand et la carte des muscles sont dans « en savoir plus »
+    illuBox.innerHTML = illustrationHtml(exercise, "thumb");
   }
   $("#guided-exercise-tip").textContent = displayTip;
   $("#guided-last").textContent = lastTimeText(exercise?.id);

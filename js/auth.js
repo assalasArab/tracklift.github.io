@@ -1,4 +1,4 @@
-import { auth } from "./firebase-config.js?v=20261025e";
+import { auth } from "./firebase-config.js?v=20261025f";
 
 /* global firebase */
 const googleProvider = new firebase.auth.GoogleAuthProvider();
