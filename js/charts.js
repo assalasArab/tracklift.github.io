@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261024o";
+import { i18n } from "./i18n.js?v=20261025a";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];
@@ -25,8 +25,8 @@ const CHART_BASE_OPTIONS = {
   responsive: true,
   plugins: { legend: { display: false } },
   scales: {
-    x: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Inter", size: 10 } } },
-    y: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Inter", size: 10 } } }
+    x: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Poppins", size: 11 } } },
+    y: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Poppins", size: 11 } } }
   }
 };
 

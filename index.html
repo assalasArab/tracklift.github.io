@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261024o">
+  <link rel="stylesheet" href="./styles.css?v=20261025a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -204,10 +204,10 @@
           <p id="detail-program-desc" class="page-subtitle"></p>
         </div>
         <div class="section-actions mb-12">
-          <button id="add-prog-session-btn" class="btn btn-primary btn-sm" data-i18n="addSession">+ nouvelle seance</button>
-          <button id="delete-program-btn" class="btn btn-danger btn-sm" data-i18n="deleteProgram">supprimer</button>
+          <button id="add-prog-session-btn" class="btn btn-surface" data-i18n="addSession">+ nouvelle séance</button>
         </div>
         <div id="prog-sessions-list"></div>
+        <button id="delete-program-btn" class="text-danger-btn" data-i18n="deleteProgramFull">supprimer ce programme</button>
       </section>
 
       <section id="view-exercises" class="view">
@@ -299,11 +299,12 @@
         <div class="guided-layout">
           <div class="guided-top">
             <div>
-              <div id="guided-session-name" class="guided-session-name">seance</div>
+              <div id="guided-session-name" class="guided-session-name">séance</div>
               <div id="guided-progress" class="guided-progress">exercice 1 sur 1</div>
             </div>
-            <button id="stop-workout-btn" class="btn btn-danger btn-sm" data-i18n="stop">stop</button>
+            <button id="stop-workout-btn" class="btn btn-surface btn-sm" data-i18n="stop">arrêter</button>
           </div>
+          <div class="guided-progressbar" role="progressbar" aria-label="séries faites" aria-valuemin="0" aria-valuemax="100"><div id="guided-progressbar-fill"></div></div>
 
           <div class="guided-card card">
             <div id="guided-illu" class="guided-illu"></div>
@@ -311,12 +312,13 @@
               <span id="guided-type-badge" class="badge">push</span>
               <span id="guided-muscle-badge" class="badge badge-secondary">pectoraux</span>
             </div>
-            <h2 id="guided-exercise-name" class="guided-exercise-name">developpe couche</h2>
+            <h2 id="guided-exercise-name" class="guided-exercise-name">développé couché</h2>
+            <p id="guided-last" class="guided-last"></p>
             <p id="guided-exercise-tip" class="guided-exercise-tip"></p>
 
             <div class="guided-meta-row">
               <div class="meta-box">
-                <div class="meta-label" data-i18n="set">serie</div>
+                <div class="meta-label" data-i18n="set">série</div>
                 <div id="guided-set-progress" class="meta-value">1 sur 4</div>
               </div>
               <div class="meta-box">
@@ -330,36 +332,47 @@
             </div>
 
             <div class="guided-inputs">
-              <div>
-                <label class="label" for="guided-reps-input" data-i18n="fillReps">reps a remplir</label>
-                <input id="guided-reps-input" class="input input-big" type="number" min="0" step="1">
+              <div class="stepper-field">
+                <label class="label" for="guided-reps-input" data-i18n="fillReps">répétitions</label>
+                <div class="stepper">
+                  <button type="button" class="stepper-btn" data-step-for="guided-reps-input" data-step="-1" data-i18n-aria="lessReps" aria-label="une répétition de moins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+                  <input id="guided-reps-input" class="input input-big" type="number" inputmode="numeric" min="0" step="1">
+                  <button type="button" class="stepper-btn" data-step-for="guided-reps-input" data-step="1" data-i18n-aria="moreReps" aria-label="une répétition de plus"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
               </div>
-              <div>
-                <label class="label" for="guided-weight-input" data-i18n="fillWeight">poids a remplir</label>
-                <input id="guided-weight-input" class="input input-big" type="number" min="0" step="0.5">
+              <div class="stepper-field">
+                <label class="label" for="guided-weight-input" data-i18n="fillWeight">poids (kg)</label>
+                <div class="stepper">
+                  <button type="button" class="stepper-btn" data-step-for="guided-weight-input" data-step="-2.5" data-i18n-aria="lessWeight" aria-label="2,5 kg de moins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+                  <input id="guided-weight-input" class="input input-big" type="number" inputmode="decimal" min="0" step="0.5">
+                  <button type="button" class="stepper-btn" data-step-for="guided-weight-input" data-step="2.5" data-i18n-aria="moreWeight" aria-label="2,5 kg de plus"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
               </div>
-            </div>
-
-            <div class="guided-actions">
-              <button id="next-btn" class="btn btn-primary btn-grow" data-i18n="next">next</button>
-              <button id="skip-open-btn" class="btn btn-ghost" data-i18n="skip">skip</button>
             </div>
 
             <div class="guided-actions secondary-actions">
-              <button id="similar-btn" class="btn btn-surface btn-grow" data-i18n="similarExercises">exo similaire</button>
-              <button id="details-btn" class="btn btn-surface btn-grow" data-i18n="knowMore">savoir plus</button>
+              <button id="similar-btn" class="btn btn-surface btn-grow" data-i18n="similarExercises">exos similaires</button>
+              <button id="details-btn" class="btn btn-surface btn-grow" data-i18n="knowMore">en savoir plus</button>
             </div>
+          </div>
+        </div>
 
-            <div id="rest-bar" class="rest-bar hidden">
-              <div>
-                <div class="meta-label" data-i18n="restTimer">chrono repos</div>
-                <div id="rest-countdown" class="rest-countdown">01:30</div>
-              </div>
-              <div class="section-actions">
-                <button id="rest-skip-btn" class="btn btn-ghost btn-sm" data-i18n="skipRest">skip repos</button>
-                <button id="rest-add-btn" class="btn btn-ghost btn-sm" data-i18n="addThirtySeconds">plus 30s</button>
-              </div>
+        <!-- barre d'action fixée en bas, à portée de pouce -->
+        <div class="guided-dock">
+          <div id="rest-bar" class="rest-bar hidden" role="timer" aria-live="off">
+            <img class="rest-logo" src="./assets/brand/logo.webp" alt="" width="44" height="44">
+            <div class="rest-info">
+              <div class="meta-label" data-i18n="restTimer">repos</div>
+              <div id="rest-countdown" class="rest-countdown">01:30</div>
             </div>
+            <div class="rest-actions">
+              <button id="rest-add-btn" class="btn btn-surface btn-sm" data-i18n="addThirtySeconds">+30 s</button>
+              <button id="rest-skip-btn" class="btn btn-surface btn-sm" data-i18n="skipRest">passer</button>
+            </div>
+          </div>
+          <div class="guided-actions">
+            <button id="skip-open-btn" class="btn btn-surface" data-i18n="skip">passer</button>
+            <button id="next-btn" class="btn btn-primary btn-grow" data-i18n="next">série validée</button>
           </div>
         </div>
       </section>
@@ -525,13 +538,13 @@
   <div id="modal-stop" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
-        <h3 data-i18n="stopWorkoutTitle">stop entrainement</h3>
+        <h3 data-i18n="stopWorkoutTitle">arrêter la séance ?</h3>
         <button class="icon-btn" data-close="modal-stop" aria-label="fermer">✕</button>
       </div>
-      <p class="confirm-text" data-i18n="confirmStopWorkout">veux tu vraiment stopper la seance en cours</p>
-      <div class="section-actions">
-        <button id="confirm-stop-btn" class="btn btn-danger btn-grow" data-i18n="stop">stop</button>
-        <button class="btn btn-ghost btn-grow" data-close="modal-stop" data-i18n="cancel">annuler</button>
+      <p class="confirm-text" data-i18n="confirmStopWorkout">Tes séries validées peuvent être enregistrées, ou tu peux tout abandonner.</p>
+      <div class="stop-actions">
+        <button id="finish-save-btn" class="btn btn-primary btn-block" data-i18n="finishAndSave">terminer et enregistrer</button>
+        <button id="confirm-stop-btn" class="text-danger-btn" data-i18n="abandonWorkout">abandonner sans enregistrer</button>
       </div>
     </div>
   </div>
@@ -549,7 +562,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261024o"></script>
+  <script type="module" src="./js/app.js?v=20261025a"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

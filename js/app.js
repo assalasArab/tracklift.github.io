@@ -1,20 +1,20 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261024o";
-import { DB } from "./db.js?v=20261024o";
-import { Auth } from "./auth.js?v=20261024o";
-import { i18n } from "./i18n.js?v=20261024o";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261024o";
-import { muscleName } from "./muscles.js?v=20261024o";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261024o";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261024o";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261024o";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete } from "./workout.js?v=20261024o";
-import { renderWeightChart } from "./charts.js?v=20261024o";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261024o";
-import { openProgramWizard } from "./program-wizard.js?v=20261024o";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261024o";
-import { openIntro } from "./onboarding.js?v=20261024o";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261024o";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261024o";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025a";
+import { DB } from "./db.js?v=20261025a";
+import { Auth } from "./auth.js?v=20261025a";
+import { i18n } from "./i18n.js?v=20261025a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025a";
+import { muscleName } from "./muscles.js?v=20261025a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025a";
+import { renderWeightChart } from "./charts.js?v=20261025a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025a";
+import { openProgramWizard } from "./program-wizard.js?v=20261025a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025a";
+import { openIntro } from "./onboarding.js?v=20261025a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -132,6 +132,10 @@ function applyStaticTranslations() {
 
   $all("[data-i18n-placeholder]").forEach(node => {
     node.placeholder = t(node.dataset.i18nPlaceholder);
+  });
+
+  $all("[data-i18n-aria]").forEach(node => {
+    node.setAttribute("aria-label", t(node.dataset.i18nAria));
   });
 
   $all("[data-i18n-title]").forEach(node => {
@@ -282,6 +286,19 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#details-btn").addEventListener("click", openExerciseDetails);
   $("#stop-workout-btn").addEventListener("click", () => openModal("modal-stop"));
   $("#confirm-stop-btn").addEventListener("click", stopWorkout);
+  document.addEventListener("click", event => {
+    const go = event.target.closest("[data-view-go]");
+    if (go) setView(go.dataset.viewGo);
+  });
+  $("#finish-save-btn").addEventListener("click", () => {
+    closeModal("modal-stop");
+    const anyDone = state.workout?.blocks.some(block => block.sets.some(set => set.status === "done"));
+    if (anyDone) finishWorkout(); else stopWorkout();
+  });
+  $("#view-workout").addEventListener("click", event => {
+    const btn = event.target.closest("[data-step-for]");
+    if (btn) stepInput(btn.dataset.stepFor, Number(btn.dataset.step));
+  });
   $("#rest-skip-btn").addEventListener("click", stopRest);
   $("#rest-add-btn").addEventListener("click", () => addRest(30));
 
@@ -523,7 +540,7 @@ function renderRadarChart() {
           ticks: { display: false, stepSize: 20 },
           grid: { color: "rgba(76,46,5,0.12)" },
           angleLines: { color: "rgba(76,46,5,0.12)" },
-          pointLabels: { color: "#6b5232", font: { family: "Inter", size: 10 } }
+          pointLabels: { color: "#6b5232", font: { family: "Poppins", size: 11 } }
         }
       }
     }
@@ -630,6 +647,7 @@ function renderAll() {
 
 function setView(view) {
   state.activeView = view;
+  document.body.classList.toggle("in-workout", view === "workout");
 
   $all(".view").forEach(node => node.classList.remove("active"));
   $all(".nav-btn").forEach(node => node.classList.toggle("active", node.dataset.view === view));
@@ -802,6 +820,7 @@ function renderPerfCard() {
       </div>
       ${perfSparkline(perf.series)}
     </div>` : ""}
+    <button type="button" class="btn btn-surface btn-block perf-more" data-view-go="progress">${t("seeProgress")}</button>
   `;
 }
 
@@ -963,7 +982,7 @@ function renderHome() {
   const displayName = String(state.profile?.name || "").trim() || t("athlete");
   $("#home-title").textContent = t("homeGreeting", { name: displayName });
 
-  const lastWeight = state.weightLog.length ? state.weightLog[state.weightLog.length - 1].weight : "-";
+  const lastWeight = state.weightLog.length ? String(state.weightLog[state.weightLog.length - 1].weight).replace(".", ",") : "-";
   const stats = [
     { value: state.sessionLogs.length, label: t("sessionsLabel") },
     { value: lastWeight, label: t("weightLabel") },
@@ -1804,14 +1823,15 @@ let progressActiveExercises = new Set();
 let progressChartInstances = { exercise: null, volume: null };
 
 function getUsedExerciseIds() {
-  const ids = new Set();
+  const counts = new Map();
   for (const log of state.sessionLogs) {
     for (const ex of (log.exercises || [])) {
       const hasDone = (ex.sets || []).some(s => s.status === "done");
-      if (hasDone) ids.add(ex.exerciseId);
+      if (hasDone) counts.set(ex.exerciseId, (counts.get(ex.exerciseId) || 0) + 1);
     }
   }
-  return [...ids];
+  // les exercices les plus pratiqués d'abord
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
 }
 
 function renderProgress() {
@@ -1819,9 +1839,9 @@ function renderProgress() {
 
   const usedIds = getUsedExerciseIds();
 
-  if (progressActiveExercises.size === 0) {
-    usedIds.forEach(id => progressActiveExercises.add(id));
-  }
+  // un seul exercice suivi à la fois : le plus pratiqué par défaut
+  const kept = [...progressActiveExercises].find(id => usedIds.includes(id));
+  progressActiveExercises = new Set(kept ? [kept] : usedIds.slice(0, 1));
 
   renderProgressChips(usedIds);
   renderProgressCharts();
@@ -1834,25 +1854,26 @@ function renderProgressChips(usedIds, filter = "") {
   const normalized = normalizeText(filter);
   const container = $("#progress-exercise-chips");
 
-  const chips = usedIds.map(id => {
+  // sans recherche : les 8 exercices les plus pratiqués (+ celui suivi)
+  const visible = normalized ? usedIds : usedIds.filter((id, i) => i < 8 || progressActiveExercises.has(id));
+  const chips = visible.map(id => {
     const ex = state.exercises.find(e => e.id === id);
     const name = ex ? getExerciseName(ex) : id;
     if (normalized && !normalizeText(name).includes(normalized)) return "";
     const active = progressActiveExercises.has(id);
-    return `<button class="exercise-chip ${active ? "active" : ""}" data-chip-id="${id}">${name}</button>`;
+    return `<button class="exercise-chip ${active ? "active" : ""}" data-chip-id="${id}" aria-pressed="${active}">${name}</button>`;
   }).join("");
 
   container.innerHTML = chips;
 
   $all(".exercise-chip").forEach(chip => {
     chip.addEventListener("click", () => {
-      const id = chip.dataset.chipId;
-      if (progressActiveExercises.has(id)) {
-        progressActiveExercises.delete(id);
-      } else {
-        progressActiveExercises.add(id);
-      }
-      chip.classList.toggle("active");
+      progressActiveExercises = new Set([chip.dataset.chipId]);
+      $all(".exercise-chip").forEach(c => {
+        const on = c === chip;
+        c.classList.toggle("active", on);
+        c.setAttribute("aria-pressed", String(on));
+      });
       renderProgressCharts();
     });
   });
@@ -1874,9 +1895,10 @@ function renderProgressCharts() {
   const allDates = new Set();
   const exerciseData = {};
 
+  const chronological = [...state.sessionLogs].sort((a, b) => a.date - b.date);
   for (const id of activeIds) {
     exerciseData[id] = {};
-    for (const log of state.sessionLogs) {
+    for (const log of chronological) {
       const exEntry = (log.exercises || []).find(e => e.exerciseId === id);
       if (!exEntry) continue;
       const doneSets = (exEntry.sets || []).filter(s => s.status === "done");
@@ -1923,11 +1945,11 @@ function renderProgressCharts() {
   const chartOpts = {
     responsive: true,
     plugins: {
-      legend: { display: activeIds.length > 1, labels: { color: "#6b5232", font: { family: "Inter", size: 10 }, boxWidth: 12 } }
+      legend: { display: activeIds.length > 1, labels: { color: "#6b5232", font: { family: "Poppins", size: 11 }, boxWidth: 12 } }
     },
     scales: {
-      x: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Inter", size: 10 } } },
-      y: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Inter", size: 10 } } }
+      x: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Poppins", size: 11 } } },
+      y: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Poppins", size: 11 } } }
     }
   };
 
@@ -1949,7 +1971,7 @@ function renderProgressCharts() {
     const points = Object.values(exerciseData[id]);
     const record = points.length ? Math.max(...points.map(p => p.maxWeight)) : 0;
     const color = CHART_COLORS[i % CHART_COLORS.length];
-    return `<div class="stat-box" style="border-left:3px solid ${color}"><div class="stat-value">${record}kg</div><div class="stat-label">${name}</div></div>`;
+    return `<div class="stat-box"><div class="stat-value">${record}<small> kg</small></div><div class="stat-label">${t("recordPr")} · ${name}</div></div>`;
   });
   statsCard.innerHTML = statRows.join("");
 }
@@ -2113,7 +2135,8 @@ function renderWorkout() {
   const currentSet = getCurrentSet(state.workout);
   const exercise = getExerciseById(block.exerciseId, state.exercises);
   const meta = getExerciseMeta(exercise);
-  const displayTip = (exercise?.tips || [])[0] || "";
+  // les conseils RepDB n'existent qu'en anglais : on ne les montre pas en français
+  const displayTip = i18n.getLanguage() === "fr" ? "" : (exercise?.tips || [])[0] || "";
 
   $("#guided-session-name").textContent = state.workout.sessionName;
   $("#guided-progress").textContent = t("exerciseProgress", {
@@ -2129,6 +2152,11 @@ function renderWorkout() {
     illuBox.innerHTML = illustrationHtml(exercise, "hero") + muscleMapHtml(exercise, { size: "sm", label: primaryMusclesLabel(exercise, i18n.getLanguage()) });
   }
   $("#guided-exercise-tip").textContent = displayTip;
+  $("#guided-last").textContent = lastTimeText(exercise?.id);
+  const allSets = state.workout.blocks.flatMap(b => b.sets);
+  const doneShare = allSets.length ? allSets.filter(s => s.status !== "pending").length / allSets.length : 0;
+  $("#guided-progressbar-fill").style.width = `${Math.round(doneShare * 100)}%`;
+  $(".guided-progressbar").setAttribute("aria-valuenow", String(Math.round(doneShare * 100)));
   const setKind = currentSet?.kind === "warmup" ? ` · ${t("setWarmup")}` : currentSet?.kind === "drop" ? ` · ${t("setDrop")}` : "";
   $("#guided-set-progress").textContent = t("setProgress", {
     current: state.workout.currentSetIndex + 1,
@@ -2138,6 +2166,30 @@ function renderWorkout() {
   $("#rest-time-value").textContent = `${block.restSeconds}s`;
   $("#guided-reps-input").value = currentSet?.reps ?? currentSet?.targetReps ?? 0;
   $("#guided-weight-input").value = currentSet?.weight ?? 0;
+}
+
+/** « la dernière fois : 4 × 8 à 80 kg » (séries faites lors de la dernière séance de cet exercice) */
+function lastTimeText(exerciseId) {
+  if (!exerciseId) return "";
+  const last = findLatestExerciseLog(exerciseId, state.sessionLogs);
+  const done = (last?.sets || []).filter(set => set.status === "done" && set.kind !== "warmup");
+  if (!done.length) return "";
+  const kg = value => String(value).replace(".", ",");
+  const sameReps = done.every(set => set.reps === done[0].reps);
+  const sameWeight = done.every(set => set.weight === done[0].weight);
+  let text;
+  if (sameReps && sameWeight) text = `${done.length} × ${done[0].reps}${done[0].weight ? ` à ${kg(done[0].weight)} kg` : ""}`;
+  else text = done.map(set => `${set.reps}${set.weight ? ` × ${kg(set.weight)}` : ""}`).join(" · ") + (done.some(set => set.weight) ? " kg" : "");
+  return t("lastTime", { sets: text });
+}
+
+/** + / − sur les répétitions et le poids */
+function stepInput(inputId, delta) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const next = Math.max(0, Math.round(((Number(input.value) || 0) + delta) * 10) / 10);
+  input.value = String(next);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function handleNext() {
@@ -2395,14 +2447,82 @@ function stopWorkout() {
 }
 
 function finishWorkout() {
+  // les séries pas encore faites comptent comme passées
+  state.workout.blocks.forEach(block => block.sets.forEach(set => { if (set.status === "pending") set.status = "skipped"; }));
+  const previousLogs = state.sessionLogs;
   const log = buildSessionLogFromWorkout(state.workout, state.exercises);
+  const recap = buildRecap(log, previousLogs);
   DB.saveSessionLog(log);
   state.sessionLogs = DB.getSessionLogs();
   state.workout = null;
   stopRest();
   renderHome();
   setView("home");
-  showToast(t("sessionSaved"));
+  openRecap(recap);
+}
+
+/** Durée, séries, volume et records battus par rapport aux séances précédentes */
+function buildRecap(log, previousLogs) {
+  let sets = 0, volume = 0;
+  const records = [];
+  for (const ex of log.exercises) {
+    const done = ex.sets.filter(set => set.status === "done");
+    sets += done.length;
+    volume += done.reduce((sum, set) => sum + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0);
+    const best = Math.max(0, ...done.map(set => Number(set.weight) || 0));
+    if (!best) continue;
+    const before = previousLogs.flatMap(l => l.exercises || []).filter(e => e.exerciseId === ex.exerciseId)
+      .flatMap(e => e.sets || []).filter(set => set.status === "done").map(set => Number(set.weight) || 0);
+    if (before.length && best > Math.max(...before)) {
+      const exercise = getExerciseById(ex.exerciseId, state.exercises);
+      records.push({ name: exercise ? getExerciseName(exercise) : ex.exerciseName, weight: best, gain: best - Math.max(...before) });
+    }
+  }
+  return { duration: log.durationMs, sets, volume: Math.round(volume), records, name: log.sessionName };
+}
+
+function openRecap(recap) {
+  document.querySelector(".recap")?.remove();
+  const kg = value => Number(value).toLocaleString(i18n.getLocale(), { maximumFractionDigits: 1 });
+  const el = document.createElement("div");
+  el.className = "recap";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-modal", "true");
+  el.setAttribute("aria-labelledby", "recap-title");
+  const plural = recap.records.length > 1 ? "s" : "";
+  el.innerHTML = `
+    <div class="recap-inner">
+      <img class="recap-illu" src="./assets/illustrations/intro-03-progres.webp" alt="" width="180" height="300">
+      <h2 id="recap-title" class="recap-title">${escapeHtml(t("recapTitle"))}</h2>
+      <p class="recap-hand">${escapeHtml(recap.name || "")}</p>
+      <div class="recap-stats">
+        <div><b>${formatDuration(recap.duration)}</b><span>${escapeHtml(t("recapDuration"))}</span></div>
+        <div><b>${recap.sets}</b><span>${escapeHtml(t("recapSets"))}</span></div>
+        <div><b>${kg(recap.volume)}<small> kg</small></b><span>${escapeHtml(t("recapVolume"))}</span></div>
+      </div>
+      ${recap.records.length ? `
+        <div class="recap-records">
+          <span class="nx-sticker">${escapeHtml(t("recapRecords", { plural }))}</span>
+          <ul>${recap.records.map(r => `<li><span>${escapeHtml(r.name)}</span><b>${kg(r.weight)} kg <small>+${kg(r.gain)} kg</small></b></li>`).join("")}</ul>
+        </div>` : `<p class="recap-none">${escapeHtml(t("recapNoRecord"))}</p>`}
+      <div class="recap-actions">
+        <button type="button" class="btn btn-primary btn-block recap-done">${escapeHtml(t("recapDone"))}</button>
+        <button type="button" class="recap-link">${escapeHtml(t("seeProgress"))}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+  document.documentElement.classList.add("ob-open");
+  const close = goProgress => {
+    el.remove();
+    document.documentElement.classList.remove("ob-open");
+    document.removeEventListener("keydown", onKey);
+    if (goProgress) setView("progress");
+  };
+  const onKey = event => { if (event.key === "Escape") close(false); };
+  document.addEventListener("keydown", onKey);
+  el.querySelector(".recap-done").addEventListener("click", () => close(false));
+  el.querySelector(".recap-link").addEventListener("click", () => close(true));
+  el.querySelector(".recap-done").focus();
 }
 
 // ─── ExerciseDB sync ───────────────────────────────────────────
