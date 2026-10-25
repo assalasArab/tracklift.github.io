@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261025i";
+import { i18n } from "./i18n.js?v=20261025j";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
@@ -29,13 +29,35 @@ export function slugify(value) {
 }
 
 let toastTimer = null;
-export function showToast(message) {
+/** Message bref. Avec `action` ({ label, onClick }), un bouton s'ajoute et le message reste plus longtemps. */
+export function showToast(message, action = null) {
   const toast = $("#toast");
   if (!toast) return;
-  toast.textContent = message;
+  toast.textContent = "";
+  const text = document.createElement("span");
+  text.textContent = message;
+  toast.appendChild(text);
+  toast.classList.toggle("has-action", !!action);
+  if (action) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "toast-action";
+    btn.textContent = action.label;
+    btn.addEventListener("click", () => {
+      clearTimeout(toastTimer);
+      toast.classList.remove("show", "has-action");
+      action.onClick();
+    }, { once: true });
+    toast.appendChild(btn);
+  }
   toast.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+  toastTimer = setTimeout(() => toast.classList.remove("show", "has-action"), action ? 5000 : 2200);
+}
+
+export function hideToast() {
+  clearTimeout(toastTimer);
+  $("#toast")?.classList.remove("show", "has-action");
 }
 
 export function showLoading(visible) {

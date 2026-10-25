@@ -1,20 +1,20 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025i";
-import { DB } from "./db.js?v=20261025i";
-import { Auth } from "./auth.js?v=20261025i";
-import { i18n } from "./i18n.js?v=20261025i";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025i";
-import { muscleName } from "./muscles.js?v=20261025i";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025i";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025i";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025i";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025i";
-import { renderWeightChart } from "./charts.js?v=20261025i";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025i";
-import { openProgramWizard } from "./program-wizard.js?v=20261025i";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025i";
-import { openIntro } from "./onboarding.js?v=20261025i";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025i";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025i";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025j";
+import { DB } from "./db.js?v=20261025j";
+import { Auth } from "./auth.js?v=20261025j";
+import { i18n } from "./i18n.js?v=20261025j";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025j";
+import { muscleName } from "./muscles.js?v=20261025j";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025j";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025j";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025j";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025j";
+import { renderWeightChart } from "./charts.js?v=20261025j";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025j";
+import { openProgramWizard } from "./program-wizard.js?v=20261025j";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025j";
+import { openIntro } from "./onboarding.js?v=20261025j";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025j";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025j";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -2267,9 +2267,29 @@ function stepInput(inputId, delta) {
   input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
+// copie de la séance juste avant la dernière action, pour pouvoir l'annuler
+function snapshotWorkout() {
+  return JSON.parse(JSON.stringify(state.workout));
+}
+
+function offerUndo(snapshot, message) {
+  // la séance est finie : le récap a pris le relais, plus rien à annuler
+  if (!state.workout || isWorkoutComplete(state.workout)) return;
+  showToast(message, {
+    label: t("undo"),
+    onClick: () => {
+      if (!state.workout) return;
+      state.workout = snapshot;
+      stopRest();
+      renderWorkout();
+    }
+  });
+}
+
 function handleNext() {
   if (!state.workout) return;
 
+  const snapshot = snapshotWorkout();
   const reps = Number($("#guided-reps-input").value);
   const weight = Number($("#guided-weight-input").value);
   completeCurrentSet(state.workout, reps, weight);
@@ -2277,20 +2297,23 @@ function handleNext() {
   if (getCurrentSet(state.workout)?.kind === "drop") stopRest();
   else startRest(getCurrentBlock(state.workout)?.restSeconds || 60);
   renderWorkout();
+  offerUndo(snapshot, t("setDone"));
 }
 
 function skipSetFlow() {
   if (!state.workout) return;
+  const snapshot = snapshotWorkout();
   skipCurrentSet(state.workout);
   renderWorkout();
-  showToast(t("setSkipped"));
+  offerUndo(snapshot, t("setSkipped"));
 }
 
 function skipExerciseFlow() {
   if (!state.workout) return;
+  const snapshot = snapshotWorkout();
   skipCurrentExercise(state.workout);
   renderWorkout();
-  showToast(t("exerciseSkipped"));
+  offerUndo(snapshot, t("exerciseSkipped"));
 }
 
 function startRest(seconds) {

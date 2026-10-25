@@ -580,6 +580,23 @@ select.input {
   max-width: calc(100% - 32px);
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.has-action { display: flex; align-items: center; gap: 14px; padding: 6px 6px 6px 18px; }
+.toast.show.has-action { pointer-events: auto; }
+.toast.has-action span { white-space: nowrap; }
+.toast-action {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  min-height: 36px;
+  font: inherit;
+  font-weight: 700;
+  background: var(--cream);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 160ms var(--ease-out);
+}
+.toast-action:active { transform: scale(0.96); }
+.toast-action:focus-visible { outline: 2px solid var(--cream); outline-offset: 2px; }
 /* ─── Carte performances ─────────────────────────────── */
 .perf-card { position: relative; overflow: hidden; }
 .perf-card::before {
@@ -1626,12 +1643,7 @@ body:not(:has(#view-nutrition.active)) .nx-mobar { display: none; }
 .streak-card.risk .streak-flame svg { animation: streakPulse 1.6s ease-in-out infinite; }
 .streak-count { display: flex; flex-direction: column; line-height: 1.05; }
 .streak-count b { font-family: var(--font-round); font-size: 32px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.streak-card.lit .streak-count b {
-  background: linear-gradient(0deg, #ff6a2e, #ffc23d);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+.streak-card.lit .streak-count b { color: var(--p-orange-edge); }
 .streak-count span { font-size: 12.5px; color: var(--text2); }
 .streak-best {
   margin-left: auto;
@@ -1866,9 +1878,10 @@ html, body {
   .btn { transition: none; }
 }
 /* ─── Orange plastique ──────────────────────────────────── */
-/* lettres en plastique : dégradé orange, reflet blanc, bord foncé en relief.
+/* lettres en plastique, réservées à trois moments : la marque, la fin de séance et le chiffre des kcal.
+   Dégradé orange, reflet blanc, bord foncé en relief.
    Le reflet se répète à chaque ligne (taille de fond = hauteur de ligne). */
-.page-title, .brand, .wz-q, .nx-quiz-q, .nx-kcal, .topbar-brand, .recap-title {
+.brand, .nx-kcal, .topbar-brand, .recap-title {
   --lh: 1.12em;
   line-height: var(--lh);
   color: var(--p-orange);
