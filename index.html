@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261025k">
+  <link rel="stylesheet" href="./styles.css?v=20261025l">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -218,6 +218,15 @@
         </div>
         <div class="section-actions mb-12">
           <button id="create-exercise-btn" class="btn btn-primary btn-sm" type="button">+ <span data-i18n="customCreate">créer un exercice</span></button>
+        </div>
+
+        <div id="body-map-card" class="card body-map-card mb-12">
+          <p class="bm-hint" data-i18n="bodyMapHint">touche un muscle pour voir ses exercices</p>
+          <div id="body-map" class="bm" role="group" aria-label="carte des muscles" data-i18n-aria="bodyMapLabel"></div>
+          <div id="body-zone-bar" class="bm-bar hidden" aria-live="polite">
+            <span id="body-zone-name" class="bm-zone-name"></span>
+            <button id="body-zone-clear" class="hero-other" type="button" data-i18n="allMuscles">tous les muscles</button>
+          </div>
         </div>
 
         <div class="ex-toolbar">
@@ -570,7 +579,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261025k"></script>
+  <script type="module" src="./js/app.js?v=20261025l"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

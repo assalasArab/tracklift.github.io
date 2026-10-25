@@ -1,20 +1,21 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025k";
-import { DB } from "./db.js?v=20261025k";
-import { Auth } from "./auth.js?v=20261025k";
-import { i18n } from "./i18n.js?v=20261025k";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025k";
-import { muscleName } from "./muscles.js?v=20261025k";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025k";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025k";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025k";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025k";
-import { renderWeightChart } from "./charts.js?v=20261025k";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025k";
-import { openProgramWizard } from "./program-wizard.js?v=20261025k";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025k";
-import { openIntro } from "./onboarding.js?v=20261025k";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025k";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025k";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025l";
+import { DB } from "./db.js?v=20261025l";
+import { Auth } from "./auth.js?v=20261025l";
+import { i18n } from "./i18n.js?v=20261025l";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025l";
+import { muscleName } from "./muscles.js?v=20261025l";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025l";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025l";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025l";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025l";
+import { renderWeightChart } from "./charts.js?v=20261025l";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025l";
+import { openProgramWizard } from "./program-wizard.js?v=20261025l";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025l";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261025l";
+import { openIntro } from "./onboarding.js?v=20261025l";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025l";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025l";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -280,7 +281,30 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     panel.hidden = !panel.hidden;
     $("#filters-toggle").setAttribute("aria-expanded", String(!panel.hidden));
   });
+  // carte du corps : toucher un muscle filtre la liste, le retoucher l'enlève
+  const pickZone = key => {
+    state.bodyZone = state.bodyZone === key ? null : key;
+    resetExerciseList();
+    // sur téléphone la liste est sous la carte : on descend jusqu'au muscle choisi et ses exercices
+    const list = $("#exercise-list");
+    if (state.bodyZone && list.getBoundingClientRect().top > window.innerHeight - 160) {
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      $("#body-zone-bar").scrollIntoView({ block: "start", behavior: smooth ? "smooth" : "auto" });
+    }
+  };
+  $("#body-map").addEventListener("click", event => {
+    const zone = event.target.closest("[data-zone]");
+    if (zone) pickZone(zone.dataset.zone);
+  });
+  $("#body-map").addEventListener("keydown", event => {
+    const zone = event.target.closest("[data-zone]");
+    if (!zone || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    pickZone(zone.dataset.zone);
+  });
+  $("#body-zone-clear").addEventListener("click", () => pickZone(null));
   $("#filters-reset").addEventListener("click", () => {
+    state.bodyZone = null;
     ["#filter-type", "#filter-muscle", "#filter-portion", "#filter-contraction"].forEach(sel => { $(sel).value = ""; });
     renderExerciseFilters();
     resetExerciseList();
@@ -1829,6 +1853,26 @@ function updatePortionFilter() {
 
 const EXERCISE_PAGE = 30;
 
+/** Carte du corps : dessinée une fois par langue, puis on ne change que la sélection. */
+function renderBodyMap(searching = false) {
+  const lang = i18n.getLanguage();
+  const map = $("#body-map");
+  if (map.dataset.lang !== lang) {
+    map.innerHTML = bodyMapHtml(state.bodyZone, { lang, labels: { front: t("bodyFront"), back: t("bodyBack") } });
+    map.dataset.lang = lang;
+  }
+  map.querySelectorAll("[data-zone]").forEach(zone => {
+    const on = zone.dataset.zone === state.bodyZone;
+    zone.classList.toggle("is-on", on);
+    zone.setAttribute("aria-pressed", String(on));
+  });
+  map.classList.toggle("has-pick", Boolean(state.bodyZone));
+  // pendant une recherche, la carte se replie pour laisser la place aux résultats
+  $("#body-map-card").classList.toggle("is-searching", searching);
+  $("#body-zone-bar").classList.toggle("hidden", !state.bodyZone);
+  $("#body-zone-name").textContent = state.bodyZone ? zoneName(state.bodyZone, lang) : "";
+}
+
 function renderExerciseList() {
   if (!state.exerciseLimit) state.exerciseLimit = EXERCISE_PAGE;
   const search = normalizeText($("#exercise-search").value);
@@ -1843,8 +1887,10 @@ function renderExerciseList() {
     const matchesMuscle = !filterMuscle || exercise.muscle_focus === filterMuscle;
     const matchesPortion = !filterPortion || exercise.muscle_portion === filterPortion;
     const matchesContraction = !filterContraction || exercise.contraction_type === filterContraction;
-    return matchesSearch && matchesType && matchesMuscle && matchesPortion && matchesContraction;
+    const matchesZone = !state.bodyZone || exerciseInZone(exercise, state.bodyZone);
+    return matchesSearch && matchesType && matchesMuscle && matchesPortion && matchesContraction && matchesZone;
   });
+  renderBodyMap(Boolean(search));
 
   const activeFilters = [filterType, filterMuscle, filterPortion, filterContraction].filter(Boolean).length;
   const badge = $("#filters-count");
@@ -1852,7 +1898,8 @@ function renderExerciseList() {
   badge.classList.toggle("hidden", !activeFilters);
   $("#exercise-count").textContent = filtered.length === 1 ? t("exerciseCountOne") : t("exerciseCount", { count: filtered.length });
 
-  filtered.sort((a, b) => (b.custom ? 1 : 0) - (a.custom ? 1 : 0) || getExerciseName(a).localeCompare(getExerciseName(b), i18n.getLocale()));
+  const rank = state.bodyZone ? exercise => zoneRank(exercise, state.bodyZone) : () => 0;
+  filtered.sort((a, b) => (b.custom ? 1 : 0) - (a.custom ? 1 : 0) || rank(a) - rank(b) || getExerciseName(a).localeCompare(getExerciseName(b), i18n.getLocale()));
   const shown = filtered.slice(0, state.exerciseLimit);
   const more = $("#exercise-more-btn");
   more.classList.toggle("hidden", filtered.length <= shown.length);

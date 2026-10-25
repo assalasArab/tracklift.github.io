@@ -2720,3 +2720,25 @@ body.in-workout.resting .main { padding-bottom: calc(320px + env(safe-area-inset
 @media (max-width: 420px) {
   .cx-row { grid-template-columns: 1fr; }
 }
+
+/* ─── Carte du corps (bibliothèque) ─────────────────────── */
+.body-map-card { padding: 12px 12px 10px; }
+.bm-hint { margin: 0 0 6px; text-align: center; font-family: var(--font-hand); font-size: 19px; color: var(--text2); }
+.bm { display: flex; justify-content: center; gap: 4px; }
+.bm-fig { margin: 0; flex: 0 1 150px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bm-stack { position: relative; width: 100%; }
+.bm-base { display: block; width: 100%; height: auto; opacity: 0.4; pointer-events: none; user-select: none; }
+.bm-layer { position: absolute; top: 0; left: 0; width: 100%; height: auto; overflow: visible; pointer-events: none; }
+.bm-zone { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+.bm-zone path { pointer-events: visiblePainted; fill: var(--p-olive); fill-opacity: 0.34; stroke: var(--p-olive); stroke-opacity: 0.5; stroke-width: 0.8; transition: fill-opacity 160ms ease, fill 160ms ease; }
+@media (hover: hover) { .bm-zone:hover path { fill: var(--p-orange); fill-opacity: 0.45; } }
+.bm-zone:focus-visible path { stroke: var(--text); stroke-opacity: 1; stroke-width: 2; }
+.bm.has-pick .bm-zone:not(.is-on) path { fill-opacity: 0.12; }
+.bm-zone.is-on path { fill: var(--p-orange); fill-opacity: 0.9; stroke: var(--p-orange-edge); stroke-opacity: 1; stroke-width: 1.2; }
+.bm-fig figcaption { font-size: 12px; font-weight: 600; color: var(--text2); }
+.bm-bar { scroll-margin-top: calc(76px + env(safe-area-inset-top)); display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding: 6px 4px 0; border-top: 1px dashed var(--border); }
+.bm-zone-name { font-family: var(--font-title); font-size: 18px; color: var(--text); }
+.body-map-card.is-searching .bm, .body-map-card.is-searching .bm-hint { display: none; }
+.body-map-card.is-searching .bm-bar { margin-top: 0; padding-top: 0; border-top: 0; }
+.body-map-card.is-searching:has(.bm-bar.hidden) { display: none; }
+@media (prefers-reduced-motion: reduce) { .bm-zone path { transition: none; } }
