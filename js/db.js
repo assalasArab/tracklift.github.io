@@ -1,6 +1,6 @@
-import { uid } from "./utils.js?v=20261025c";
-import { EXERCISE_SEED } from "./exercises.js?v=20261025c";
-import { firestore } from "./firebase-config.js?v=20261025c";
+import { uid } from "./utils.js?v=20261025e";
+import { EXERCISE_SEED } from "./exercises.js?v=20261025e";
+import { firestore } from "./firebase-config.js?v=20261025e";
 
 export const DB = {
   currentUserId: null,

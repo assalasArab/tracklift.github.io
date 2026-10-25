@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261025c">
+  <link rel="stylesheet" href="./styles.css?v=20261025e">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -62,10 +62,11 @@
       </div>
 
       <div class="auth-email-form">
-        <label class="label" for="auth-email-input" data-i18n="email">email</label>
+        <label class="label" for="auth-email-input" data-i18n="email">adresse e-mail</label>
         <input id="auth-email-input" class="input" type="email" placeholder="nom@exemple.com">
         <label class="label" for="auth-password-input" data-i18n="password">mot de passe</label>
         <input id="auth-password-input" class="input" type="password" placeholder="••••••••">
+        <button id="forgot-password-btn" class="hero-other forgot-link" type="button" data-i18n="forgotPassword">mot de passe oublié ?</button>
         <button id="email-signin-btn" class="btn btn-primary btn-block" data-i18n="signInWithEmail">se connecter</button>
         <button id="email-signup-btn" class="btn btn-ghost btn-block" data-i18n="signUpWithEmail">creer un compte</button>
       </div>
@@ -98,7 +99,7 @@
     </div>
 
     <div id="drawer-overlay" class="drawer-overlay hidden"></div>
-    <aside id="profile-drawer" class="profile-drawer">
+    <aside id="profile-drawer" class="profile-drawer" inert aria-hidden="true">
       <div class="drawer-header">
         <h2 data-i18n="profile">profil</h2>
         <button id="drawer-close-btn" class="icon-btn" aria-label="fermer">✕</button>
@@ -286,6 +287,7 @@
 
         <div id="progress-exercise-chips" class="exercise-chips"></div>
 
+        <div id="exercise-stats-card" class="grid stats-grid"></div>
         <div class="card mb-12">
           <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="maxWeightBySession">charge maximale par seance</h2>
           <canvas id="chart-exercise" height="220"></canvas>
@@ -295,14 +297,13 @@
           <p class="small-meta mb-12" data-i18n="totalVolumeFormula">series × reps × charge</p>
           <canvas id="chart-volume" height="220"></canvas>
         </div>
-        <div id="exercise-stats-card" class="grid stats-grid"></div>
       </section>
 
       <section id="view-workout" class="view">
         <div class="guided-layout">
           <div class="guided-top">
             <div>
-              <div id="guided-session-name" class="guided-session-name">séance</div>
+              <h1 id="guided-session-name" class="guided-session-name">séance</h1>
               <div id="guided-progress" class="guided-progress">exercice 1 sur 1</div>
             </div>
             <button id="stop-workout-btn" class="btn btn-surface btn-sm" data-i18n="stop">arrêter</button>
@@ -565,7 +566,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261025c"></script>
+  <script type="module" src="./js/app.js?v=20261025e"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

@@ -1267,7 +1267,7 @@ html, body { font-size: 16px; line-height: 1.5; letter-spacing: 0; }
 /* ─── Orange plastique ──────────────────────────────────── */
 /* lettres en plastique : dégradé orange, reflet blanc, bord foncé en relief.
    Le reflet se répète à chaque ligne (taille de fond = hauteur de ligne). */
-.page-title, .brand, .wz-q, .nx-quiz-q, .nx-kcal, .topbar-brand, .guided-exercise-name, .recap-title {
+.page-title, .brand, .wz-q, .nx-quiz-q, .nx-kcal, .topbar-brand, .recap-title {
   --lh: 1.12em;
   line-height: var(--lh);
   color: var(--p-orange);
@@ -1767,6 +1767,29 @@ body.in-workout .guided-dock {
 /* performances : 4 chiffres, 2 par ligne sur téléphone, 4 sur grand écran */
 .perf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 720px) { .perf-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ─── Passe 3 (re-critique) ─── */
+/* bouton principal : texte à l'encre sur orange vif (le blanc ne passait pas 4,5:1) */
+.btn-primary, .hero-card .btn-primary { background: linear-gradient(180deg, #ffa448 0%, #ff8418 55%, #f57200 100%); color: var(--text); text-shadow: none; }
+@media (hover: hover) and (pointer: fine) { .btn-primary:hover, .hero-card .btn-primary:hover { background: linear-gradient(180deg, #ffad58 0%, #ff8d26 55%, #f87a08 100%); } }
+@media (hover: none) { .btn-primary:hover, .hero-card .btn-primary:hover { background: linear-gradient(180deg, #ffa448 0%, #ff8418 55%, #f57200 100%); } }
+/* petits boutons d'action : menthe, l'orange reste au bouton principal de l'écran */
+.btn-sm.btn-primary, .btn-sm.btn-primary:hover, .btn-sm.btn-primary:active { background: var(--p-mint); color: var(--text); box-shadow: none; }
+.guided-exercise-name { color: var(--text); -webkit-text-fill-color: currentColor; background: none; filter: none; font-family: var(--font-title); font-weight: 400; font-synthesis: none; }
+.nav-btn.active, .nav-btn.active span { color: var(--text); }
+.perf-progress.up { color: #2f6b22; }
+.streak-next > span, .streak-next span { font-size: 13px; }
+.secondary-actions .btn { min-width: 0; white-space: normal; }
+.page-subtitle, .nx-quiz-x, .wz-expl, .ob-text { text-wrap: pretty; }
+body.in-workout.resting .main { padding-bottom: calc(320px + env(safe-area-inset-bottom)); }
+/* progression : étiquettes sur une ligne qui défile, le graphique reste proche */
+#progress-exercise-chips { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; margin: 0 -16px 12px; padding: 2px 16px 6px; scroll-snap-type: x proximity; scrollbar-width: none; }
+#progress-exercise-chips::-webkit-scrollbar { display: none; }
+#progress-exercise-chips .exercise-chip { flex: none; scroll-snap-align: start; }
+#exercise-stats-card { margin-bottom: 12px; }
+.forgot-link { align-self: flex-end; min-height: 36px; font-size: 14px; color: var(--accent-ink); }
+.detail-note { margin: 8px 0 16px; padding: 12px 14px; border-radius: var(--radius); background: var(--surface2); color: var(--text2); font-size: 14px; max-width: 60ch; }
+.recap-more { margin: 8px 0 0; font-size: 14px; color: var(--text2); }
 
 /* ─── Muscles sollicités : vignettes RepDB ────────────── */
 .mchips-group { margin-top: 12px; }

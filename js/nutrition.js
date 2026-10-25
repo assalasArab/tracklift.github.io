@@ -4,7 +4,7 @@
    Monté à la demande dans #view-nutrition. IDs et classes préfixés nx-.
    ═══════════════════════════════════════════════════════════ */
 
-import { illu as illuHtml } from "./illustrations.js?v=20261025c";
+import { illu as illuHtml } from "./illustrations.js?v=20261025e";
 
 /* ---------- catalogue MET (Compendium of Physical Activities 2024) ---------- */
 const MET = [
@@ -96,7 +96,7 @@ const PHASE_CHOICES = [
 const STEPS = [
   { tag: "Ton objectif", img: "nutri-01-objectif.webp",
     q: () => "Qu'est-ce que tu veux faire en ce moment ?", hand: () => "tout le calcul s'adapte à ça",
-    x: () => "<b>Sèche</b> : tu manges un peu moins que ce que tu dépenses, pour perdre du gras sans perdre ton muscle. <b>Maintien</b> : ton poids reste stable pendant que tu progresses. <b>Prise de masse</b> : un léger surplus pour construire du muscle. Tu pourras changer d'objectif plus tard sans tout refaire." },
+    x: () => "Tu pourras changer d'objectif plus tard sans tout refaire." },
   { tag: "Ton profil", img: "nutri-02-profil.png",
     q: () => "Parle-moi un peu de toi", hand: () => "sexe, âge, taille, poids",
     x: () => "Ces infos servent à calculer ton <b>métabolisme de base</b> : l'énergie que ton corps brûle au repos, juste pour fonctionner (cœur, cerveau, respiration). C'est en général 60 à 70 % de ce que tu dépenses dans une journée. Ton poids est repris de ta dernière pesée." },

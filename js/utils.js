@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261025c";
+import { i18n } from "./i18n.js?v=20261025e";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
@@ -46,7 +46,13 @@ export function showLoading(visible) {
 
 export function openModal(id) {
   const modal = typeof id === "string" ? document.getElementById(id) : id;
-  if (modal) modal.classList.remove("hidden");
+  if (!modal) return;
+  const card = modal.querySelector(".modal-card, .modal-content");
+  if (card && !card.hasAttribute("role")) {
+    card.setAttribute("role", "dialog");
+    card.setAttribute("aria-modal", "true");
+  }
+  modal.classList.remove("hidden");
 }
 
 export function closeModal(id) {

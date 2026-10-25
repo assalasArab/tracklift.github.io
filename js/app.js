@@ -1,20 +1,20 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025c";
-import { DB } from "./db.js?v=20261025c";
-import { Auth } from "./auth.js?v=20261025c";
-import { i18n } from "./i18n.js?v=20261025c";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025c";
-import { muscleName } from "./muscles.js?v=20261025c";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025c";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025c";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025c";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025c";
-import { renderWeightChart } from "./charts.js?v=20261025c";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025c";
-import { openProgramWizard } from "./program-wizard.js?v=20261025c";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025c";
-import { openIntro } from "./onboarding.js?v=20261025c";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025c";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025c";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025e";
+import { DB } from "./db.js?v=20261025e";
+import { Auth } from "./auth.js?v=20261025e";
+import { i18n } from "./i18n.js?v=20261025e";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025e";
+import { muscleName } from "./muscles.js?v=20261025e";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025e";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025e";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025e";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025e";
+import { renderWeightChart } from "./charts.js?v=20261025e";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025e";
+import { openProgramWizard } from "./program-wizard.js?v=20261025e";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025e";
+import { openIntro } from "./onboarding.js?v=20261025e";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025e";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025e";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -176,6 +176,12 @@ function bindGlobalEvents() {
   $("#google-signin-btn").addEventListener("click", handleGoogleSignIn);
 $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#email-signup-btn").addEventListener("click", handleEmailSignUp);
+  $("#forgot-password-btn").addEventListener("click", async () => {
+    const email = $("#auth-email-input").value.trim();
+    if (!email) { showToast(t("resetNeedEmail")); $("#auth-email-input").focus(); return; }
+    try { await Auth.resetPassword(email); showToast(t("resetSent")); }
+    catch { showToast(t("resetError")); }
+  });
 
   $("#profile-btn").addEventListener("click", openProfileDrawer);
   $("#drawer-close-btn").addEventListener("click", closeProfileDrawer);
@@ -305,7 +311,12 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   });
   $("#similar-btn").addEventListener("click", openSimilarModal);
   $("#details-btn").addEventListener("click", openExerciseDetails);
-  $("#stop-workout-btn").addEventListener("click", () => openModal("modal-stop"));
+  $("#stop-workout-btn").addEventListener("click", () => {
+    const anyDone = state.workout?.blocks.some(block => block.sets.some(set => set.status === "done"));
+    $("#finish-save-btn").classList.toggle("hidden", !anyDone);
+    $("#confirm-stop-btn").textContent = t(anyDone ? "abandonWorkout" : "quitWorkout");
+    openModal("modal-stop");
+  });
   $("#confirm-stop-btn").addEventListener("click", stopWorkout);
   document.addEventListener("click", event => {
     const go = event.target.closest("[data-view-go]");
@@ -411,6 +422,8 @@ async function handleLogout() {
 }
 
 function openProfileDrawer() {
+  $("#profile-drawer").inert = false;
+  $("#profile-drawer").removeAttribute("aria-hidden");
   $("#drawer-overlay").classList.remove("hidden");
   requestAnimationFrame(() => {
     $("#drawer-overlay").classList.add("open");
@@ -421,6 +434,8 @@ function openProfileDrawer() {
 function closeProfileDrawer() {
   $("#drawer-overlay").classList.remove("open");
   $("#profile-drawer").classList.remove("open");
+  $("#profile-drawer").inert = true;
+  $("#profile-drawer").setAttribute("aria-hidden", "true");
   setTimeout(() => $("#drawer-overlay").classList.add("hidden"), 300);
 }
 
@@ -1837,6 +1852,7 @@ function renderExerciseList() {
   badge.classList.toggle("hidden", !activeFilters);
   $("#exercise-count").textContent = filtered.length === 1 ? t("exerciseCountOne") : t("exerciseCount", { count: filtered.length });
 
+  filtered.sort((a, b) => (b.custom ? 1 : 0) - (a.custom ? 1 : 0) || getExerciseName(a).localeCompare(getExerciseName(b), i18n.getLocale()));
   const shown = filtered.slice(0, state.exerciseLimit);
   const more = $("#exercise-more-btn");
   more.classList.toggle("hidden", filtered.length <= shown.length);
@@ -1849,8 +1865,8 @@ function renderExerciseList() {
 
   $("#exercise-list").innerHTML = shown.map(exercise => {
     const meta = getExerciseMeta(exercise);
-    const subtitle = [meta.type, primaryMusclesLabel(exercise, i18n.getLanguage())].filter(Boolean).join(" · ");
-    const smallMeta = [meta.equipment, meta.difficulty, meta.contractionType].filter(Boolean).join(" · ");
+    const subtitle = [exercise.type === "other" ? "" : meta.type, primaryMusclesLabel(exercise, i18n.getLanguage())].filter(Boolean).join(" · ");
+    const smallMeta = [...new Set([meta.equipment, meta.difficulty, meta.contractionType].filter(Boolean))].join(" · ");
 
     return `
       <button type="button" class="exercise-item exercise-row" data-details-id="${exercise.id}">
@@ -1895,7 +1911,9 @@ function renderProgress() {
 
   // un seul exercice suivi à la fois : le plus pratiqué par défaut
   const kept = [...progressActiveExercises].find(id => usedIds.includes(id));
-  progressActiveExercises = new Set(kept ? [kept] : usedIds.slice(0, 1));
+  // par défaut : l'exercice avec charge le plus pratiqué (un record « 0 kg » ne dit rien)
+  const weighted = usedIds.find(id => state.sessionLogs.some(log => (log.exercises || []).some(e => e.exerciseId === id && (e.sets || []).some(s => s.status === "done" && Number(s.weight) > 0))));
+  progressActiveExercises = new Set(kept ? [kept] : [weighted || usedIds[0]].filter(Boolean));
 
   renderProgressChips(usedIds);
   renderProgressCharts();
@@ -2016,7 +2034,7 @@ function renderProgressCharts() {
   progressChartInstances.volume = new Chart(document.getElementById("chart-volume").getContext("2d"), {
     type: "bar",
     data: { labels, datasets: volumeDatasets },
-    options: chartOpts
+    options: { ...chartOpts, scales: { ...chartOpts.scales, y: { ...chartOpts.scales.y, beginAtZero: true } } }
   });
 
   const statRows = activeIds.map((id, i) => {
@@ -2024,8 +2042,10 @@ function renderProgressCharts() {
     const name = ex ? getExerciseName(ex) : id;
     const points = Object.values(exerciseData[id]);
     const record = points.length ? Math.max(...points.map(p => p.maxWeight)) : 0;
-    const color = CHART_COLORS[i % CHART_COLORS.length];
-    return `<div class="stat-box"><div class="stat-value">${record}<small> kg</small></div><div class="stat-label">${t("recordPr")} · ${name}</div></div>`;
+    // exercice au poids du corps : le record se compte en répétitions
+    const bestReps = Math.max(0, ...state.sessionLogs.flatMap(log => (log.exercises || []).filter(e => e.exerciseId === id).flatMap(e => (e.sets || []).filter(s => s.status === "done").map(s => Number(s.reps) || 0))));
+    const value = record > 0 ? `${String(record).replace(".", ",")}<small> kg</small>` : `${bestReps}<small> reps</small>`;
+    return `<div class="stat-box"><div class="stat-value">${value}</div><div class="stat-label">${t("recordPr")} · ${name}</div></div>`;
   });
   statsCard.innerHTML = statRows.join("");
 }
@@ -2217,8 +2237,8 @@ function renderWorkout() {
     total: block.sets.length
   }) + setKind;
   $("#guided-target-reps").textContent = currentSet?.targetReps ?? currentSet?.reps ?? "-";
-  $("#rest-time-value").textContent = `${block.restSeconds}s`;
-  $("#guided-reps-input").value = currentSet?.reps ?? currentSet?.targetReps ?? 0;
+  $("#rest-time-value").textContent = `${block.restSeconds} s`;
+  $("#guided-reps-input").value = currentSet?.targetReps ?? currentSet?.reps ?? 0;
   $("#guided-weight-input").value = currentSet?.weight ?? 0;
 }
 
@@ -2274,6 +2294,7 @@ function skipExerciseFlow() {
 
 function startRest(seconds) {
   stopRest();
+  document.body.classList.add("resting");
   state.restRemaining = seconds;
   $("#rest-bar").classList.remove("hidden");
   updateRestUi();
@@ -2292,6 +2313,7 @@ function updateRestUi() {
 }
 
 function stopRest() {
+  document.body.classList.remove("resting");
   clearInterval(state.restInterval);
   state.restInterval = null;
   $("#rest-bar").classList.add("hidden");
@@ -2358,6 +2380,7 @@ function renderExerciseDetails(exercise) {
   const endImage = loadExerciseImage(exercise, "end");
   const similarExercises = getSimilarExercises(exercise, state.exercises, 6);
   const lang = i18n.getLanguage();
+  const englishOnly = lang === "fr" && !exercise.custom;
   const description = exercise.description || "-";
   const instructions = exercise.instructions || [];
   const instructionsHtml = instructions.length ? `<ol class="tips-list">${instructions.map(item => `<li>${item}</li>`).join("")}</ol>` : "-";
@@ -2404,6 +2427,7 @@ function renderExerciseDetails(exercise) {
       ${muscleChipsHtml(exercise, { lang, labels: { primary: t("primaryMuscles"), secondary: t("secondaryMuscles") } })}
       <div class="mm-credit">${t("muscleMapCredit")}</div>
     </div>` : ""}
+    ${englishOnly ? `<p class="detail-note">${t("noFrenchText")}</p>` : `
     <div class="detail-block">
       <div class="meta-label">${t("description")}</div>
       <div class="description-text">${description}</div>
@@ -2415,7 +2439,7 @@ function renderExerciseDetails(exercise) {
     <div class="detail-block">
       <div class="meta-label">${t("tips")}</div>
       <div>${tipsHtml}</div>
-    </div>
+    </div>`}
     <div class="detail-block">
       <div class="meta-label">${t("similar")}</div>
       <div class="detail-list">${similarExercises.map(item => `<span class="badge badge-link" data-similar-id="${item.id}">${getExerciseName(item)}</span>`).join("") || "-"}</div>
@@ -2525,6 +2549,8 @@ function buildRecap(log, previousLogs) {
     volume += done.reduce((sum, set) => sum + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0);
     const best = Math.max(0, ...done.map(set => Number(set.weight) || 0));
     if (!best) continue;
+    const bestSet = done.find(set => (Number(set.weight) || 0) === best);
+    if ((Number(bestSet.reps) || 0) < (Number(bestSet.targetReps) || 0)) continue;
     const before = previousLogs.flatMap(l => l.exercises || []).filter(e => e.exerciseId === ex.exerciseId)
       .flatMap(e => e.sets || []).filter(set => set.status === "done").map(set => Number(set.weight) || 0);
     if (before.length && best > Math.max(...before)) {
@@ -2533,6 +2559,12 @@ function buildRecap(log, previousLogs) {
     }
   }
   return { duration: log.durationMs, sets, volume: Math.round(volume), records, name: log.sessionName };
+}
+
+function recapDuration(ms) {
+  const min = Math.max(1, Math.round((ms || 0) / 60000));
+  if (min < 60) return `${min}<small> min</small>`;
+  return `${Math.floor(min / 60)}<small> h </small>${String(min % 60).padStart(2, "0")}`;
 }
 
 function openRecap(recap) {
@@ -2550,14 +2582,15 @@ function openRecap(recap) {
       <h2 id="recap-title" class="recap-title">${escapeHtml(t("recapTitle"))}</h2>
       <p class="recap-hand">${escapeHtml(recap.name || "")}</p>
       <div class="recap-stats">
-        <div><b>${formatDuration(recap.duration)}</b><span>${escapeHtml(t("recapDuration"))}</span></div>
+        <div><b>${recapDuration(recap.duration)}</b><span>${escapeHtml(t("recapDuration"))}</span></div>
         <div><b>${recap.sets}</b><span>${escapeHtml(t("recapSets"))}</span></div>
         <div><b>${kg(recap.volume)}<small> kg</small></b><span>${escapeHtml(t("recapVolume"))}</span></div>
       </div>
       ${recap.records.length ? `
         <div class="recap-records">
           <h3 class="recap-subtitle">${escapeHtml(t("recapRecords", { plural }))}</h3>
-          <ul>${recap.records.map(r => `<li><span>${escapeHtml(r.name)}</span><b>${kg(r.weight)} kg <small>+${kg(r.gain)} kg</small></b></li>`).join("")}</ul>
+          <ul>${recap.records.slice(0, 3).map(r => `<li><span>${escapeHtml(r.name)}</span><b>${kg(r.weight)} kg <small>+${kg(r.gain)} kg</small></b></li>`).join("")}</ul>
+          ${recap.records.length > 3 ? `<p class="recap-more">${escapeHtml(t("recordMore", { count: recap.records.length - 3, plural: recap.records.length - 3 > 1 ? "s" : "" }))}</p>` : ""}
         </div>` : `<p class="recap-none">${escapeHtml(t("recapNoRecord"))}</p>`}
       <div class="recap-actions">
         <button type="button" class="btn btn-primary btn-block recap-done">${escapeHtml(t("recapDone"))}</button>

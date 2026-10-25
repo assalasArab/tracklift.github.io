@@ -1,4 +1,4 @@
-import { auth } from "./firebase-config.js?v=20261025c";
+import { auth } from "./firebase-config.js?v=20261025e";
 
 /* global firebase */
 const googleProvider = new firebase.auth.GoogleAuthProvider();
@@ -19,6 +19,11 @@ export const Auth = {
   async signInWithEmail(email, password) {
     const result = await auth.signInWithEmailAndPassword(email, password);
     return result.user;
+  },
+
+  /** E-mail de réinitialisation du mot de passe */
+  resetPassword(email) {
+    return auth.sendPasswordResetEmail(email);
   },
 
   /** Deconnexion Firebase */

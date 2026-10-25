@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261025c";
-import { getExerciseById } from "./exercises.js?v=20261025c";
+import { uid } from "./utils.js?v=20261025e";
+import { getExerciseById } from "./exercises.js?v=20261025e";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -24,7 +24,9 @@ function suggestWeight(previousExerciseLog, fallback) {
   if (!sets.length) return fallback || 0;
   const allDone = sets.every(set => set.status === "done");
   const allSkipped = sets.every(set => set.status !== "done");
-  if (allDone) return roundWeight((fallback || 0) + 2.5);
+  // exercice au poids du corps (charge 0) : on ne rajoute pas de lest d'office
+  if (!fallback) return 0;
+  if (allDone) return roundWeight(fallback + 2.5);
   if (allSkipped) return roundWeight(Math.max(0, (fallback || 0) - 2.5));
   return roundWeight(fallback || 0);
 }
