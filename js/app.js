@@ -1,20 +1,20 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025a";
-import { DB } from "./db.js?v=20261025a";
-import { Auth } from "./auth.js?v=20261025a";
-import { i18n } from "./i18n.js?v=20261025a";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025a";
-import { muscleName } from "./muscles.js?v=20261025a";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025a";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025a";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025a";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025a";
-import { renderWeightChart } from "./charts.js?v=20261025a";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025a";
-import { openProgramWizard } from "./program-wizard.js?v=20261025a";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025a";
-import { openIntro } from "./onboarding.js?v=20261025a";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025a";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025a";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025c";
+import { DB } from "./db.js?v=20261025c";
+import { Auth } from "./auth.js?v=20261025c";
+import { i18n } from "./i18n.js?v=20261025c";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025c";
+import { muscleName } from "./muscles.js?v=20261025c";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025c";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025c";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025c";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025c";
+import { renderWeightChart } from "./charts.js?v=20261025c";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025c";
+import { openProgramWizard } from "./program-wizard.js?v=20261025c";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025c";
+import { openIntro } from "./onboarding.js?v=20261025c";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025c";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025c";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -219,6 +219,8 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
 
   $("#open-launcher-btn").addEventListener("click", openLauncher);
   $("#open-weight-btn").addEventListener("click", openWeightModal);
+  $("#hero-start-btn").addEventListener("click", startHeroSession);
+  $("#recent-more-btn").addEventListener("click", () => { state.showAllSessions = !state.showAllSessions; renderHome(); });
   $("#streak-pill").addEventListener("click", focusStreakCard);
   $("#streak-card").addEventListener("click", event => {
     if (event.target.closest("[data-streak-save]")) saveStreakWeight();
@@ -228,7 +230,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     if (event.key === "Enter" && event.target.id === "streak-input") saveStreakWeight();
   });
   $("#save-weight-btn").addEventListener("click", saveWeight);
-  $("#open-export-btn").addEventListener("click", () => openModal("modal-export"));
+  $("#open-export-btn").addEventListener("click", () => { closeProfileDrawer(); openModal("modal-export"); });
   $("#export-perf-btn").addEventListener("click", () => { closeModal("modal-export"); exportPerfExcel(); });
   $("#export-programs-btn").addEventListener("click", () => { closeModal("modal-export"); exportProgramsExcel(); });
   $("#export-gmail-btn").addEventListener("click", () => { closeModal("modal-export"); exportAndSendGmail(); });
@@ -262,7 +264,26 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     button.addEventListener("click", () => switchLauncherTab(button.dataset.launcherTab));
   });
 
-  $("#exercise-search").addEventListener("input", renderExerciseList);
+  // chaque nouvelle recherche ou filtre repart des 30 premiers résultats
+  const resetExerciseList = () => { state.exerciseLimit = EXERCISE_PAGE; renderExerciseList(); };
+  $("#exercise-search").addEventListener("input", resetExerciseList);
+  ["#filter-type", "#filter-portion", "#filter-contraction"].forEach(sel => $(sel).addEventListener("change", () => { state.exerciseLimit = EXERCISE_PAGE; }));
+  $("#filter-muscle").addEventListener("change", () => { state.exerciseLimit = EXERCISE_PAGE; });
+  $("#filters-toggle").addEventListener("click", () => {
+    const panel = $("#ex-filters");
+    panel.hidden = !panel.hidden;
+    $("#filters-toggle").setAttribute("aria-expanded", String(!panel.hidden));
+  });
+  $("#filters-reset").addEventListener("click", () => {
+    ["#filter-type", "#filter-muscle", "#filter-portion", "#filter-contraction"].forEach(sel => { $(sel).value = ""; });
+    renderExerciseFilters();
+    resetExerciseList();
+  });
+  $("#exercise-more-btn").addEventListener("click", () => { state.exerciseLimit += EXERCISE_PAGE; renderExerciseList(); });
+  $("#exercise-list").addEventListener("click", event => {
+    const row = event.target.closest("[data-details-id]");
+    if (row) showExerciseDetails(row.dataset.detailsId);
+  });
   $("#create-exercise-btn").addEventListener("click", () => openCustomExercise());
   $("#filter-type").addEventListener("change", renderExerciseList);
   $("#filter-muscle").addEventListener("change", () => {
@@ -648,6 +669,8 @@ function renderAll() {
 function setView(view) {
   state.activeView = view;
   document.body.classList.toggle("in-workout", view === "workout");
+  // chaque onglet s'ouvre en haut de page
+  window.scrollTo(0, 0);
 
   $all(".view").forEach(node => node.classList.remove("active"));
   $all(".nav-btn").forEach(node => node.classList.toggle("active", node.dataset.view === view));
@@ -792,8 +815,6 @@ function renderPerfCard() {
     { label: t("perfPerWeek"), value: formatNumber(perf.perWeek, 1), unit: "" },
     { label: t("perfDuration"), value: perf.avgDurationMs ? formatNumber(perf.avgDurationMs / 60000) : dash, unit: perf.avgDurationMs ? "min" : "" },
     { label: t("perfVolume"), value: formatNumber(perf.avgVolume), unit: "kg" },
-    { label: t("perfSets"), value: formatNumber(perf.avgSets, 1), unit: "" },
-    { label: t("perfLoad"), value: perf.avgLoad ? formatNumber(perf.avgLoad, 1) : dash, unit: perf.avgLoad ? "kg" : "" },
     { label: t("perfCompletion"), value: perf.completion !== null ? formatNumber(perf.completion * 100) : dash, unit: perf.completion !== null ? "%" : "" }
   ];
 
@@ -978,29 +999,49 @@ function createProgramFromNotion({ program, customs }) {
   showToast(t("notionProgramCreated", { name: saved.name }));
 }
 
+/** Prochaine séance du programme en cours : celle qui suit la dernière faite */
+function getNextSession() {
+  const lastProgramLog = state.sessionLogs.find(log => log.programId && state.programs.some(p => p.id === log.programId));
+  const program = state.programs.find(p => p.id === lastProgramLog?.programId) || state.programs.find(p => (p.sessions || []).some(s => s.exerciseIds?.length));
+  const sessions = (program?.sessions || []).filter(s => s.exerciseIds?.length);
+  if (!program || !sessions.length) return null;
+  const lastIndex = lastProgramLog ? sessions.findIndex(s => s.name === lastProgramLog.sessionName) : -1;
+  return { program, session: sessions[(lastIndex + 1) % sessions.length] };
+}
+
+function renderHero() {
+  const next = getNextSession();
+  const title = $("#hero-title"), sub = $("#hero-subtitle");
+  $("#hero-card").classList.toggle("has-next", !!next);
+  if (next) {
+    title.textContent = next.session.name;
+    sub.textContent = t("nextSessionMeta", { count: next.session.exerciseIds.length });
+  } else {
+    title.textContent = t("newSession");
+    sub.textContent = t("guideModeSubtitle");
+  }
+}
+
+function startHeroSession() {
+  const next = getNextSession();
+  if (!next) { openLauncher(); return; }
+  state.currentProgramId = next.program.id;
+  launchSpecificProgSession(next.session.id);
+}
+
 function renderHome() {
   const displayName = String(state.profile?.name || "").trim() || t("athlete");
   $("#home-title").textContent = t("homeGreeting", { name: displayName });
 
-  const lastWeight = state.weightLog.length ? String(state.weightLog[state.weightLog.length - 1].weight).replace(".", ",") : "-";
-  const stats = [
-    { value: state.sessionLogs.length, label: t("sessionsLabel") },
-    { value: lastWeight, label: t("weightLabel") },
-    { value: state.programs.length, label: t("programsLabel") },
-    { value: state.exercises.length, label: t("exercisesLabel") }
-  ];
-
+  renderHero();
   renderStreak();
   renderPerfCard();
 
-  $("#stats-grid").innerHTML = stats.map(item => `
-    <div class="stat-box">
-      <div class="stat-value">${item.value}</div>
-      <div class="stat-label">${item.label}</div>
-    </div>
-  `).join("");
-
-  const recent = state.sessionLogs.slice(0, 8);
+  // 3 dernières séances, le reste derrière « voir tout »
+  const recent = state.sessionLogs.slice(0, state.showAllSessions ? 20 : 3);
+  const moreBtn = $("#recent-more-btn");
+  moreBtn.classList.toggle("hidden", state.sessionLogs.length <= 3);
+  moreBtn.textContent = t(state.showAllSessions ? "seeLess" : "seeAll");
   $("#recent-sessions-list").innerHTML = recent.length ? recent.map(log => {
     const completedSets = (log.exercises || []).reduce((total, exercise) => {
       return total + (exercise.sets || []).filter(set => set.status === "done").length;
@@ -1771,7 +1812,10 @@ function updatePortionFilter() {
   $("#filter-portion").value = "";
 }
 
+const EXERCISE_PAGE = 30;
+
 function renderExerciseList() {
+  if (!state.exerciseLimit) state.exerciseLimit = EXERCISE_PAGE;
   const search = normalizeText($("#exercise-search").value);
   const filterType = $("#filter-type").value;
   const filterMuscle = $("#filter-muscle").value;
@@ -1787,31 +1831,41 @@ function renderExerciseList() {
     return matchesSearch && matchesType && matchesMuscle && matchesPortion && matchesContraction;
   });
 
-  $("#exercise-list").innerHTML = filtered.map(exercise => {
+  const activeFilters = [filterType, filterMuscle, filterPortion, filterContraction].filter(Boolean).length;
+  const badge = $("#filters-count");
+  badge.textContent = activeFilters;
+  badge.classList.toggle("hidden", !activeFilters);
+  $("#exercise-count").textContent = filtered.length === 1 ? t("exerciseCountOne") : t("exerciseCount", { count: filtered.length });
+
+  const shown = filtered.slice(0, state.exerciseLimit);
+  const more = $("#exercise-more-btn");
+  more.classList.toggle("hidden", filtered.length <= shown.length);
+  more.textContent = t("showMore", { count: filtered.length - shown.length });
+
+  if (!filtered.length) {
+    $("#exercise-list").innerHTML = `<p class="empty-state">${t("noExerciseFound")}</p>`;
+    return;
+  }
+
+  $("#exercise-list").innerHTML = shown.map(exercise => {
     const meta = getExerciseMeta(exercise);
     const subtitle = [meta.type, primaryMusclesLabel(exercise, i18n.getLanguage())].filter(Boolean).join(" · ");
     const smallMeta = [meta.equipment, meta.difficulty, meta.contractionType].filter(Boolean).join(" · ");
 
     return `
-      <div class="exercise-item">
-        <div class="exercise-item-head">
-          <div class="ex-row">
-            ${illustrationHtml(exercise, "thumb")}
-            <div class="ex-row-text">
-              <div class="item-title">${getExerciseName(exercise)}${exercise.custom ? ` <span class="custom-tag">${t("customBadge")}</span>` : ""}</div>
-              <div class="item-subtitle">${subtitle}</div>
-              <div class="small-meta">${smallMeta}</div>
-            </div>
-          </div>
-          <button class="btn btn-ghost btn-sm" data-details-id="${exercise.id}">${t("details")}</button>
-        </div>
-      </div>
+      <button type="button" class="exercise-item exercise-row" data-details-id="${exercise.id}">
+        <span class="ex-row">
+          ${illustrationHtml(exercise, "thumb").replace(/<div/g, "<span").replace(/<\/div>/g, "</span>")}
+          <span class="ex-row-text">
+            <span class="item-title">${getExerciseName(exercise)}${exercise.custom ? ` <span class="custom-tag">${t("customBadge")}</span>` : ""}</span>
+            <span class="item-subtitle">${subtitle}</span>
+            <span class="small-meta">${smallMeta}</span>
+          </span>
+        </span>
+        <svg class="row-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
     `;
   }).join("");
-
-  $all("[data-details-id]").forEach(button => {
-    button.addEventListener("click", () => showExerciseDetails(button.dataset.detailsId));
-  });
 }
 
 const CHART_COLORS = [
@@ -2502,7 +2556,7 @@ function openRecap(recap) {
       </div>
       ${recap.records.length ? `
         <div class="recap-records">
-          <span class="nx-sticker">${escapeHtml(t("recapRecords", { plural }))}</span>
+          <h3 class="recap-subtitle">${escapeHtml(t("recapRecords", { plural }))}</h3>
           <ul>${recap.records.map(r => `<li><span>${escapeHtml(r.name)}</span><b>${kg(r.weight)} kg <small>+${kg(r.gain)} kg</small></b></li>`).join("")}</ul>
         </div>` : `<p class="recap-none">${escapeHtml(t("recapNoRecord"))}</p>`}
       <div class="recap-actions">

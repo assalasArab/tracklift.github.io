@@ -4,7 +4,7 @@
    Monté à la demande dans #view-nutrition. IDs et classes préfixés nx-.
    ═══════════════════════════════════════════════════════════ */
 
-import { illu as illuHtml } from "./illustrations.js?v=20261025a";
+import { illu as illuHtml } from "./illustrations.js?v=20261025c";
 
 /* ---------- catalogue MET (Compendium of Physical Activities 2024) ---------- */
 const MET = [
@@ -407,7 +407,7 @@ function markup() {
     <div class="nx-recap" id="nx-recap">
       ${illu(RESULT_ILLU, "nx-recap-illu")}
       <div class="nx-recap-t">
-        <span class="nx-sticker">Ton plan est prêt</span>
+        <h2 class="nx-recap-title">Ton plan est prêt</h2>
         <p>Calculé à partir de tes réponses. Change une réponse et tout se recalcule.</p>
       </div>
       <div class="nx-recap-steps" id="nx-recapSteps"></div>
@@ -1381,9 +1381,9 @@ function renderQuiz() {
     $("quizHead").innerHTML = `
       <div class="nx-quiz-top">
         <button type="button" class="icon-btn nx-quiz-back" data-quiz="prev" aria-label="Étape précédente" ${step ? "" : "hidden"}>←</button>
-        <div class="nx-quiz-bar" role="progressbar" aria-valuemin="1" aria-valuemax="${STEPS.length}" aria-valuenow="${step + 1}"><div style="width:${(step + 1) / STEPS.length * 100}%"></div></div>
+        <div class="nx-quiz-bar" role="progressbar" aria-label="${st.tag}, étape ${step + 1} sur ${STEPS.length}" aria-valuemin="1" aria-valuemax="${STEPS.length}" aria-valuenow="${step + 1}"><div style="width:${(step + 1) / STEPS.length * 100}%"></div></div>
+        <span class="nx-quiz-count">${step + 1}/${STEPS.length}</span>
       </div>
-      <span class="nx-sticker">${st.tag} · ${step + 1}/${STEPS.length}</span>
       <h1 class="nx-quiz-q">${st.q()}</h1>
       <p class="nx-quiz-hand">${st.hand()}</p>
       ${illu(st.img)}

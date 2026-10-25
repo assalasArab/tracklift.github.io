@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261025a">
+  <link rel="stylesheet" href="./styles.css?v=20261025c">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -115,6 +115,11 @@
         <button id="drawer-wizard-btn" class="drawer-menu-item" data-i18n="wizardMenu">créer mon programme</button>
         <button id="drawer-notion-btn" class="drawer-menu-item" data-i18n="notionMenu">importer depuis Notion</button>
         <button id="drawer-intro-btn" class="drawer-menu-item" data-i18n="introMenu">revoir la présentation</button>
+        <button id="open-export-btn" class="drawer-menu-item" data-i18n="exportMenu">exporter mes données</button>
+        <label id="import-label" class="drawer-menu-item drawer-menu-file">
+          <span data-i18n="importMenu">importer un fichier Excel</span>
+          <input id="import-file-input" type="file" accept=".xlsx,.xls" hidden>
+        </label>
         <button id="drawer-language-btn" class="drawer-menu-item" data-i18n="language">langue</button>
         <button id="drawer-exercisedb-btn" class="drawer-menu-item hidden" data-i18n="exercisedbTitle">ExerciseDB (GIFs)</button>
         <button id="drawer-logout-btn" class="drawer-menu-item drawer-menu-danger" data-i18n="disconnect">deconnexion</button>
@@ -157,32 +162,27 @@
           <p class="page-subtitle" data-i18n="homeSubtitle">pret a lancer une nouvelle seance</p>
         </div>
 
-        <div class="card hero-card">
-          <div>
-            <div class="hero-title" data-i18n="newSession">nouvelle seance</div>
-            <div class="hero-subtitle" data-i18n="guideModeSubtitle">mode guide step by step</div>
+        <div class="card hero-card" id="hero-card">
+          <div class="hero-text">
+            <div class="hero-title" id="hero-title" data-i18n="newSession">nouvelle séance</div>
+            <div class="hero-subtitle" id="hero-subtitle" data-i18n="guideModeSubtitle">guidée, série par série</div>
           </div>
-          <button id="open-launcher-btn" class="btn btn-primary" data-i18n="startWorkout">demarrer</button>
+          <div class="hero-actions">
+            <button id="hero-start-btn" class="btn btn-primary" data-i18n="startWorkout">démarrer</button>
+            <button id="open-launcher-btn" class="hero-other" data-i18n="otherSession">autre séance</button>
+          </div>
         </div>
 
         <div id="streak-card" class="card streak-card mb-12"></div>
 
         <div id="perf-card" class="card perf-card mb-12"></div>
 
-        <div class="grid stats-grid" id="stats-grid"></div>
-
         <div class="section-row">
-          <h2 class="section-title" data-i18n="previousSessions">seances precedentes</h2>
-          <div class="section-actions">
-            <button id="open-weight-btn" class="btn btn-ghost btn-sm" data-i18n="weight">poids</button>
-            <button id="open-export-btn" class="btn btn-ghost btn-sm" data-i18n="export">export</button>
-            <label id="import-label" class="btn btn-ghost btn-sm" style="cursor:pointer;">
-              <span data-i18n="import">import</span>
-              <input id="import-file-input" type="file" accept=".xlsx,.xls" style="display:none;">
-            </label>
-          </div>
+          <h2 class="section-title" data-i18n="previousSessions">séances précédentes</h2>
         </div>
         <div id="recent-sessions-list"></div>
+        <button id="recent-more-btn" class="btn btn-surface btn-block hidden" data-i18n="seeAll">voir tout</button>
+        <button id="open-weight-btn" class="hidden" type="button" tabindex="-1" aria-hidden="true"></button>
       </section>
 
       <section id="view-programs" class="view">
@@ -219,12 +219,12 @@
           <button id="create-exercise-btn" class="btn btn-primary btn-sm" type="button">+ <span data-i18n="customCreate">créer un exercice</span></button>
         </div>
 
-        <div class="card mb-12">
-          <label class="label" for="exercise-search" data-i18n="search">recherche</label>
-          <input id="exercise-search" class="input" type="text" placeholder="rechercher un exercice" data-i18n-placeholder="searchExercisePlaceholder">
+        <div class="ex-toolbar">
+          <input id="exercise-search" class="input" type="search" placeholder="rechercher un exercice" data-i18n-placeholder="searchExercisePlaceholder" data-i18n-aria="searchExercisePlaceholder" aria-label="rechercher un exercice">
+          <button id="filters-toggle" class="btn btn-surface filters-toggle" type="button" aria-expanded="false" aria-controls="ex-filters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span data-i18n="filters">filtres</span><span id="filters-count" class="filters-count hidden"></span></button>
         </div>
 
-        <div class="filters card mb-12">
+        <div id="ex-filters" class="filters card mb-12" hidden>
           <div class="filter-col">
             <label class="label" for="filter-type" data-i18n="type">type</label>
             <select id="filter-type" class="input">
@@ -254,9 +254,12 @@
               <option value="" data-i18n="all">tous</option>
             </select>
           </div>
+          <button id="filters-reset" class="hero-other filters-reset" type="button" data-i18n="clearFilters">effacer les filtres</button>
         </div>
 
+        <p id="exercise-count" class="ex-count" aria-live="polite"></p>
         <div id="exercise-list"></div>
+        <button id="exercise-more-btn" class="btn btn-surface btn-block hidden" type="button"></button>
         <p class="data-credit"><span data-i18n="exerciseCredit">Exercise data by</span> <a href="https://repdb.co" target="_blank" rel="noopener">RepDB (repdb.co)</a></p>
       </section>
 
@@ -562,7 +565,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261025a"></script>
+  <script type="module" src="./js/app.js?v=20261025c"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

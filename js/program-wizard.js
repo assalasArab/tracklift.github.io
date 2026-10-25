@@ -4,7 +4,7 @@
    matériel, durée, charges de référence) puis construit un
    programme complet avec séries, répétitions et charges de départ.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261025a";
+import { illu } from "./illustrations.js?v=20261025c";
 
 /* ---------- bibliothèque de mouvements ----------
    gym / db / bw : exercice pour salle complète, haltères seuls, poids du corps (null = pas d'équivalent)
@@ -727,8 +727,10 @@ function renderStep() {
   }
 
   wiz.el.querySelector(".wz-body").innerHTML = `
-    <div class="wz-progress"><div style="width:${progress}%"></div></div>
-    <div class="wz-step">Étape ${wiz.index + 1} sur ${steps.length}</div>
+    <div class="wz-progress-row">
+      <div class="wz-progress" role="progressbar" aria-label="Étape ${wiz.index + 1} sur ${steps.length}" aria-valuemin="1" aria-valuemax="${steps.length}" aria-valuenow="${wiz.index + 1}"><div style="width:${progress}%"></div></div>
+      <span class="wz-count">${wiz.index + 1}/${steps.length}</span>
+    </div>
     <h3 class="wz-q">${esc(step.q)}</h3>
     ${metaHtml(step)}
     ${body}
