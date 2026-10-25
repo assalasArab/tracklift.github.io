@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261025j";
+import { i18n } from "./i18n.js?v=20261025k";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
@@ -85,13 +85,16 @@ export function closeModal(id) {
 // Illustrations RepDB (repdb.co) servies depuis assets/exercises :
 // "start" + "peak" (positions de départ et d'arrivée) ou une seule image "main".
 const EXERCISE_IMG_DIR = "./assets/exercises";
+// à changer quand les images sont refaites, pour que les navigateurs oublient les anciennes
+const EXERCISE_IMG_VERSION = "olive1";
 
 export function getExerciseIllustration(exercise) {
   const img = exercise?.img;
   if (!img) return null;
   const start = img.start || img.main;
   if (!start) return null;
-  return { start: `${EXERCISE_IMG_DIR}/${start}`, end: img.peak ? `${EXERCISE_IMG_DIR}/${img.peak}` : null };
+  const url = file => `${EXERCISE_IMG_DIR}/${file}?c=${EXERCISE_IMG_VERSION}`;
+  return { start: url(start), end: img.peak ? url(img.peak) : null };
 }
 
 const ILLU_PLACEHOLDER = `<span class="ex-illu-ph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span>`;
