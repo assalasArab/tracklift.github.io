@@ -1,6 +1,7 @@
-import { uid } from "./utils.js?v=20261025l";
-import { EXERCISE_SEED } from "./exercises.js?v=20261025l";
-import { firestore } from "./firebase-config.js?v=20261025l";
+import { uid } from "./utils.js?v=20261025m";
+import { EXERCISE_SEED } from "./exercises.js?v=20261025m";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261025m";
+import { firestore } from "./firebase-config.js?v=20261025m";
 
 export const DB = {
   currentUserId: null,
@@ -54,7 +55,7 @@ export const DB = {
       };
     }
     // Les exercices viennent toujours du SEED local
-    this._cache.exercises = EXERCISE_SEED;
+    this._cache.exercises = [...EXERCISE_SEED, ...EXTRA_EXERCISES];
     return this._cache;
   },
 

@@ -158,7 +158,7 @@ export const translations = {
     sessionCreatedAddExercises: "séance créée, ajoute des exercices",
     addExercisesFirst: "ajoute d'abord des exercices à cette séance (bouton « modifier les exos »)",
 
-    exerciseDatabaseSubtitle: "650 exercices, classés par type et par muscle",
+    exerciseDatabaseSubtitle: "Plus de 650 exercices, classés par type et par muscle",
     search: "recherche",
     searchExercisePlaceholder: "rechercher un exercice",
     searchExercisePlaceholderLong: "rechercher un exercice…",

@@ -1,21 +1,21 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025l";
-import { DB } from "./db.js?v=20261025l";
-import { Auth } from "./auth.js?v=20261025l";
-import { i18n } from "./i18n.js?v=20261025l";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025l";
-import { muscleName } from "./muscles.js?v=20261025l";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025l";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025l";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025l";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025l";
-import { renderWeightChart } from "./charts.js?v=20261025l";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025l";
-import { openProgramWizard } from "./program-wizard.js?v=20261025l";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025l";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261025l";
-import { openIntro } from "./onboarding.js?v=20261025l";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025l";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025l";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025m";
+import { DB } from "./db.js?v=20261025m";
+import { Auth } from "./auth.js?v=20261025m";
+import { i18n } from "./i18n.js?v=20261025m";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025m";
+import { muscleName } from "./muscles.js?v=20261025m";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025m";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025m";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025m";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025m";
+import { renderWeightChart } from "./charts.js?v=20261025m";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025m";
+import { openProgramWizard } from "./program-wizard.js?v=20261025m";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025m";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261025m";
+import { openIntro } from "./onboarding.js?v=20261025m";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025m";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025m";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -2451,11 +2451,14 @@ function renderExerciseDetails(exercise) {
   const endImage = loadExerciseImage(exercise, "end");
   const similarExercises = getSimilarExercises(exercise, state.exercises, 6);
   const lang = i18n.getLanguage();
-  const englishOnly = lang === "fr" && !exercise.custom;
-  const description = exercise.description || "-";
-  const instructions = exercise.instructions || [];
+  // exercices ajoutés par TrackLift : textes en français (repli sur le français si l'anglais manque)
+  const frText = Boolean(exercise.description_fr);
+  const pickText = (fr, en) => (lang === "fr" && fr?.length ? fr : (en?.length ? en : fr));
+  const englishOnly = lang === "fr" && !exercise.custom && !frText;
+  const description = pickText(exercise.description_fr, exercise.description) || "-";
+  const instructions = pickText(exercise.instructions_fr, exercise.instructions) || [];
   const instructionsHtml = instructions.length ? `<ol class="tips-list">${instructions.map(item => `<li>${item}</li>`).join("")}</ol>` : "-";
-  const tips = exercise.tips || [];
+  const tips = pickText(exercise.tips_fr, exercise.tips) || [];
   const tipsHtml = tips.length ? `<ul class="tips-list">${tips.map(item => `<li>${item}</li>`).join("")}</ul>` : "-";
   const meta = getExerciseMeta(exercise);
   const exerciseDisplayName = getExerciseName(exercise);
@@ -2466,7 +2469,8 @@ function renderExerciseDetails(exercise) {
 
   // Use GIF from ExerciseDB if available, otherwise fall back to static images
   const hasGif = false;
-  const imageHtml = hasGif
+  // pas d'illustration (exercices ajoutés sans dessin) : on n'affiche pas deux cadres vides
+  const imageHtml = !startImage.urls.length ? "" : hasGif
     ? `<div class="detail-gif-container mb-12">
         <div class="detail-block">
           <div class="meta-label">${t("animatedDemo")}</div>
