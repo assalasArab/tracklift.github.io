@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261026b">
+  <link rel="stylesheet" href="./styles.css?v=20261026e">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -37,7 +37,7 @@
     <div class="loading-text" data-i18n="loading">chargement</div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <div id="auth-screen" class="screen auth-screen">
     <div class="auth-box">
@@ -285,18 +285,13 @@
         </div>
 
         <div class="card mb-12">
-          <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="bodyWeight">poids corporel</h2>
-          <canvas id="chart-weight" height="200"></canvas>
-        </div>
-
-        <div class="card mb-12">
           <label class="label" data-i18n="trackExercise">suivre un exercice</label>
           <input id="progress-exercise-search" class="input" type="text" placeholder="rechercher un exercice..." data-i18n-placeholder="searchExercisePlaceholder">
         </div>
 
         <div id="progress-exercise-chips" class="exercise-chips"></div>
 
-        <div id="exercise-stats-card" class="grid stats-grid"></div>
+        <div id="exercise-stats-card" class="win-wrap" aria-live="polite"></div>
         <div class="card mb-12">
           <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="maxWeightBySession">charge maximale par seance</h2>
           <canvas id="chart-exercise" height="220"></canvas>
@@ -305,6 +300,10 @@
           <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="totalVolume">volume total</h2>
           <p class="small-meta mb-12" data-i18n="totalVolumeFormula">series × reps × charge</p>
           <canvas id="chart-volume" height="220"></canvas>
+        </div>
+        <div class="card mb-12">
+          <h2 class="section-title mb-12" style="font-size: 20px;" data-i18n="bodyWeight">poids corporel</h2>
+          <canvas id="chart-weight" height="200"></canvas>
         </div>
       </section>
 
@@ -331,6 +330,7 @@
               </div>
             </div>
             <p id="guided-last" class="guided-last"></p>
+            <ol id="guided-sets" class="set-chips" aria-label="séries de cet exercice" data-i18n-aria="setsOfExercise"></ol>
             <p id="guided-exercise-tip" class="guided-exercise-tip"></p>
 
             <div class="guided-meta-row">
@@ -343,18 +343,18 @@
                 <div id="rest-time-value" class="meta-value">90s</div>
               </div>
               <div class="meta-box">
-                <div class="meta-label" data-i18n="targetReps">objectif reps</div>
+                <div id="guided-target-label" class="meta-label" data-i18n="targetReps">objectif reps</div>
                 <div id="guided-target-reps" class="meta-value">10</div>
               </div>
             </div>
 
             <div class="guided-inputs">
               <div class="stepper-field">
-                <label class="label" for="guided-reps-input" data-i18n="fillReps">répétitions</label>
+                <label id="guided-reps-label" class="label" for="guided-reps-input" data-i18n="fillReps">répétitions</label>
                 <div class="stepper">
-                  <button type="button" class="stepper-btn" data-step-for="guided-reps-input" data-step="-1" data-i18n-aria="lessReps" aria-label="une répétition de moins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+                  <button type="button" class="stepper-btn" data-step-for="guided-reps-input" data-step="-1" data-step-unit="reps" data-i18n-aria="lessReps" aria-label="une répétition de moins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
                   <input id="guided-reps-input" class="input input-big" type="number" inputmode="numeric" min="0" step="1">
-                  <button type="button" class="stepper-btn" data-step-for="guided-reps-input" data-step="1" data-i18n-aria="moreReps" aria-label="une répétition de plus"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                  <button type="button" class="stepper-btn" data-step-for="guided-reps-input" data-step="1" data-step-unit="reps" data-i18n-aria="moreReps" aria-label="une répétition de plus"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
                 </div>
               </div>
               <div class="stepper-field">
@@ -579,7 +579,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261026b"></script>
+  <script type="module" src="./js/app.js?v=20261026e"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

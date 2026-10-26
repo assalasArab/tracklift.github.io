@@ -4,7 +4,7 @@
    qui filtre la liste sur les exercices qui le travaillent.
    Schémas : wger.de, licence CC-BY-SA 3.0.
    ═══════════════════════════════════════════════════════════ */
-import { MUSCLE_LAYERS } from "./body-map-data.js?v=20261026b";
+import { MUSCLE_LAYERS } from "./body-map-data.js?v=20261026e";
 
 /* zone → calques dessinés + muscles qui la font travailler.
    « withSecondary » : peu d'exercices le ciblent en premier, on ajoute ceux où il travaille en second (affichés après). */
@@ -74,7 +74,7 @@ function figure(side, selected, lang, caption) {
       </svg>`;
   }).join("");
   return `<figure class="bm-fig">
-    <div class="bm-stack"><img class="bm-base" src="./assets/muscles/muscular_system_${side}.svg" alt="">${hits}${zones}</div>
+    <div class="bm-stack"><img class="bm-base" src="./assets/muscles/muscular_system_${side}.svg?c=olive1" alt="">${hits}${zones}</div>
     <figcaption>${caption}</figcaption>
   </figure>`;
 }

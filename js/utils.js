@@ -1,4 +1,4 @@
-import { i18n } from "./i18n.js?v=20261026b";
+import { i18n } from "./i18n.js?v=20261026e";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
@@ -50,9 +50,17 @@ export function showToast(message, action = null) {
     }, { once: true });
     toast.appendChild(btn);
   }
+  // pendant la séance, le message se pose juste au-dessus des boutons du bas, sous le pouce
+  const dock = document.body.classList.contains("in-workout") ? document.querySelector(".guided-dock") : null;
+  toast.classList.toggle("toast-low", !!dock);
+  toast.style.bottom = dock ? `${Math.round(window.innerHeight - dock.getBoundingClientRect().top + 10)}px` : "";
   toast.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show", "has-action"), action ? 5000 : 2200);
+  const hide = () => toast.classList.remove("show", "has-action");
+  const arm = ms => { clearTimeout(toastTimer); toastTimer = setTimeout(hide, ms); };
+  arm(action ? 5000 : 2200);
+  // tant qu'on touche ou qu'on vise le message, il reste affiché
+  toast.onpointerenter = toast.onfocusin = action ? () => clearTimeout(toastTimer) : null;
+  toast.onpointerleave = toast.onfocusout = action ? () => arm(2500) : null;
 }
 
 export function hideToast() {

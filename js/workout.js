@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261026b";
-import { getExerciseById } from "./exercises.js?v=20261026b";
+import { uid } from "./utils.js?v=20261026e";
+import { getExerciseById } from "./exercises.js?v=20261026e";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -45,7 +45,11 @@ function buildSuggestedSets(exercise, previousExerciseLog, planned) {
       : { targetReps: suggestReps(previousExerciseLog, item.reps), reps: item.reps, weight: suggestWeight(previousExerciseLog, item.weight), status: "pending", ...(item.kind ? { kind: item.kind } : {}) });
   }
   const presetByFocus = { quadriceps: { sets: 4, reps: 8, weight: 20 }, pectoraux: { sets: 4, reps: 8, weight: 20 }, dos: { sets: 4, reps: 10, weight: 20 }, epaules: { sets: 3, reps: 12, weight: 10 }, triceps: { sets: 3, reps: 12, weight: 10 }, biceps: { sets: 3, reps: 12, weight: 10 }, ischio_jambiers: { sets: 4, reps: 10, weight: 20 }, fessiers: { sets: 4, reps: 10, weight: 20 }, abdominaux: { sets: 3, reps: 15, weight: 0 } };
-  const preset = presetByFocus[exercise?.muscle_focus] || { sets: 3, reps: 10, weight: 10 };
+  let preset = presetByFocus[exercise?.muscle_focus] || { sets: 3, reps: 10, weight: 10 };
+  // gainage et positions tenues : la « répétition » est une durée en secondes
+  if (exercise?.contraction_type === "isometrique") preset = { sets: 3, reps: 30, weight: 0 };
+  // poids du corps : pas de charge par défaut
+  else if (exercise?.bodyweight) preset = { ...preset, weight: 0 };
   return Array.from({ length: preset.sets }, () => ({ targetReps: preset.reps, reps: preset.reps, weight: preset.weight, status: "pending" }));
 }
 export function findLatestExerciseLog(exerciseId, sessionLogs) {

@@ -50,7 +50,7 @@ export function muscleName(key, lang = "fr") {
 }
 
 export function muscleThumb(key) {
-  return MUSCLES[key] && !NO_THUMB.has(key) ? `./assets/muscles/repdb/${key.replace(/_/g, "-")}.webp` : null;
+  return MUSCLES[key] && !NO_THUMB.has(key) ? `./assets/muscles/repdb/${key.replace(/_/g, "-")}.webp?c=olive1` : null;
 }
 
 export function muscleWgerIds(keys) {

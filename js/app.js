@@ -1,21 +1,21 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261026b";
-import { DB } from "./db.js?v=20261026b";
-import { Auth } from "./auth.js?v=20261026b";
-import { i18n } from "./i18n.js?v=20261026b";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261026b";
-import { muscleName } from "./muscles.js?v=20261026b";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261026b";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261026b";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261026b";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261026b";
-import { renderWeightChart } from "./charts.js?v=20261026b";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261026b";
-import { openProgramWizard } from "./program-wizard.js?v=20261026b";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261026b";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261026b";
-import { openIntro } from "./onboarding.js?v=20261026b";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261026b";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261026b";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261026e";
+import { DB } from "./db.js?v=20261026e";
+import { Auth } from "./auth.js?v=20261026e";
+import { i18n } from "./i18n.js?v=20261026e";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261026e";
+import { muscleName } from "./muscles.js?v=20261026e";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261026e";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261026e";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261026e";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261026e";
+import { renderWeightChart } from "./charts.js?v=20261026e";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261026e";
+import { openProgramWizard } from "./program-wizard.js?v=20261026e";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261026e";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261026e";
+import { openIntro } from "./onboarding.js?v=20261026e";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261026e";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261026e";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -712,7 +712,8 @@ function setView(view) {
   window.scrollTo(0, 0);
 
   $all(".view").forEach(node => node.classList.remove("active"));
-  $all(".nav-btn").forEach(node => node.classList.toggle("active", node.dataset.view === view));
+  const navView = view === "progress" ? "home" : view;
+  $all(".nav-btn").forEach(node => node.classList.toggle("active", node.dataset.view === navView));
 
   const activeNode = document.getElementById(`view-${view}`);
   if (activeNode) activeNode.classList.add("active");
@@ -754,7 +755,13 @@ function logBelongsToProgram(log, program) {
   return (program.sessions || []).some(session => normalizeText(session.name) === target);
 }
 
+/** une séance compte dans les statistiques à partir de 3 séries faites (pas les essais ni les abandons) */
+function countsInStats(log) {
+  return (log.exercises || []).reduce((n, ex) => n + (ex.sets || []).filter(set => set.status === "done").length, 0) >= 3;
+}
+
 function computePerformance(logs) {
+  logs = logs.filter(countsInStats);
   if (!logs.length) return null;
   let doneSets = 0, totalSets = 0, totalReps = 0, loadSum = 0, loadCount = 0, durationSum = 0, durationCount = 0;
 
@@ -1095,16 +1102,17 @@ function renderHome() {
       return { name, maxWeight, totalSets, bestReps };
     }).filter(ex => ex.totalSets > 0);
 
-    const exerciseListHtml = exerciseDetails.length ? `
+    const exerciseListHtml = `
       <div class="session-exercise-details hidden" data-details-for="${log.id}">
         ${exerciseDetails.map(ex => `
           <div class="session-exercise-row">
             <span class="session-exercise-name">${ex.name}</span>
-            <span class="session-exercise-stats">${ex.totalSets}×${ex.bestReps} · ${ex.maxWeight} kg</span>
+            <span class="session-exercise-stats">${ex.totalSets}×${ex.bestReps}${ex.maxWeight ? ` · ${ex.maxWeight} kg` : ""}</span>
           </div>
         `).join("")}
+        <button type="button" class="text-danger-btn session-delete" data-delete-log="${log.id}">${escapeHtml(t("deleteSession"))}</button>
       </div>
-    ` : "";
+    `;
 
     return `
       <div class="session-item" data-toggle-details="${log.id}" style="cursor:pointer;">
@@ -1123,7 +1131,7 @@ function renderHome() {
 
   $all("[data-toggle-details]").forEach(item => {
     item.addEventListener("click", (e) => {
-      if (e.target.closest("[data-repeat]")) return;
+      if (e.target.closest("[data-repeat], [data-delete-log]")) return;
       const details = item.querySelector("[data-details-for]");
       if (details) details.classList.toggle("hidden");
     });
@@ -1131,6 +1139,23 @@ function renderHome() {
 
   $all("[data-repeat]").forEach(button => {
     button.addEventListener("click", () => repeatWorkout(button.dataset.repeat));
+  });
+
+  $all("[data-delete-log]").forEach(button => {
+    button.addEventListener("click", () => {
+      const removed = DB.deleteSessionLog(button.dataset.deleteLog);
+      if (!removed) return;
+      state.sessionLogs = DB.getSessionLogs();
+      renderHome();
+      showToast(t("sessionDeleted"), {
+        label: t("undo"),
+        onClick: () => {
+          DB.saveSessionLog(removed);
+          state.sessionLogs = DB.getSessionLogs();
+          renderHome();
+        }
+      });
+    });
   });
 }
 
@@ -2026,7 +2051,8 @@ function renderProgressCharts() {
       allDates.add(dateKey);
       const maxW = Math.max(...doneSets.map(s => s.weight || 0));
       const vol = doneSets.reduce((sum, s) => sum + (s.reps || 0) * (s.weight || 0), 0);
-      exerciseData[id][dateKey] = { maxWeight: maxW, volume: vol };
+      const maxReps = Math.max(...doneSets.map(s => Number(s.reps) || 0));
+      exerciseData[id][dateKey] = { maxWeight: maxW, volume: vol, maxReps, date: log.date };
     }
   }
 
@@ -2036,14 +2062,22 @@ function renderProgressCharts() {
     const ex = state.exercises.find(e => e.id === id);
     const name = ex ? getExerciseName(ex) : id;
     const color = CHART_COLORS[i % CHART_COLORS.length];
+    const values = labels.map(d => exerciseData[id][d]?.maxWeight ?? null);
+    // un point orange plus gros chaque fois que la charge dépasse tout ce qui précède
+    let best = -Infinity;
+    const isRecord = values.map((v, k) => { if (v === null) return false; const rec = k > 0 && v > best; best = Math.max(best, v); return rec; });
     return {
       label: name,
-      data: labels.map(d => exerciseData[id][d]?.maxWeight ?? null),
+      data: values,
       borderColor: color,
       backgroundColor: color + "22",
       fill: false,
       tension: 0.4,
-      pointRadius: 3,
+      pointRadius: isRecord.map(r => r ? 6 : 3),
+      pointHoverRadius: isRecord.map(r => r ? 8 : 5),
+      pointBackgroundColor: isRecord.map(r => r ? "#ff7a00" : color),
+      pointBorderColor: isRecord.map(r => r ? "#c94400" : color),
+      pointBorderWidth: isRecord.map(r => r ? 2 : 1),
       borderWidth: 2,
       spanGaps: true
     };
@@ -2084,17 +2118,37 @@ function renderProgressCharts() {
     options: { ...chartOpts, scales: { ...chartOpts.scales, y: { ...chartOpts.scales.y, beginAtZero: true } } }
   });
 
-  const statRows = activeIds.map((id, i) => {
-    const ex = state.exercises.find(e => e.id === id);
-    const name = ex ? getExerciseName(ex) : id;
-    const points = Object.values(exerciseData[id]);
-    const record = points.length ? Math.max(...points.map(p => p.maxWeight)) : 0;
-    // exercice au poids du corps : le record se compte en répétitions
-    const bestReps = Math.max(0, ...state.sessionLogs.flatMap(log => (log.exercises || []).filter(e => e.exerciseId === id).flatMap(e => (e.sets || []).filter(s => s.status === "done").map(s => Number(s.reps) || 0))));
-    const value = record > 0 ? `${String(record).replace(".", ",")}<small> kg</small>` : `${bestReps}<small> reps</small>`;
-    return `<div class="stat-box"><div class="stat-value">${value}</div><div class="stat-label">${t("recordPr")} · ${name}</div></div>`;
-  });
-  statsCard.innerHTML = statRows.join("");
+  statsCard.innerHTML = activeIds.map(id => winCardHtml(id, Object.values(exerciseData[id]))).join("");
+}
+
+/** « +10 kg sur Développé couché depuis le 29 sept. » : le progrès en une phrase, avec la mascotte */
+function winCardHtml(id, points) {
+  if (!points.length) return "";
+  const ex = state.exercises.find(e => e.id === id);
+  const name = ex ? getExerciseName(ex) : id;
+  const loaded = points.some(p => p.maxWeight > 0);
+  const timed = isTimed(ex);
+  const value = p => loaded ? p.maxWeight : p.maxReps;
+  const unit = loaded ? "kg" : timed ? "s" : t("recapRepsShort");
+  const num = v => Number(v).toLocaleString(i18n.getLocale(), { maximumFractionDigits: 1 });
+  const first = points[0];
+  const record = Math.max(...points.map(value));
+  const gain = record - value(first);
+  const since = new Date(first.date).toLocaleDateString(i18n.getLocale(), { day: "numeric", month: "short" });
+  const big = gain > 0 ? `+${num(gain)}<small> ${escapeHtml(unit)}</small>` : `${num(record)}<small> ${escapeHtml(unit)}</small>`;
+  const line = points.length === 1 ? t("winFirstLine", { exercise: name })
+    : gain > 0 ? t("winGainLine", { exercise: name, date: since })
+    : t("winHoldLine", { exercise: name });
+  const meta = t("winMeta", { record: `${num(record)} ${unit}`, count: points.length, plural: points.length > 1 ? "s" : "" });
+  return `<div class="win-card${gain > 0 ? " is-up" : ""}">
+      <div class="win-text">
+        <p class="win-big">${big}</p>
+        <p class="win-line">${escapeHtml(line)}</p>
+        <p class="win-meta">${escapeHtml(meta)}</p>
+        ${loaded && points.length > 2 ? `<p class="win-legend"><i aria-hidden="true"></i>${escapeHtml(t("winRecordDot"))}</p>` : ""}
+      </div>
+      <img class="win-illu" src="./assets/illustrations/intro-03-progres.webp" alt="" width="84" height="140">
+    </div>`;
 }
 
 function openLauncher() {
@@ -2284,10 +2338,45 @@ function renderWorkout() {
     current: state.workout.currentSetIndex + 1,
     total: block.sets.length
   }) + setKind;
+  const timed = isTimed(exercise);
+  $("#guided-target-label").textContent = t(timed ? "targetSeconds" : "targetReps");
+  $("#guided-reps-label").textContent = t(timed ? "fillSeconds" : "fillReps");
+  $all('[data-step-unit="reps"]').forEach(button => {
+    const up = Number(button.dataset.step) > 0;
+    button.dataset.step = String((up ? 1 : -1) * (timed ? 5 : 1));
+    button.setAttribute("aria-label", t(timed ? (up ? "moreSeconds" : "lessSeconds") : (up ? "moreReps" : "lessReps")));
+  });
   $("#guided-target-reps").textContent = currentSet?.targetReps ?? currentSet?.reps ?? "-";
+  renderSetChips(block, state.workout.currentSetIndex, timed);
   $("#rest-time-value").textContent = `${block.restSeconds} s`;
   $("#guided-reps-input").value = currentSet?.targetReps ?? currentSet?.reps ?? 0;
   $("#guided-weight-input").value = currentSet?.weight ?? 0;
+}
+
+/** gainage, positions tenues : on compte des secondes, pas des répétitions */
+function isTimed(exercise) {
+  return exercise?.contraction_type === "isometrique";
+}
+
+/** « 9 × 20 kg », « 30 s », « 12 » : une série en clair */
+function setLabel(set, timed) {
+  const kg = String(Number(set.weight) || 0).replace(".", ",");
+  const amount = timed ? `${set.reps} s` : String(set.reps);
+  return Number(set.weight) ? `${amount} × ${kg} kg` : amount;
+}
+
+/** Les séries de l'exercice en cours : faites (avec le détail), passées, en cours, à venir */
+function renderSetChips(block, currentIndex, timed) {
+  const list = $("#guided-sets");
+  if (!list) return;
+  list.classList.toggle("hidden", block.sets.length < 2);
+  list.innerHTML = block.sets.map((set, index) => {
+    const n = `S${index + 1}`;
+    if (set.status === "done") return `<li class="set-chip is-done"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>${n}</span> ${escapeHtml(setLabel(set, timed))}</li>`;
+    if (set.status === "skipped") return `<li class="set-chip is-skipped"><span>${n}</span> ${escapeHtml(t("setChipSkipped"))}</li>`;
+    if (index === currentIndex) return `<li class="set-chip is-now" aria-current="step"><span>${n}</span> ${escapeHtml(t("setChipNow"))}</li>`;
+    return `<li class="set-chip"><span>${n}</span></li>`;
+  }).join("");
 }
 
 /** « la dernière fois : 4 × 8 à 80 kg » (séries faites lors de la dernière séance de cet exercice) */
@@ -2296,12 +2385,14 @@ function lastTimeText(exerciseId) {
   const last = findLatestExerciseLog(exerciseId, state.sessionLogs);
   const done = (last?.sets || []).filter(set => set.status === "done" && set.kind !== "warmup");
   if (!done.length) return "";
+  const timed = isTimed(getExerciseById(exerciseId, state.exercises));
+  const unit = timed ? " s" : "";
   const kg = value => String(value).replace(".", ",");
   const sameReps = done.every(set => set.reps === done[0].reps);
   const sameWeight = done.every(set => set.weight === done[0].weight);
   let text;
-  if (sameReps && sameWeight) text = `${done.length} × ${done[0].reps}${done[0].weight ? ` à ${kg(done[0].weight)} kg` : ""}`;
-  else text = done.map(set => `${set.reps}${set.weight ? ` × ${kg(set.weight)}` : ""}`).join(" · ") + (done.some(set => set.weight) ? " kg" : "");
+  if (sameReps && sameWeight) text = `${done.length} × ${done[0].reps}${unit}${done[0].weight ? ` à ${kg(done[0].weight)} kg` : ""}`;
+  else text = done.map(set => `${set.reps}${unit}${set.weight ? ` × ${kg(set.weight)}` : ""}`).join(" · ") + (done.some(set => set.weight) ? " kg" : "");
   return t("lastTime", { sets: text });
 }
 
@@ -2616,12 +2707,16 @@ function finishWorkout() {
 
 /** Durée, séries, volume et records battus par rapport aux séances précédentes */
 function buildRecap(log, previousLogs) {
-  let sets = 0, volume = 0;
+  let sets = 0, volume = 0, reps = 0;
   const records = [];
+  const compare = [];
   for (const ex of log.exercises) {
     const done = ex.sets.filter(set => set.status === "done");
     sets += done.length;
+    reps += done.reduce((sum, set) => sum + (Number(set.reps) || 0), 0);
     volume += done.reduce((sum, set) => sum + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0);
+    const line = compareWithLastTime(ex, done, previousLogs);
+    if (line) compare.push(line);
     const best = Math.max(0, ...done.map(set => Number(set.weight) || 0));
     if (!best) continue;
     const bestSet = done.find(set => (Number(set.weight) || 0) === best);
@@ -2633,7 +2728,27 @@ function buildRecap(log, previousLogs) {
       records.push({ name: exercise ? getExerciseName(exercise) : ex.exerciseName, weight: best, gain: best - Math.max(...before) });
     }
   }
-  return { duration: log.durationMs, sets, volume: Math.round(volume), records, name: log.sessionName };
+  return { duration: log.durationMs, sets, volume: Math.round(volume), reps, records, compare, name: log.sessionName };
+}
+
+/** Meilleure série du jour contre la dernière fois : charge si chargé, sinon répétitions (ou secondes) */
+function compareWithLastTime(ex, done, previousLogs) {
+  const work = done.filter(set => set.kind !== "warmup");
+  if (!work.length) return null;
+  const exercise = getExerciseById(ex.exerciseId, state.exercises);
+  const timed = isTimed(exercise);
+  const loaded = work.some(set => Number(set.weight) > 0);
+  const score = set => loaded ? Number(set.weight) || 0 : Number(set.reps) || 0;
+  const best = work.reduce((a, b) => (score(b) > score(a) || (score(b) === score(a) && (Number(b.reps) || 0) > (Number(a.reps) || 0)) ? b : a));
+  const last = findLatestExerciseLog(ex.exerciseId, previousLogs);
+  const lastWork = (last?.sets || []).filter(set => set.status === "done" && set.kind !== "warmup");
+  const lastBest = lastWork.length ? Math.max(...lastWork.map(score)) : null;
+  return {
+    name: exercise ? getExerciseName(exercise) : ex.exerciseName,
+    best: setLabel(best, timed),
+    delta: lastBest === null ? null : score(best) - lastBest,
+    unit: loaded ? "kg" : timed ? "s" : t("recapRepsShort")
+  };
 }
 
 function recapDuration(ms) {
@@ -2651,6 +2766,7 @@ function openRecap(recap) {
   el.setAttribute("aria-modal", "true");
   el.setAttribute("aria-labelledby", "recap-title");
   const plural = recap.records.length > 1 ? "s" : "";
+  const recordNames = new Set(recap.records.map(r => r.name));
   el.innerHTML = `
     <div class="recap-inner">
       <img class="recap-illu" src="./assets/illustrations/intro-03-progres.webp" alt="" width="180" height="300">
@@ -2659,14 +2775,29 @@ function openRecap(recap) {
       <div class="recap-stats">
         <div><b>${recapDuration(recap.duration)}</b><span>${escapeHtml(t("recapDuration"))}</span></div>
         <div><b>${recap.sets}</b><span>${escapeHtml(t("recapSets"))}</span></div>
-        <div><b>${kg(recap.volume)}<small> kg</small></b><span>${escapeHtml(t("recapVolume"))}</span></div>
+        ${recap.volume > 0
+          ? `<div><b>${kg(recap.volume)}<small> kg</small></b><span>${escapeHtml(t("recapVolume"))}</span></div>`
+          : `<div><b>${recap.reps}</b><span>${escapeHtml(t("recapReps"))}</span></div>`}
       </div>
-      ${recap.records.length ? `
+      ${recap.compare.length ? `
+        <div class="recap-compare">
+          <h3 class="recap-subtitle">${escapeHtml(t("recapVsLast"))}</h3>
+          <ul>${recap.compare.slice(0, 5).map(c => {
+            const tag = c.delta === null ? `<i class="cmp-new">${escapeHtml(t("recapFirst"))}</i>`
+              : c.delta > 0 ? `<i class="cmp-up">+${kg(c.delta)} ${escapeHtml(c.unit)}</i>`
+              : c.delta < 0 ? `<i class="cmp-down">${kg(c.delta).replace("-", "−")} ${escapeHtml(c.unit)}</i>`
+              : `<i class="cmp-same">${escapeHtml(t("recapSame"))}</i>`;
+            const record = recordNames.has(c.name) ? `<em class="cmp-record">${escapeHtml(t("recordPr"))}</em>` : "";
+            return `<li><span>${escapeHtml(c.name)}${record}</span><b>${escapeHtml(c.best)}</b>${tag}</li>`;
+          }).join("")}</ul>
+          ${recap.compare.length > 5 ? `<p class="recap-more">${escapeHtml(t("recapMoreExercises", { count: recap.compare.length - 5, plural: recap.compare.length - 5 > 1 ? "s" : "" }))}</p>` : ""}
+        </div>` : ""}
+      ${recap.records.length && !recap.compare.length ? `
         <div class="recap-records">
           <h3 class="recap-subtitle">${escapeHtml(t("recapRecords", { plural }))}</h3>
           <ul>${recap.records.slice(0, 3).map(r => `<li><span>${escapeHtml(r.name)}</span><b>${kg(r.weight)} kg <small>+${kg(r.gain)} kg</small></b></li>`).join("")}</ul>
           ${recap.records.length > 3 ? `<p class="recap-more">${escapeHtml(t("recordMore", { count: recap.records.length - 3, plural: recap.records.length - 3 > 1 ? "s" : "" }))}</p>` : ""}
-        </div>` : `<p class="recap-none">${escapeHtml(t("recapNoRecord"))}</p>`}
+        </div>` : recap.records.length ? "" : `<p class="recap-none">${escapeHtml(t("recapNoRecord"))}</p>`}
       <div class="recap-actions">
         <button type="button" class="btn btn-primary btn-block recap-done">${escapeHtml(t("recapDone"))}</button>
         <button type="button" class="recap-link">${escapeHtml(t("seeProgress"))}</button>

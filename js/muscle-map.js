@@ -5,19 +5,21 @@
    Schémas : wger.de, licence CC-BY-SA 3.0 (copiés dans assets/muscles).
    Vignettes et données musculaires : RepDB (repdb.co).
    ═══════════════════════════════════════════════════════════ */
-import { muscleName, muscleThumb, muscleWgerIds } from "./muscles.js?v=20261026b";
+import { muscleName, muscleThumb, muscleWgerIds } from "./muscles.js?v=20261026e";
 
 const BASE = "./assets/muscles";
+// à changer quand les schémas sont recolorés, pour vider les caches
+const V = "?c=olive1";
 
 const FRONT = new Set([1, 2, 3, 4, 6, 10, 13, 14]);
 
 function figure(side, main, secondary) {
   const keep = id => (side === "front") === FRONT.has(id);
   const layers = [
-    ...[...secondary].filter(keep).map(id => `<img src="${BASE}/secondary/muscle-${id}.svg" alt="" loading="lazy">`),
-    ...[...main].filter(keep).map(id => `<img src="${BASE}/main/muscle-${id}.svg" alt="" loading="lazy">`)
+    ...[...secondary].filter(keep).map(id => `<img src="${BASE}/secondary/muscle-${id}.svg${V}" alt="" loading="lazy">`),
+    ...[...main].filter(keep).map(id => `<img src="${BASE}/main/muscle-${id}.svg${V}" alt="" loading="lazy">`)
   ];
-  return `<div class="mm-fig"><img class="mm-base" src="${BASE}/muscular_system_${side}.svg" alt="" loading="lazy">${layers.join("")}</div>`;
+  return `<div class="mm-fig"><img class="mm-base" src="${BASE}/muscular_system_${side}.svg${V}" alt="" loading="lazy">${layers.join("")}</div>`;
 }
 
 /** true si au moins un muscle de l'exercice peut être dessiné */

@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261026b";
-import { EXERCISE_SEED } from "./exercises.js?v=20261026b";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261026b";
-import { firestore } from "./firebase-config.js?v=20261026b";
+import { uid } from "./utils.js?v=20261026e";
+import { EXERCISE_SEED } from "./exercises.js?v=20261026e";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261026e";
+import { firestore } from "./firebase-config.js?v=20261026e";
 
 export const DB = {
   currentUserId: null,
@@ -170,6 +170,16 @@ export const DB = {
     data.profile = { ...(data.profile || {}), ...patch };
     this.saveData(data);
     return data.profile;
+  },
+
+  /** Retire une séance de l'historique et la renvoie (pour pouvoir l'annuler) */
+  deleteSessionLog(id) {
+    const data = this.getData();
+    const index = data.sessionLogs.findIndex(log => log.id === id);
+    if (index < 0) return null;
+    const [removed] = data.sessionLogs.splice(index, 1);
+    this.saveData(data);
+    return removed;
   },
 
   saveSessionLog(log) {
