@@ -1,21 +1,21 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261025m";
-import { DB } from "./db.js?v=20261025m";
-import { Auth } from "./auth.js?v=20261025m";
-import { i18n } from "./i18n.js?v=20261025m";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261025m";
-import { muscleName } from "./muscles.js?v=20261025m";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261025m";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261025m";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261025m";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261025m";
-import { renderWeightChart } from "./charts.js?v=20261025m";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261025m";
-import { openProgramWizard } from "./program-wizard.js?v=20261025m";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261025m";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261025m";
-import { openIntro } from "./onboarding.js?v=20261025m";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261025m";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261025m";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261026b";
+import { DB } from "./db.js?v=20261026b";
+import { Auth } from "./auth.js?v=20261026b";
+import { i18n } from "./i18n.js?v=20261026b";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261026b";
+import { muscleName } from "./muscles.js?v=20261026b";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261026b";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261026b";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261026b";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261026b";
+import { renderWeightChart } from "./charts.js?v=20261026b";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261026b";
+import { openProgramWizard } from "./program-wizard.js?v=20261026b";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261026b";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261026b";
+import { openIntro } from "./onboarding.js?v=20261026b";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261026b";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261026b";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -1861,7 +1861,7 @@ function renderBodyMap(searching = false) {
     map.innerHTML = bodyMapHtml(state.bodyZone, { lang, labels: { front: t("bodyFront"), back: t("bodyBack") } });
     map.dataset.lang = lang;
   }
-  map.querySelectorAll("[data-zone]").forEach(zone => {
+  map.querySelectorAll(".bm-zone").forEach(zone => {
     const on = zone.dataset.zone === state.bodyZone;
     zone.classList.toggle("is-on", on);
     zone.setAttribute("aria-pressed", String(on));

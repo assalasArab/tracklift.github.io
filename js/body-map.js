@@ -4,7 +4,7 @@
    qui filtre la liste sur les exercices qui le travaillent.
    Schémas : wger.de, licence CC-BY-SA 3.0.
    ═══════════════════════════════════════════════════════════ */
-import { MUSCLE_LAYERS } from "./body-map-data.js?v=20261025m";
+import { MUSCLE_LAYERS } from "./body-map-data.js?v=20261026b";
 
 /* zone → calques dessinés + muscles qui la font travailler.
    « withSecondary » : peu d'exercices le ciblent en premier, on ajoute ceux où il travaille en second (affichés après). */
@@ -60,18 +60,21 @@ export function zoneRank(exercise, key) {
 }
 
 function figure(side, selected, lang, caption) {
-  const layers = Object.entries(LAYERS)
-    .filter(([, layer]) => layer.side === side)
-    .map(([id, layer]) => {
-      const key = LAYER_ZONE[id];
-      if (!key) return "";
-      const on = key === selected;
-      return `<svg class="bm-layer" viewBox="0 0 ${layer.w} ${layer.h}" aria-hidden="false" focusable="false">
+  const sideLayers = Object.entries(LAYERS).filter(([id, layer]) => layer.side === side && LAYER_ZONE[id]);
+  const box = layer => `viewBox="0 0 ${layer.w} ${layer.h}" focusable="false"`;
+  // 1) marges invisibles, toutes SOUS les muscles : elles n'attrapent que les touchers tombés à côté
+  const hits = sideLayers.map(([id, layer]) =>
+    `<svg class="bm-layer" ${box(layer)} aria-hidden="true"><g class="bm-hit" data-zone="${LAYER_ZONE[id]}">${layer.svg}</g></svg>`).join("");
+  // 2) les muscles visibles, chacun est un bouton
+  const zones = sideLayers.map(([id, layer]) => {
+    const key = LAYER_ZONE[id];
+    const on = key === selected;
+    return `<svg class="bm-layer" ${box(layer)}>
         <g class="bm-zone${on ? " is-on" : ""}" data-zone="${key}" role="button" tabindex="0" aria-pressed="${on}" aria-label="${zoneName(key, lang)}">${layer.svg}</g>
       </svg>`;
-    }).join("");
+  }).join("");
   return `<figure class="bm-fig">
-    <div class="bm-stack"><img class="bm-base" src="./assets/muscles/muscular_system_${side}.svg" alt="">${layers}</div>
+    <div class="bm-stack"><img class="bm-base" src="./assets/muscles/muscular_system_${side}.svg" alt="">${hits}${zones}</div>
     <figcaption>${caption}</figcaption>
   </figure>`;
 }
