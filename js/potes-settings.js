@@ -3,10 +3,10 @@
    le classement critère par critère, l'objectif de la semaine
    et les notifications. Tout se change à tout moment.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261027a";
-import { Social, NOTIF_TYPES } from "./social.js?v=20261027a";
-import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261027a";
-import { t, tn, esc, openSheet, sheetHead, Bridge } from "./potes-ui.js?v=20261027a";
+import { showToast } from "./utils.js?v=20261027b";
+import { Social, NOTIF_TYPES } from "./social.js?v=20261027b";
+import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261027b";
+import { t, tn, esc, openSheet, sheetHead, Bridge } from "./potes-ui.js?v=20261027b";
 
 const SENSITIVE = ["weight", "nutrition"];
 

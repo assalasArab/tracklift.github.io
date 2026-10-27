@@ -1,28 +1,44 @@
 /* ═══════════════════════════════════════════════════════════
    Avatar : petite config JSON → dessin SVG façon sticker, et l'éditeur.
-   Config : { v, skin, hair, hairColor, eyes, mouth, beard, outfit, outfitColor, accessory, bg }
+   Config : { v, skin, face, body, hair, hairColor, eyes, eyeColor, nose, mouth, beard, accessory, bg }
    Chaque valeur est l'identifiant d'une pièce de js/avatar-parts.js.
+   Les pièces sont des calques PNG ; les zones de peau, de cheveux et d'iris
+   sont recoloriées à l'affichage (masque SVG rempli de la couleur choisie).
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261027a";
-import { escapeHtml } from "./utils.js?v=20261027a";
+import { i18n } from "./i18n.js?v=20261027b";
+import { escapeHtml } from "./utils.js?v=20261027b";
 import {
-  INK, FACE, NECK, SKINS, HAIR_COLORS, OUTFIT_COLORS, BACKGROUNDS,
-  HAIRS, EYES, MOUTHS, BEARDS, OUTFITS, ACCESSORIES, AVATAR_CATEGORIES, LAYER_ORDER
-} from "./avatar-parts.js?v=20261027a";
+  SKINS, HAIR_COLORS, EYE_COLORS, BACKGROUNDS,
+  FACES, BODIES, HAIRS, EYES, NOSES, MOUTHS, BEARDS, ACCESSORIES,
+  AVATAR_CATEGORIES, LAYER_ORDER, TINTS
+} from "./avatar-parts.js?v=20261027b";
 
 const LISTS = {
-  skin: SKINS, hair: HAIRS, hairColor: HAIR_COLORS, eyes: EYES, mouth: MOUTHS,
-  beard: BEARDS, outfit: OUTFITS, outfitColor: OUTFIT_COLORS, accessory: ACCESSORIES, bg: BACKGROUNDS
+  skin: SKINS, face: FACES, body: BODIES, hair: HAIRS, hairColor: HAIR_COLORS, eyes: EYES, eyeColor: EYE_COLORS,
+  nose: NOSES, mouth: MOUTHS, beard: BEARDS, accessory: ACCESSORIES, bg: BACKGROUNDS
 };
 export const AVATAR_KEYS = Object.keys(LISTS);
+const ART_BASE = new URL("../assets/avatar/", import.meta.url).href;
 
 const t = (key, vars) => i18n.t(key, vars);
 const pick = (list, id) => list.find(item => item.id === id) || list[0];
 
+// anciennes pièces dessinées en SVG (avatar v1) → pièce dessinée la plus proche
+const LEGACY = {
+  hair: { rase: "c3", court: "c3", boucles: "c7", meche: "c2", herisse: "c6", afro: "c7", chignon: "c4", queue: "c4", long: "c5", carre: "c8" },
+  eyes: { grands: "y4", points: "y1", joyeux: "y5", clin: "y5", determine: "y9", zen: "y2" },
+  mouth: { sourire: "m2", rire: "m6", neutre: "m1", langue: "m8", effort: "m9", souffle: "m8", malin: "m7" },
+  beard: { "trois-jours": "x4", barbe: "x3", moustache: "x1", bouc: "x2" },
+  accessory: { lunettes: "l1" }
+};
+
 /** Toujours une config complète et valide (valeurs inconnues → première pièce) */
 export function normalizeAvatar(config) {
-  const out = { v: 1 };
-  for (const key of AVATAR_KEYS) out[key] = pick(LISTS[key], config?.[key]).id;
+  const out = { v: 2 };
+  for (const key of AVATAR_KEYS) {
+    const value = config?.[key];
+    out[key] = pick(LISTS[key], LEGACY[key]?.[value] ?? value).id;
+  }
   return out;
 }
 
@@ -33,27 +49,21 @@ export function isAvatar(config) {
 /** Tirage au sort, avec des probabilités qui donnent des têtes crédibles */
 export function randomAvatar(rand = Math.random) {
   const any = list => list[Math.floor(rand() * list.length)].id;
-  const often = (list, firstChance) => (rand() < firstChance ? list[0].id : list[1 + Math.floor(rand() * (list.length - 1))].id);
+  const drawn = list => { const real = list.filter(item => item.art); return real[Math.floor(rand() * real.length)].id; };
   return normalizeAvatar({
     skin: any(SKINS),
-    hair: rand() < 0.06 ? "chauve" : HAIRS[1 + Math.floor(rand() * (HAIRS.length - 1))].id,
+    face: any(FACES),
+    body: any(BODIES),
+    hair: rand() < 0.05 ? "chauve" : drawn(HAIRS),
     hairColor: rand() < 0.85 ? HAIR_COLORS[Math.floor(rand() * 6)].id : any(HAIR_COLORS),
     eyes: any(EYES),
+    eyeColor: any(EYE_COLORS),
+    nose: any(NOSES),
     mouth: any(MOUTHS),
-    beard: often(BEARDS, 0.65),
-    outfit: any(OUTFITS),
-    outfitColor: any(OUTFIT_COLORS),
-    accessory: often(ACCESSORIES, 0.45),
+    beard: rand() < 0.65 ? "aucune" : drawn(BEARDS),
+    accessory: rand() < 0.75 ? "aucun" : drawn(ACCESSORIES),
     bg: any(BACKGROUNDS)
   });
-}
-
-/* ombre franche : la couleur mélangée à un brun chaud */
-function shadeOf(hex, amount = 0.17) {
-  const n = parseInt(hex.slice(1), 16);
-  const mix = (c, d) => Math.round(c + (d - c) * amount);
-  const r = mix(n >> 16, 0x3b), g = mix((n >> 8) & 255, 0x1d), b = mix(n & 255, 0x10);
-  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
 }
 
 let seq = 0;
@@ -70,62 +80,46 @@ export function avatarSvg(config, { size = 40, label = "", view = "0 0 100 100",
   const id = `av${++seq}`;
   const colors = {
     skin: pick(SKINS, a.skin).color,
-    hair: pick(HAIR_COLORS, a.hairColor).color,
-    outfit: pick(OUTFIT_COLORS, a.outfitColor).color,
+    hairColor: pick(HAIR_COLORS, a.hairColor).color,
+    eyeColor: pick(EYE_COLORS, a.eyeColor).color,
     bg: pick(BACKGROUNDS, a.bg).color
   };
-  const brush = {
-    ...colors,
-    /** aplat + ombre à droite + contour */
-    shape(d, color, width = 2.4, rule = "nonzero") {
-      return `<path d="${d}" fill="${color}" fill-rule="${rule}"/>`
-        + `<path d="${d}" fill="${shadeOf(color)}" fill-rule="${rule}" clip-path="url(#${id}-r)"/>`
-        + `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`;
-    },
-    line(d, width = 2.4) {
-      return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    }
-  };
-  const builtins = {
-    "@ears": () => [28.6, 71.4].map(x => brush.shape(`M${x} 47.2 C${x + 2.6} 47.2 ${x + 4.4} 49.8 ${x + 4.4} 53 C${x + 4.4} 56.2 ${x + 2.6} 58.8 ${x} 58.8 C${x - 2.6} 58.8 ${x - 4.4} 56.2 ${x - 4.4} 53 C${x - 4.4} 49.8 ${x - 2.6} 47.2 ${x} 47.2 Z`, colors.skin, 2.2)).join("")
-      + brush.line("M29.6 50.4 Q27.4 53 29.6 55.6", 1.5) + brush.line("M70.4 50.4 Q72.6 53 70.4 55.6", 1.5),
-    "@face": () => brush.shape(FACE, colors.skin)
-      + `<ellipse cx="36.4" cy="60.4" rx="3.6" ry="2.2" fill="#f0806e" opacity="0.32"/><ellipse cx="63.6" cy="60.4" rx="3.6" ry="2.2" fill="#f0806e" opacity="0.32"/>`,
-    "@nose": () => brush.line("M50.6 55.4 Q47.6 59.4 50.8 60", 2)
-  };
-  const layer = (category, name) => {
+  let defs = "", body = "";
+  for (const category of LAYER_ORDER) {
     const part = pick(LISTS[category], a[category]);
-    const png = part.png?.[name];
-    if (png) return `<image href="${escapeHtml(png)}" x="0" y="0" width="100" height="100"/>`;
-    const draw = part.layers?.[name];
-    return draw ? draw(brush) : "";
-  };
-  let body = "";
-  for (const [category, name] of LAYER_ORDER) {
-    if (category === "outfit") body += brush.shape(NECK, shadeOf(colors.skin, 0.12), 2.2);
-    body += category.startsWith("@") ? builtins[category]() : layer(category, name);
+    if (!part.art) continue;
+    const [x, y, w, h] = part.art.box;
+    const at = `x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="none"`;
+    for (const layer of part.art.layers) {
+      const href = `${ART_BASE}${category}-${part.id}-${layer}.png`;
+      if (layer === "base") { body += `<image href="${href}" ${at}/>`; continue; }
+      // zone à colorier : le PNG sert de masque à un aplat de la couleur choisie
+      const maskId = `${id}-${category}-${layer}`;
+      defs += `<mask id="${maskId}" maskUnits="userSpaceOnUse" x="${x}" y="${y}" width="${w}" height="${h}"><image href="${href}" ${at}/></mask>`;
+      body += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${colors[TINTS[layer]]}" mask="url(#${maskId})"/>`;
+    }
   }
   const a11y = label ? `role="img" aria-label="${escapeHtml(label)}"` : `aria-hidden="true"`;
-  const defs = `<defs><clipPath id="${id}-r"><path d="M56.5 0 H120 V120 H63 Z"/></clipPath>`
-    + (frame ? `<clipPath id="${id}-c"><circle cx="50" cy="50" r="46.6"/></clipPath>` : "") + `</defs>`;
+  if (frame) defs += `<clipPath id="${id}-c"><circle cx="50" cy="50" r="46.6"/></clipPath>`;
   const inner = frame
-    // dans le rond, le personnage est un peu agrandi pour que le visage se lise même en petit
-    ? `<circle cx="50" cy="50" r="46.6" fill="${colors.bg}"/><g clip-path="url(#${id}-c)"><g transform="translate(50 58) scale(1.13) translate(-50 -58)">${body}</g></g><circle cx="50" cy="50" r="48" fill="none" stroke="#fff" stroke-width="3.6"/>`
+    // dans le rond : la tête et le haut des épaules, cadrés pour que le visage se lise même en petit
+    ? `<circle cx="50" cy="50" r="46.6" fill="${colors.bg}"/><g clip-path="url(#${id}-c)"><g transform="translate(50 50) scale(1.04) translate(-50 -53)">${body}</g></g><circle cx="50" cy="50" r="48" fill="none" stroke="#fff" stroke-width="3.6"/>`
     : body;
-  return `<svg class="av${className ? ` ${className}` : ""}" viewBox="${view}" width="${size}" height="${size}" focusable="false" ${a11y}>${defs}${inner}</svg>`;
+  return `<svg class="av${className ? ` ${className}` : ""}" viewBox="${view}" width="${size}" height="${size}" focusable="false" ${a11y}><defs>${defs}</defs>${inner}</svg>`;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Éditeur : onglets (peau, coiffure, yeux…), aperçu en direct, « au hasard ».
+   Éditeur : onglets (visage, coiffure, yeux…), aperçu en direct, « au hasard ».
    ═══════════════════════════════════════════════════════════ */
 // onglets : chaque onglet regroupe une forme et, si besoin, sa couleur (affichée en premier)
 const TABS = [
-  { key: "skin", fields: ["skin"] },
+  { key: "face", fields: ["skin", "face"] },
   { key: "hair", fields: ["hairColor", "hair"] },
-  { key: "eyes", fields: ["eyes"] },
+  { key: "eyes", fields: ["eyeColor", "eyes"] },
+  { key: "nose", fields: ["nose"] },
   { key: "mouth", fields: ["mouth"] },
   { key: "beard", fields: ["hairColor", "beard"] },
-  { key: "outfit", fields: ["outfitColor", "outfit"] },
+  { key: "body", fields: ["skin", "body"] },
   { key: "accessory", fields: ["accessory"] },
   { key: "bg", fields: ["bg"] }
 ];

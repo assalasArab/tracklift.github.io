@@ -2,10 +2,10 @@
    Programmes partagés (partager, voir, rejoindre, mettre à jour)
    et exercices de la communauté (ajouter, proposer, 10 maximum).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261027a";
-import { Social } from "./social.js?v=20261027a";
-import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261027a";
-import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge, shareLink } from "./potes-ui.js?v=20261027a";
+import { showToast } from "./utils.js?v=20261027b";
+import { Social } from "./social.js?v=20261027b";
+import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261027b";
+import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge, shareLink } from "./potes-ui.js?v=20261027b";
 
 const errorText = err => t(err?.code === "offline" ? "potesNeedOnline" : err?.code === "limit" ? "cmLimit" : "potesJoinError", { limit: COMMUNITY_LIMIT });
 

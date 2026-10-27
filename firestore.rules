@@ -100,9 +100,13 @@ service cloud.firestore {
 
     function validAvatar(a) {
       return a is map
-        && a.keys().hasOnly(['v', 'skin', 'hair', 'hairColor', 'eyes', 'mouth', 'beard', 'outfit', 'outfitColor', 'accessory', 'bg'])
+        && a.keys().hasOnly(['v', 'skin', 'face', 'body', 'hair', 'hairColor', 'eyes', 'eyeColor', 'nose', 'mouth', 'beard', 'outfit', 'outfitColor', 'accessory', 'bg'])
         && (!('v' in a) || a.v is int)
         && (!('skin' in a) || partId(a.skin))
+        && (!('face' in a) || partId(a.face))
+        && (!('body' in a) || partId(a.body))
+        && (!('eyeColor' in a) || partId(a.eyeColor))
+        && (!('nose' in a) || partId(a.nose))
         && (!('hair' in a) || partId(a.hair))
         && (!('hairColor' in a) || partId(a.hairColor))
         && (!('eyes' in a) || partId(a.eyes))
