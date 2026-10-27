@@ -1,24 +1,42 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261026e";
-import { DB } from "./db.js?v=20261026e";
-import { Auth } from "./auth.js?v=20261026e";
-import { i18n } from "./i18n.js?v=20261026e";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261026e";
-import { muscleName } from "./muscles.js?v=20261026e";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261026e";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261026e";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261026e";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261026e";
-import { renderWeightChart } from "./charts.js?v=20261026e";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261026e";
-import { openProgramWizard } from "./program-wizard.js?v=20261026e";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261026e";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261026e";
-import { openIntro } from "./onboarding.js?v=20261026e";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261026e";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261026e";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261027a";
+import { DB } from "./db.js?v=20261027a";
+import { Auth } from "./auth.js?v=20261027a";
+import { i18n } from "./i18n.js?v=20261027a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261027a";
+import { muscleName } from "./muscles.js?v=20261027a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261027a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261027a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261027a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261027a";
+import { renderWeightChart } from "./charts.js?v=20261027a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261027a";
+import { openProgramWizard } from "./program-wizard.js?v=20261027a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261027a";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261027a";
+import { openIntro } from "./onboarding.js?v=20261027a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261027a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261027a";
+import { Social } from "./social.js?v=20261027a";
+import { mountPotes, unmountPotes, bindPotes, editMyAvatar, setInvite } from "./potes.js?v=20261027a";
+import { avatarSvg } from "./avatar.js?v=20261027a";
+import { Bridge } from "./potes-ui.js?v=20261027a";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261027a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261027a";
+import { openSettings } from "./potes-settings.js?v=20261027a";
+import { openProgramShare, openProgramPreview, openCommunity } from "./potes-programs.js?v=20261027a";
+import { SharedPrograms } from "./community.js?v=20261027a";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey } from "./social-stats.js?v=20261027a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
+
+// Liens de la partie Potes : ?pote=<pseudo> (invitation) et ?programme=<id> (programme partagé)
+const potesLink = (() => {
+  const query = new URLSearchParams(location.search);
+  const link = { pote: query.get("pote"), programme: query.get("programme") };
+  if (link.pote || link.programme) history.replaceState(null, "", location.pathname + location.hash);
+  return link;
+})();
 
 const state = {
   user: null,
@@ -165,6 +183,8 @@ function init() {
     state.weightLog = [];
     state.workout = null;
     unmountNutrition();
+    unmountPotes();
+    Social.reset();
     showLoading(false);
     updateSyncBadge();
     closeProfileDrawer();
@@ -190,6 +210,22 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#drawer-logout-btn").addEventListener("click", () => { closeProfileDrawer(); handleLogout(); });
   $("#drawer-language-btn").addEventListener("click", () => openModal("modal-language"));
   $("#drawer-progress-btn").addEventListener("click", () => { closeProfileDrawer(); setView("progress"); });
+  // partie Potes et avatar
+  $("#drawer-potes-btn").addEventListener("click", () => { closeProfileDrawer(); setView("potes"); });
+  ["#drawer-avatar", "#drawer-avatar-link"].forEach(sel => $(sel).addEventListener("click", () => { closeProfileDrawer(); editMyAvatar(); }));
+  bindPotes($("#view-potes"));
+  setupPotesBridge();
+  mountBell($("#bell-btn"));
+  watchLive();
+  bindHomeLine($("#potes-line"));
+  $("#community-btn").addEventListener("click", openCommunity);
+  $("#programs-list").addEventListener("click", event => {
+    const share = event.target.closest("[data-share-program]");
+    const update = event.target.closest("[data-program-update]");
+    if (share) { event.stopPropagation(); openProgramShare(share.dataset.shareProgram); }
+    if (update) { event.stopPropagation(); openProgramPreview(update.dataset.programUpdate); }
+  }, true);
+  Social.onChange(onSocialChange);
   $("#drawer-about-btn").addEventListener("click", toggleDrawerAbout);
   $("#drawer-exercisedb-btn").addEventListener("click", toggleDrawerExerciseDB);
   $("#progress-back-btn").addEventListener("click", () => setView("home"));
@@ -655,9 +691,7 @@ async function loadApp(firebaseUser) {
     state.sessionLogs = DB.getSessionLogs();
     state.weightLog = DB.getWeightLog();
 
-    const initial = (firebaseUser.displayName || "t").slice(0, 1);
-    $("#profile-btn").textContent = initial;
-    $("#drawer-avatar").textContent = initial;
+    renderMyAvatar();
     $("#drawer-name").textContent = firebaseUser.displayName || "";
     $("#drawer-email").textContent = firebaseUser.email || "";
     const createdAt = data.profile?.createdAt;
@@ -673,6 +707,8 @@ async function loadApp(firebaseUser) {
 
     applyStaticTranslations();
     renderAll();
+    // partie Potes : chargée à côté, sans retarder l'appli ; une erreur la laisse simplement de côté
+    Social.load(firebaseUser.uid);
 
     if (notionReturn) {
       const back = notionReturn;
@@ -724,6 +760,201 @@ function setView(view) {
   if (view === "progress") renderProgress();
   if (view === "workout") renderWorkout();
   if (view === "nutrition") renderNutrition();
+  if (view === "potes") mountPotes($("#view-potes"));
+  else unmountPotes();
+}
+
+/* ─── Partie Potes : branchements avec le reste de l'appli ─── */
+/** Textes venus d'autres utilisateurs (programmes, exercices) : sans balises, avant d'entrer dans tes données */
+function cleanForeign(value, max = 80) {
+  return String(value ?? "").replace(/[<>"'`&]/g, "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
+}
+const SESSION_TYPES = ["push", "pull", "legs", "full", "other"];
+const cleanList = list => (Array.isArray(list) ? list : []).map(item => cleanForeign(item, 30)).filter(Boolean).slice(0, 8);
+
+/** Exercice venu d'un autre (communauté ou programme partagé) → exercice perso */
+function foreignExercise(ex, extra) {
+  return {
+    id: `custom-${uid()}`,
+    name: cleanForeign(ex.name, 60) || "exercice",
+    name_fr: cleanForeign(ex.name, 60) || "exercice",
+    type: SESSION_TYPES.includes(ex.type) ? ex.type : "other",
+    muscle_focus: cleanForeign(ex.muscle_focus, 30) || "autre",
+    muscle_portion: ex.muscle_portion ? cleanForeign(ex.muscle_portion, 30) : null,
+    contraction_type: ex.contraction_type ? cleanForeign(ex.contraction_type, 30) : null,
+    primary_muscles: cleanList(ex.primary_muscles),
+    secondary_muscles: cleanList(ex.secondary_muscles),
+    secondary_detail: [],
+    equipment: cleanForeign(ex.equipment, 30) || "autre",
+    difficulty: "intermediaire",
+    bodyweight: !!ex.bodyweight,
+    unilateral: false,
+    description: cleanForeign(ex.description, 400),
+    instructions: [],
+    tips: [],
+    img: null,
+    similar_exercises: [],
+    custom: true,
+    createdAt: Date.now(),
+    ...extra
+  };
+}
+
+/** Séances d'un programme partagé → séances locales (exercices inconnus écartés, charges à régler) */
+function sessionsFromShared(shared) {
+  const idFor = {};
+  for (const custom of shared.customs || []) {
+    const tag = `${shared.id}:${custom.id}`;
+    const existing = DB.getCustomExercises().find(ex => ex.sharedFrom === tag);
+    idFor[custom.id] = (existing || DB.saveCustomExercise(foreignExercise(custom, { sharedFrom: tag }))).id;
+  }
+  state.exercises = DB.getExercises();
+  const known = id => idFor[id] || (getExerciseById(id, state.exercises) ? id : null);
+  return (shared.sessions || []).slice(0, 14).map(session => {
+    const exerciseIds = [];
+    const plan = {};
+    for (const id of session.exerciseIds || []) {
+      const real = known(id);
+      if (!real || exerciseIds.includes(real)) continue;
+      exerciseIds.push(real);
+      const p = session.plan?.[id];
+      if (p) plan[real] = {
+        sets: Math.min(12, Math.max(1, Number(p.sets) || 3)),
+        reps: Math.min(100, Math.max(1, Number(p.reps) || 10)),
+        weight: 0,
+        ...(Array.isArray(p.setList) ? { setList: p.setList.slice(0, 12).map(item => ({ reps: Number(item.reps) || 0, weight: 0, kind: ["warmup", "drop", "work"].includes(item.kind) ? item.kind : "work" })) } : {})
+      };
+    }
+    return { id: uid(), name: cleanForeign(session.name, 40) || t("session"), type: SESSION_TYPES.includes(session.type) ? session.type : "other", exerciseIds, plan };
+  });
+}
+
+function joinSharedProgram(shared) {
+  const saved = { id: uid(), name: cleanForeign(shared.name) || t("program"), description: cleanForeign(shared.description, 300), createdAt: Date.now(), sessions: sessionsFromShared(shared) };
+  DB.addProgram(saved);
+  state.programs = DB.getPrograms();
+  renderPrograms();
+  return saved.id;
+}
+
+function updateProgramCopy(localId, shared) {
+  const data = DB.getData();
+  const program = data.programs.find(p => p.id === localId);
+  if (!program) return;
+  program.name = cleanForeign(shared.name) || program.name;
+  program.description = cleanForeign(shared.description, 300);
+  program.sessions = sessionsFromShared(shared);
+  DB.saveData(data);
+  state.programs = DB.getPrograms();
+  state.programUpdates?.delete(localId);
+  renderPrograms();
+}
+
+/** Mes chiffres du classement, calculés sur mes données (les mêmes que ceux publiés) */
+function mySocialStats() {
+  const month = monthKey(Date.now());
+  return {
+    sessions: weekSessions(state.sessionLogs).length,
+    streak: computeStreak(state.weightLog).current,
+    records: recordHistory(state.sessionLogs).filter(r => monthKey(r.date) === month).length
+  };
+}
+
+function setupPotesBridge() {
+  Object.assign(Bridge, {
+    nameOf: id => exerciseNameById(id) || id,
+    getPrograms: () => state.programs,
+    getCustomExercises: () => DB.getCustomExercises(),
+    translate: (category, value) => translateExerciseValue(category, value),
+    sessionTypeLabel: type => getSessionTypeLabel(type),
+    myStats: mySocialStats,
+    openFriend: openFriendPage,
+    openSettings,
+    openMyProfile: openMyProfileAsFriend,
+    openProgram: openProgramPreview,
+    goPotes: () => setView("potes"),
+    joinProgram: joinSharedProgram,
+    updateProgramCopy,
+    addCommunityExercise: ex => { DB.saveCustomExercise(foreignExercise(ex, { communityId: ex.id })); refreshExercises(); },
+    refresh: () => { renderPrograms(); renderHome(); }
+  });
+  // le résumé partagé : SEULEMENT ce que l'utilisateur a choisi de montrer
+  Social.summaryProvider = () => buildSharedItems({
+    share: Social.share,
+    board: Social.board,
+    weeklyGoal: Social.weeklyGoal,
+    logs: state.sessionLogs,
+    weightLog: state.weightLog,
+    program: getNextSession()?.program || state.programs[0] || null,
+    nutrition: DB.getNutrition(),
+    sharedPrograms: SharedPrograms.publishedList(state.programs),
+    nameOf: id => exerciseNameById(id) || id
+  });
+}
+
+let socialSignature = "";
+function onSocialChange() {
+  renderMyAvatar();
+  $("#community-btn").classList.toggle("hidden", !Social.joined);
+  if (state.activeView === "home") renderHomeLine($("#potes-line"));
+  // programmes : étiquettes de partage seulement si elles ont changé
+  const signature = JSON.stringify([Social.joined, SharedPrograms.shares, SharedPrograms.joined]);
+  if (signature !== socialSignature) {
+    socialSignature = signature;
+    renderPrograms();
+    checkProgramUpdates();
+  }
+  // liens ouverts avant la connexion : traités une fois la partie Potes chargée
+  if (Social.loaded && (potesLink.pote || potesLink.programme)) {
+    const { pote, programme } = potesLink;
+    potesLink.pote = potesLink.programme = null;
+    if (pote && !Social.error) { setView("potes"); setInvite(pote); }
+    if (programme) setTimeout(() => openProgramPreview(programme), pote ? 400 : 0);
+  }
+}
+
+/** Programmes suivis : une nouvelle version chez l'auteur ? (vérifié une fois par ouverture) */
+async function checkProgramUpdates() {
+  if (!Social.joined) return;
+  state.programUpdates = state.programUpdates || new Set();
+  state.programChecked = state.programChecked || new Set();
+  for (const [id, entry] of Object.entries(SharedPrograms.joined)) {
+    if (state.programChecked.has(id)) continue;
+    state.programChecked.add(id);
+    const shared = await SharedPrograms.get(id);
+    if (shared && shared.version > entry.version) { state.programUpdates.add(entry.localId); renderPrograms(); }
+  }
+}
+
+/** Après une séance : records et objectif de la semaine pour les potes (si partagés), puis résumé à jour */
+function shareSessionWithPotes(recap) {
+  if (!Social.joined) return;
+  for (const record of recap.records.slice(0, 5)) Social.postEvent("record", { name: String(record.name || "").slice(0, 60), weight: record.weight, gain: record.gain });
+  const count = weekSessions(state.sessionLogs).length;
+  if (count === Social.weeklyGoal) Social.postEvent("weekGoal", { count, goal: Social.weeklyGoal });
+  Social.queuePublish();
+}
+
+/** Avatar dans le bouton profil et le tiroir ; la lettre du nom tant qu'il n'y a pas d'avatar */
+function renderMyAvatar() {
+  const avatar = Social.avatar;
+  const initial = String(state.user?.name || state.user?.email || "t").slice(0, 1);
+  const btn = $("#profile-btn");
+  const drawerAvatar = $("#drawer-avatar");
+  btn.classList.toggle("has-avatar", !!avatar);
+  drawerAvatar.classList.toggle("has-avatar", !!avatar);
+  btn.setAttribute("aria-label", t("profile"));
+  if (avatar) {
+    btn.innerHTML = avatarSvg(avatar, { size: 38 });
+    drawerAvatar.innerHTML = avatarSvg(avatar, { size: 84 });
+  } else {
+    btn.textContent = initial;
+    drawerAvatar.textContent = initial;
+  }
+  $("#drawer-avatar-link").textContent = t(avatar ? "avatarEdit" : "avatarCreate");
+  const pseudo = $("#drawer-pseudo");
+  pseudo.classList.toggle("hidden", !Social.joined);
+  pseudo.textContent = Social.joined ? t("potesPseudo", { name: Social.username }) : "";
 }
 
 function renderNutrition() {
@@ -1081,6 +1312,7 @@ function renderHome() {
 
   renderHero();
   renderStreak();
+  renderHomeLine($("#potes-line"));
   renderPerfCard();
 
   // 3 dernières séances, le reste derrière « voir tout »
@@ -1147,12 +1379,14 @@ function renderHome() {
       if (!removed) return;
       state.sessionLogs = DB.getSessionLogs();
       renderHome();
+      Social.queuePublish();
       showToast(t("sessionDeleted"), {
         label: t("undo"),
         onClick: () => {
           DB.saveSessionLog(removed);
           state.sessionLogs = DB.getSessionLogs();
           renderHome();
+          Social.queuePublish();
         }
       });
     });
@@ -1189,6 +1423,9 @@ function logWeight(weight, { silent = false } = {}) {
   const after = computeStreak(state.weightLog);
   renderHome();
   if (state.activeView === "progress") renderProgress();
+  // partie Potes : palier de flamme (si partagée) et résumé à jour
+  if (!before.doneToday && STREAK_MILESTONES.includes(after.current)) Social.postEvent("streak", { days: after.current });
+  Social.queuePublish();
   if (silent) return;
 
   if (before.doneToday) {
@@ -1564,17 +1801,26 @@ function parseDateStr(str) {
 }
 
 function renderPrograms() {
-  $("#programs-list").innerHTML = state.programs.length ? state.programs.map(program => `
+  // partie Potes : étiquette « partagé » / « programme d'un pote » et bouton « partager » (seulement si rejoint)
+  const followed = Object.entries(Social.joined ? SharedPrograms.joined : {});
+  $("#programs-list").innerHTML = state.programs.length ? state.programs.map(program => {
+    const shared = Social.joined && SharedPrograms.shares[program.id];
+    const follow = followed.find(([, entry]) => entry.localId === program.id);
+    const update = follow && state.programUpdates?.has(program.id);
+    return `
     <div class="program-item" style="cursor:pointer;" data-program-id="${program.id}">
       <div class="program-item-head">
         <div>
-          <div class="item-title">${program.name}</div>
-          <div class="item-subtitle">${program.description || ""}</div>
+          <div class="item-title">${escapeHtml(program.name)}</div>
+          <div class="item-subtitle">${escapeHtml(program.description || "")}</div>
           <div class="small-meta">${t("sessionsCount", { count: program.sessions.length })}</div>
+          ${shared ? `<span class="prog-tag">${escapeHtml(t("spTagShared"))}</span>` : follow ? `<span class="prog-tag">${escapeHtml(t("spTagFollowed"))}</span>` : ""}
+          ${update ? `<button type="button" class="prog-update" data-program-update="${escapeHtml(follow[0])}">${escapeHtml(t("spUpdateAvailable"))}</button>` : ""}
         </div>
+        ${Social.joined && !follow ? `<button type="button" class="btn btn-surface btn-sm" data-share-program="${program.id}">${escapeHtml(t("spShareShort"))}</button>` : ""}
       </div>
-    </div>
-  `).join("") : `<div class="card">${t("noProgramsYet")}</div>`;
+    </div>`;
+  }).join("") : `<div class="card">${t("noProgramsYet")}</div>`;
 
   $all("[data-program-id]").forEach(card => {
     card.addEventListener("click", () => openProgramDetail(card.dataset.programId));
@@ -2630,6 +2876,8 @@ function renderExerciseDetails(exercise) {
 
 function updateUILanguage() {
   applyStaticTranslations();
+  if (state.user) renderMyAvatar();
+  if (state.activeView === "potes") mountPotes($("#view-potes"));
 
   if (state.profile) {
     renderHome();
@@ -2698,6 +2946,7 @@ function finishWorkout() {
   const recap = buildRecap(log, previousLogs);
   DB.saveSessionLog(log);
   state.sessionLogs = DB.getSessionLogs();
+  shareSessionWithPotes(recap);
   state.workout = null;
   stopRest();
   renderHome();
@@ -2717,15 +2966,11 @@ function buildRecap(log, previousLogs) {
     volume += done.reduce((sum, set) => sum + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0);
     const line = compareWithLastTime(ex, done, previousLogs);
     if (line) compare.push(line);
-    const best = Math.max(0, ...done.map(set => Number(set.weight) || 0));
-    if (!best) continue;
-    const bestSet = done.find(set => (Number(set.weight) || 0) === best);
-    if ((Number(bestSet.reps) || 0) < (Number(bestSet.targetReps) || 0)) continue;
-    const before = previousLogs.flatMap(l => l.exercises || []).filter(e => e.exerciseId === ex.exerciseId)
-      .flatMap(e => e.sets || []).filter(set => set.status === "done").map(set => Number(set.weight) || 0);
-    if (before.length && best > Math.max(...before)) {
+    // règle commune avec la partie Potes (records du mois, notifications) : js/social-stats.js
+    const record = findRecord(ex, previousLogs);
+    if (record) {
       const exercise = getExerciseById(ex.exerciseId, state.exercises);
-      records.push({ name: exercise ? getExerciseName(exercise) : ex.exerciseName, weight: best, gain: best - Math.max(...before) });
+      records.push({ name: exercise ? getExerciseName(exercise) : ex.exerciseName, weight: record.weight, gain: record.gain });
     }
   }
   return { duration: log.durationMs, sets, volume: Math.round(volume), reps, records, compare, name: log.sessionName };

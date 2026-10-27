@@ -1,7 +1,12 @@
-import { i18n } from "./i18n.js?v=20261026e";
+import { i18n } from "./i18n.js?v=20261027a";
 
 export function uid() {
   return Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+}
+
+/** Texte sûr à insérer dans du HTML (pseudos des potes, noms saisis…) */
+export function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
 }
 
 export function $(selector, root = document) {

@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261026e">
+  <link rel="stylesheet" href="./styles.css?v=20261027a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -81,6 +81,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg><span id="streak-pill-count">0</span>
         </button>
         <span id="sync-badge" class="sync-badge">local</span>
+        <button id="bell-btn" class="bell-btn hidden" type="button" aria-label="notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.6 16.6c.9-.9 1.4-2 1.4-3.6v-2.2a5 5 0 0 1 10 0V13c0 1.6.5 2.7 1.4 3.6.3.3.1.9-.4.9H6c-.5 0-.7-.6-.4-.9Z"/><path d="M10 20.2a2.3 2.3 0 0 0 4 0"/></svg><span class="bell-badge hidden"></span></button>
         <button id="profile-btn" class="avatar-btn" title="profil" data-i18n-title="profile">t</button>
       </div>
     </header>
@@ -105,13 +106,16 @@
         <button id="drawer-close-btn" class="icon-btn" aria-label="fermer">✕</button>
       </div>
       <div class="drawer-profile-info">
-        <div id="drawer-avatar" class="drawer-avatar">t</div>
+        <button id="drawer-avatar" class="drawer-avatar" type="button" tabindex="-1" aria-hidden="true">t</button>
+        <button id="drawer-avatar-link" class="hero-other drawer-avatar-link" type="button">créer mon avatar</button>
         <div id="drawer-name" class="drawer-name"></div>
+        <div id="drawer-pseudo" class="drawer-pseudo hidden"></div>
         <div id="drawer-email" class="drawer-email"></div>
         <div id="drawer-since" class="drawer-since"></div>
       </div>
       <nav class="drawer-menu">
         <button id="drawer-progress-btn" class="drawer-menu-item" data-i18n="progress">progression</button>
+        <button id="drawer-potes-btn" class="drawer-menu-item"><span data-i18n="potesMenu">potes</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-about-btn" class="drawer-menu-item" data-i18n="about">a propos</button>
         <button id="drawer-wizard-btn" class="drawer-menu-item" data-i18n="wizardMenu">créer mon programme</button>
         <button id="drawer-notion-btn" class="drawer-menu-item" data-i18n="notionMenu">importer depuis Notion</button>
@@ -176,6 +180,8 @@
 
         <div id="streak-card" class="card streak-card mb-12"></div>
 
+        <div id="potes-line" class="card potes-line mb-12 hidden"></div>
+
         <div id="perf-card" class="card perf-card mb-12"></div>
 
         <div class="section-row">
@@ -218,6 +224,7 @@
         </div>
         <div class="section-actions mb-12">
           <button id="create-exercise-btn" class="btn btn-primary btn-sm" type="button">+ <span data-i18n="customCreate">créer un exercice</span></button>
+          <button id="community-btn" class="btn btn-surface btn-sm hidden" type="button" data-i18n="cmButton">communauté</button>
         </div>
 
         <div id="body-map-card" class="card body-map-card mb-12">
@@ -395,6 +402,8 @@
       </section>
 
       <section id="view-nutrition" class="view" aria-label="nutrition"></section>
+
+      <section id="view-potes" class="view"></section>
     </main>
 
     <div id="nx-mobar" class="nx-mobar"><span>Cible</span><b id="nx-moKcal">0</b><span id="nx-moMacros"></span></div>
@@ -579,7 +588,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261026e"></script>
+  <script type="module" src="./js/app.js?v=20261027a"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

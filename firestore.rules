@@ -1,0 +1,372 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════
+// TrackLift : règles de sécurité Firestore
+//
+// Où les coller : console Firebase > Firestore Database > onglet « Règles »,
+// remplacer tout le texte par ce fichier, puis « Publier ».
+// Tout ce qui n'est pas autorisé ci-dessous est refusé.
+// Testé avec l'émulateur Firestore (_bench/rules-tests, hors dépôt).
+//
+// Rappel : les stats partagées sont calculées dans le navigateur de chacun ;
+// un tricheur pourrait les gonfler. C'est accepté entre potes.
+//
+// users/<uid> : données de l'appli (programmes, séances, pesées, nutrition)
+//   ✔ le propriétaire lit et écrit son document
+//   ✘ personne d'autre, même un ami
+//
+// social/<uid> : réglages privés de la partie Potes (avatar, partages, notifs…)
+//   ✔ le propriétaire lit et écrit
+//   ✘ personne d'autre ; ✘ supprimer le document ; ✘ changer sa clé d'auteur
+//
+// usernames/<pseudo> → { uid } : réservation du pseudo
+//   ✔ vérifier UN pseudo exact (connecté) ; réserver un pseudo libre avec son profil ;
+//     libérer l'ancien en changeant de pseudo ou en partant
+//   ✘ lister les pseudos ; prendre un pseudo pris ; en garder deux ; pseudo mal formé ou réservé
+//
+// profiles/<uid> : profil public = pseudo + avatar, rien d'autre
+//   ✔ un utilisateur connecté lit le profil d'une personne précise
+//   ✘ lister les profils ; un profil avec autre chose (e-mail, nom…) ;
+//     lire le profil de quelqu'un qui nous a bloqué ; écrire celui d'un autre
+//
+// friendRequests/<de>_<vers> : demande d'ami
+//   ✔ envoyer une demande (les deux dans la partie Potes, pas déjà amis, personne n'a bloqué l'autre)
+//   ✔ l'expéditeur et le destinataire la lisent et la suppriment (annuler, refuser, accepter)
+//   ✘ demande au nom d'un autre ; à soi-même ; vers ou depuis quelqu'un qui a bloqué
+//
+// friendships/<uidA>_<uidB> (paire triée, champ members) : amitié réciproque
+//   ✔ créée par le destinataire d'une demande existante ; lue et supprimée par les deux membres
+//   ✘ créer une amitié sans demande reçue ; lire l'amitié des autres
+//
+// blocks/<qui bloque>_<bloqué>
+//   ✔ bloquer, débloquer, voir sa propre liste
+//   ✘ voir qui nous a bloqué
+//
+// shared/<uid> : liste de ce que l'utilisateur partage ; shared/<uid>/items/<élément> : les données
+//   éléments : streak, sessions, records, curves, program, weight, nutrition, board, programs
+//   ✔ lu par ses amis seulement, et pour chaque élément SEULEMENT si son interrupteur est allumé
+//     dans social/<uid> (couper un partage coupe la lecture immédiatement, même si la donnée traîne)
+//   ✔ écrit par le propriétaire, seulement pour un élément qu'il partage
+//   ✘ un inconnu ; un ancien ami ; un élément non partagé ; le classement d'un critère refusé
+//
+// activity/<auteur>/events/<id> : record, palier de flamme, objectif de la semaine
+//   ✔ lu par l'auteur et ses amis (amitié vérifiée à chaque lecture) ; écrit par l'auteur
+//     seulement pour un type qu'il partage
+//   ✘ un inconnu ; un ancien ami ; écrire dans l'espace d'un autre
+//
+// cheers/<de>_<idÉvénement> : « bravo »
+//   ✔ un ami félicite un événement qui existe ; l'expéditeur et le destinataire le lisent
+//   ✘ féliciter un inconnu ; se féliciter soi-même ; lire les bravos des autres
+//
+// sharedPrograms/<id> (+ members/<uid>) : programme partagé par lien, que d'autres rejoignent
+//   ✔ lu par un utilisateur connecté qui connaît le lien (pas de liste) ; écrit par son auteur
+//   ✔ chacun s'inscrit ou se désinscrit lui-même ; l'auteur et les inscrits voient la liste
+//   ✘ lister les programmes des autres ; modifier le programme d'un autre ;
+//     inscrire quelqu'un d'autre
+//
+// communityExercises/<clé d'auteur>_<1 à 10> : exercices de la communauté (anonymes)
+//   ✔ lus par tout utilisateur connecté ; 10 exercices maximum par personne
+//   ✔ modifiés et supprimés par leur auteur seulement
+//   ✘ un 11e exercice ; un exercice au nom d'un autre ; un exercice mal formé
+// ═══════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function isMe(userId) { return signedIn() && request.auth.uid == userId; }
+
+    function usernameDoc(name) { return /databases/$(database)/documents/usernames/$(name); }
+    function profileDoc(userId) { return /databases/$(database)/documents/profiles/$(userId); }
+    function socialDoc(userId) { return /databases/$(database)/documents/social/$(userId); }
+
+    function hasBlocked(owner, other) {
+      return exists(/databases/$(database)/documents/blocks/$(owner + '_' + other));
+    }
+    function pairId(a, b) { return a < b ? a + '_' + b : b + '_' + a; }
+    function areFriends(a, b) {
+      return exists(/databases/$(database)/documents/friendships/$(pairId(a, b)));
+    }
+
+    // ─── Pseudo et avatar ─────────────────────────────────
+    function validName(name) {
+      return name is string
+        && name.matches('^[a-z0-9_.]{3,20}$')
+        && !(name in ['admin', 'administrateur', 'tracklift', 'support', 'moderation', 'moderateur', 'staff', 'officiel', 'equipe']);
+    }
+
+    function partId(value) { return value is string && value.matches('^[a-z0-9-]{1,16}$'); }
+
+    function validAvatar(a) {
+      return a is map
+        && a.keys().hasOnly(['v', 'skin', 'hair', 'hairColor', 'eyes', 'mouth', 'beard', 'outfit', 'outfitColor', 'accessory', 'bg'])
+        && (!('v' in a) || a.v is int)
+        && (!('skin' in a) || partId(a.skin))
+        && (!('hair' in a) || partId(a.hair))
+        && (!('hairColor' in a) || partId(a.hairColor))
+        && (!('eyes' in a) || partId(a.eyes))
+        && (!('mouth' in a) || partId(a.mouth))
+        && (!('beard' in a) || partId(a.beard))
+        && (!('outfit' in a) || partId(a.outfit))
+        && (!('outfitColor' in a) || partId(a.outfitColor))
+        && (!('accessory' in a) || partId(a.accessory))
+        && (!('bg' in a) || partId(a.bg));
+    }
+
+    function validProfile(d) {
+      return d.keys().hasOnly(['username', 'usernameLower', 'avatar', 'updatedAt'])
+        && d.keys().hasAll(['username', 'usernameLower', 'avatar'])
+        && d.username is string
+        && d.username.lower() == d.usernameLower
+        && validName(d.usernameLower)
+        && validAvatar(d.avatar)
+        && (!('updatedAt' in d) || d.updatedAt is int);
+    }
+
+    function nameOwnedAfter(name, userId) {
+      return existsAfter(usernameDoc(name))
+        && getAfter(usernameDoc(name)).data.uid == userId;
+    }
+
+    // ─── Réglages de partage (lus dans social/<uid>) ──────
+    function shareOn(s, key) { return s.get('share', {}).get(key, false) == true; }
+    function boardOn(s, key) { return s.get('board', {}).get(key, false) == true; }
+    function anyBoardOn(s) { return boardOn(s, 'sessions') || boardOn(s, 'streak') || boardOn(s, 'records'); }
+
+    // un élément partagé est-il autorisé par les réglages s ?
+    function itemOn(s, item) {
+      return (item == 'board' && anyBoardOn(s))
+        || item == 'programs'
+        || (item in ['streak', 'sessions', 'records', 'curves', 'program', 'weight', 'nutrition'] && shareOn(s, item));
+    }
+
+    function validBoard(b, s) {
+      return b.keys().hasOnly(['weekKey', 'monthKey', 'sessions', 'streak', 'records', 'updatedAt'])
+        && (!('sessions' in b) || boardOn(s, 'sessions'))
+        && (!('streak' in b) || boardOn(s, 'streak'))
+        && (!('records' in b) || boardOn(s, 'records'));
+    }
+
+    function eventShared(type, s) {
+      return (type == 'record' && shareOn(s, 'records'))
+        || (type == 'streak' && shareOn(s, 'streak'))
+        || (type == 'weekGoal' && shareOn(s, 'sessions'));
+    }
+
+    // ─── Données de l'appli : inchangé ────────────────────
+    match /users/{userId} {
+      allow read, write: if isMe(userId);
+    }
+
+    // ─── Réglages privés de la partie Potes ───────────────
+    function validAuthorKey(d) {
+      return !('authorKey' in d) || (d.authorKey is string && d.authorKey.matches('^[a-z0-9]{12}$'));
+    }
+    match /social/{userId} {
+      allow read: if isMe(userId);
+      allow create: if isMe(userId) && request.resource.data.size() <= 40 && validAuthorKey(request.resource.data);
+      allow update: if isMe(userId)
+        && request.resource.data.size() <= 40
+        && validAuthorKey(request.resource.data)
+        // la clé d'auteur des exercices communautaires ne change jamais (sinon la limite sauterait)
+        && (!('authorKey' in resource.data) || request.resource.data.get('authorKey', '') == resource.data.authorKey);
+      allow delete: if false;
+    }
+
+    // ─── Pseudos ──────────────────────────────────────────
+    match /usernames/{name} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && validName(name)
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == me()
+        && existsAfter(profileDoc(me()))
+        && getAfter(profileDoc(me())).data.usernameLower == name;
+      allow update: if false;
+      allow delete: if signedIn()
+        && resource.data.uid == me()
+        && (!existsAfter(profileDoc(me()))
+            || getAfter(profileDoc(me())).data.usernameLower != name);
+    }
+
+    // ─── Profils publics ──────────────────────────────────
+    match /profiles/{userId} {
+      allow get: if signedIn() && (me() == userId || !hasBlocked(userId, me()));
+      allow list: if false;
+      allow create: if isMe(userId)
+        && validProfile(request.resource.data)
+        && nameOwnedAfter(request.resource.data.usernameLower, userId);
+      allow update: if isMe(userId)
+        && validProfile(request.resource.data)
+        && nameOwnedAfter(request.resource.data.usernameLower, userId)
+        && (request.resource.data.usernameLower == resource.data.usernameLower
+            || !existsAfter(usernameDoc(resource.data.usernameLower)));
+      allow delete: if isMe(userId)
+        && !existsAfter(usernameDoc(resource.data.usernameLower));
+    }
+
+    // ─── Demandes d'ami ───────────────────────────────────
+    match /friendRequests/{requestId} {
+      allow get, list: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['from', 'to', 'createdAt'])
+        && request.resource.data.from == me()
+        && request.resource.data.to is string
+        && request.resource.data.to != me()
+        && requestId == me() + '_' + request.resource.data.to
+        && exists(profileDoc(me()))
+        && exists(profileDoc(request.resource.data.to))
+        && !hasBlocked(request.resource.data.to, me())
+        && !hasBlocked(me(), request.resource.data.to)
+        && !areFriends(me(), request.resource.data.to);
+      allow update: if false;
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+    }
+
+    // ─── Amitiés ──────────────────────────────────────────
+    function otherOf(members) { return members[0] == me() ? members[1] : members[0]; }
+    match /friendships/{pairKey} {
+      allow get, list: if signedIn() && me() in resource.data.members;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['members', 'createdAt', 'createdBy'])
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == 2
+        && request.resource.data.members[0] < request.resource.data.members[1]
+        && pairKey == request.resource.data.members[0] + '_' + request.resource.data.members[1]
+        && me() in request.resource.data.members
+        && request.resource.data.createdBy == me()
+        // seul le destinataire d'une demande peut créer l'amitié
+        && exists(/databases/$(database)/documents/friendRequests/$(otherOf(request.resource.data.members) + '_' + me()))
+        && !hasBlocked(me(), otherOf(request.resource.data.members))
+        && !hasBlocked(otherOf(request.resource.data.members), me());
+      allow update: if false;
+      allow delete: if signedIn() && me() in resource.data.members;
+    }
+
+    // ─── Blocages ─────────────────────────────────────────
+    match /blocks/{blockId} {
+      allow get, list: if signedIn() && resource.data.by == me();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['by', 'target', 'createdAt'])
+        && request.resource.data.by == me()
+        && request.resource.data.target is string
+        && request.resource.data.target != me()
+        && blockId == me() + '_' + request.resource.data.target;
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.by == me();
+    }
+
+    // ─── Ce que l'on partage ──────────────────────────────
+    match /shared/{userId} {
+      // la liste des éléments partagés : amis seulement
+      allow get: if signedIn() && (me() == userId || areFriends(me(), userId));
+      allow list: if false;
+      allow create, update: if isMe(userId)
+        && request.resource.data.keys().hasOnly(['items', 'updatedAt'])
+        && request.resource.data.items is list
+        && request.resource.data.items.size() <= 10;
+      allow delete: if isMe(userId);
+
+      match /items/{item} {
+        // lu par un ami SEULEMENT si l'interrupteur de cet élément est allumé maintenant
+        allow get: if signedIn()
+          && (me() == userId || (areFriends(me(), userId) && itemOn(get(socialDoc(userId)).data, item)));
+        allow list: if isMe(userId);
+        allow create, update: if isMe(userId)
+          && itemOn(getAfter(socialDoc(userId)).data, item)
+          && (item != 'board' || validBoard(request.resource.data, getAfter(socialDoc(userId)).data));
+        allow delete: if isMe(userId);
+      }
+    }
+
+    // ─── Activité (notifications des potes) ───────────────
+    match /activity/{author}/events/{eventId} {
+      allow get, list: if signedIn() && (me() == author || areFriends(me(), author));
+      allow create: if isMe(author)
+        && request.resource.data.keys().hasOnly(['type', 'data', 'createdAt'])
+        && request.resource.data.type in ['record', 'streak', 'weekGoal']
+        && eventShared(request.resource.data.type, get(socialDoc(author)).data)
+        && request.resource.data.data is map
+        && request.resource.data.data.size() <= 8;
+      allow update: if false;
+      allow delete: if isMe(author);
+    }
+
+    // ─── Bravos ───────────────────────────────────────────
+    match /cheers/{cheerId} {
+      allow get, list: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['from', 'to', 'eventId', 'createdAt'])
+        && request.resource.data.from == me()
+        && request.resource.data.to is string
+        && request.resource.data.to != me()
+        && cheerId == me() + '_' + request.resource.data.eventId
+        && areFriends(me(), request.resource.data.to)
+        && exists(/databases/$(database)/documents/activity/$(request.resource.data.to)/events/$(request.resource.data.eventId));
+      allow update: if false;
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+    }
+
+    // ─── Programmes partagés ──────────────────────────────
+    function validSharedProgram(d) {
+      return d.keys().hasOnly(['owner', 'name', 'description', 'sessions', 'customs', 'version', 'createdAt', 'updatedAt'])
+        && d.owner == me()
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 80
+        && (!('description' in d) || (d.description is string && d.description.size() <= 300))
+        && d.sessions is list && d.sessions.size() <= 14
+        && (!('customs' in d) || (d.customs is list && d.customs.size() <= 40))
+        && d.version is int;
+    }
+    function programDoc(programId) { return /databases/$(database)/documents/sharedPrograms/$(programId); }
+
+    match /sharedPrograms/{programId} {
+      allow get: if signedIn() && !hasBlocked(resource.data.owner, me());
+      allow list: if signedIn() && resource.data.owner == me();
+      allow create: if signedIn() && exists(profileDoc(me())) && validSharedProgram(request.resource.data);
+      allow update: if signedIn() && resource.data.owner == me() && validSharedProgram(request.resource.data);
+      allow delete: if signedIn() && resource.data.owner == me();
+
+      match /members/{memberId} {
+        allow get, list: if signedIn()
+          && (get(programDoc(programId)).data.owner == me()
+              || exists(/databases/$(database)/documents/sharedPrograms/$(programId)/members/$(me())));
+        allow create: if isMe(memberId)
+          && exists(profileDoc(memberId))
+          && exists(programDoc(programId))
+          && !hasBlocked(get(programDoc(programId)).data.owner, me())
+          && request.resource.data.keys().hasOnly(['joinedAt']);
+        allow update: if false;
+        // soi-même (ne plus suivre) ou l'auteur (quand il arrête de partager)
+        allow delete: if isMe(memberId)
+          || (signedIn() && get(programDoc(programId)).data.owner == me());
+      }
+    }
+
+    // ─── Exercices de la communauté ───────────────────────
+    function myAuthorKey() { return get(socialDoc(me())).data.get('authorKey', ''); }
+    function validCommunity(exId, d) {
+      return d.keys().hasOnly(['key', 'name', 'type', 'muscle_focus', 'muscle_portion', 'contraction_type', 'primary_muscles', 'secondary_muscles', 'equipment', 'bodyweight', 'description', 'createdAt', 'updatedAt'])
+        && d.key is string && d.key.matches('^[a-z0-9]{12}$')
+        // l'identifiant est <clé>_<1 à 10> : 10 exercices maximum par personne
+        && exId.matches('^' + d.key + '_([1-9]|10)$')
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 60
+        && (!('description' in d) || (d.description is string && d.description.size() <= 400))
+        && (!('primary_muscles' in d) || (d.primary_muscles is list && d.primary_muscles.size() <= 4))
+        && (!('secondary_muscles' in d) || (d.secondary_muscles is list && d.secondary_muscles.size() <= 8));
+    }
+    match /communityExercises/{exId} {
+      allow get, list: if signedIn();
+      allow create: if signedIn()
+        && exists(profileDoc(me()))
+        && validCommunity(exId, request.resource.data)
+        && myAuthorKey() == request.resource.data.key;
+      allow update: if signedIn()
+        && myAuthorKey() == resource.data.key
+        && request.resource.data.key == resource.data.key
+        && validCommunity(exId, request.resource.data);
+      allow delete: if signedIn() && myAuthorKey() == resource.data.key;
+    }
+  }
+}
