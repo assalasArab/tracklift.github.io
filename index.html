@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261027b">
+  <link rel="stylesheet" href="./styles.css?v=20261028a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -588,15 +588,17 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261027b"></script>
+  <script type="module" src="./js/app.js?v=20261028a"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
         <h3 data-i18n="sessionExercises">exercices de la seance</h3>
         <button class="icon-btn" data-close="modal-manage-exercises" aria-label="fermer">✕</button>
       </div>
-      <input id="search-manage-exercises" class="input mb-12" type="text" placeholder="rechercher un exercice..." data-i18n-placeholder="searchExercisePlaceholderLong">
-      <div id="manage-exercises-list" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+      <div id="manage-session-items" class="ms-session"></div>
+      <label class="ms-label" for="search-manage-exercises" data-i18n="msAddLabel">ajouter un exercice</label>
+      <input id="search-manage-exercises" class="input mb-12" type="search" autocomplete="off" placeholder="rechercher un exercice..." data-i18n-placeholder="searchExercisePlaceholderLong">
+      <div id="manage-exercises-list" class="ms-catalog">
         </div>
       <div class="section-actions mt-12">
         <button class="btn btn-primary btn-block" data-close="modal-manage-exercises" data-i18n="finish">terminer</button>

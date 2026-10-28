@@ -61,6 +61,7 @@ rules_version = '2';
 // sharedPrograms/<id> (+ members/<uid>) : programme partagé par lien, que d'autres rejoignent
 //   ✔ lu par un utilisateur connecté qui connaît le lien (pas de liste) ; écrit par son auteur
 //   ✔ chacun s'inscrit ou se désinscrit lui-même ; l'auteur et les inscrits voient la liste
+//   ✔ compétition : chacun écrit SES chiffres (séances, records : des nombres, jamais de charge)
 //   ✘ lister les programmes des autres ; modifier le programme d'un autre ;
 //     inscrire quelqu'un d'autre
 //
@@ -324,6 +325,18 @@ service cloud.firestore {
         && d.version is int;
     }
     function programDoc(programId) { return /databases/$(database)/documents/sharedPrograms/$(programId); }
+    // fiche d'un membre : date d'arrivée + chiffres de compétition (facultatifs)
+    function validMember(d) {
+      return d.keys().hasOnly(['joinedAt', 'compete', 'weekKey', 'week', 'total', 'monthKey', 'records', 'updatedAt'])
+        && d.joinedAt is int
+        && (!('compete' in d) || d.compete is bool)
+        && (!('weekKey' in d) || (d.weekKey is string && d.weekKey.size() <= 10))
+        && (!('monthKey' in d) || (d.monthKey is string && d.monthKey.size() <= 7))
+        && (!('week' in d) || (d.week is int && d.week >= 0 && d.week <= 21))
+        && (!('total' in d) || (d.total is int && d.total >= 0 && d.total <= 100000))
+        && (!('records' in d) || (d.records is int && d.records >= 0 && d.records <= 1000))
+        && (!('updatedAt' in d) || d.updatedAt is int);
+    }
 
     match /sharedPrograms/{programId} {
       allow get: if signedIn() && !hasBlocked(resource.data.owner, me());
@@ -340,8 +353,11 @@ service cloud.firestore {
           && exists(profileDoc(memberId))
           && exists(programDoc(programId))
           && !hasBlocked(get(programDoc(programId)).data.owner, me())
-          && request.resource.data.keys().hasOnly(['joinedAt']);
-        allow update: if false;
+          && validMember(request.resource.data);
+        // ses propres chiffres seulement ; la date d'arrivée ne bouge pas
+        allow update: if isMe(memberId)
+          && validMember(request.resource.data)
+          && request.resource.data.joinedAt == resource.data.joinedAt;
         // soi-même (ne plus suivre) ou l'auteur (quand il arrête de partager)
         allow delete: if isMe(memberId)
           || (signedIn() && get(programDoc(programId)).data.owner == me());

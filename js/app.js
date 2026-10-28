@@ -1,31 +1,31 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261027b";
-import { DB } from "./db.js?v=20261027b";
-import { Auth } from "./auth.js?v=20261027b";
-import { i18n } from "./i18n.js?v=20261027b";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261027b";
-import { muscleName } from "./muscles.js?v=20261027b";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261027b";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261027b";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261027b";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261027b";
-import { renderWeightChart } from "./charts.js?v=20261027b";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261027b";
-import { openProgramWizard } from "./program-wizard.js?v=20261027b";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261027b";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261027b";
-import { openIntro } from "./onboarding.js?v=20261027b";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261027b";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261027b";
-import { Social } from "./social.js?v=20261027b";
-import { mountPotes, unmountPotes, bindPotes, editMyAvatar, setInvite } from "./potes.js?v=20261027b";
-import { avatarSvg } from "./avatar.js?v=20261027b";
-import { Bridge } from "./potes-ui.js?v=20261027b";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261027b";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261027b";
-import { openSettings } from "./potes-settings.js?v=20261027b";
-import { openProgramShare, openProgramPreview, openCommunity } from "./potes-programs.js?v=20261027b";
-import { SharedPrograms } from "./community.js?v=20261027b";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey } from "./social-stats.js?v=20261027b";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261028a";
+import { DB } from "./db.js?v=20261028a";
+import { Auth } from "./auth.js?v=20261028a";
+import { i18n } from "./i18n.js?v=20261028a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261028a";
+import { muscleName } from "./muscles.js?v=20261028a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261028a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261028a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261028a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261028a";
+import { renderWeightChart } from "./charts.js?v=20261028a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261028a";
+import { openProgramWizard } from "./program-wizard.js?v=20261028a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261028a";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261028a";
+import { openIntro } from "./onboarding.js?v=20261028a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261028a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261028a";
+import { Social } from "./social.js?v=20261028a";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite } from "./potes.js?v=20261028a";
+import { avatarSvg } from "./avatar.js?v=20261028a";
+import { Bridge } from "./potes-ui.js?v=20261028a";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261028a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261028a";
+import { openSettings } from "./potes-settings.js?v=20261028a";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261028a";
+import { SharedPrograms } from "./community.js?v=20261028a";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261028a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -184,6 +184,7 @@ function init() {
     state.workout = null;
     unmountNutrition();
     unmountPotes();
+    resetPotesView();
     Social.reset();
     showLoading(false);
     updateSyncBadge();
@@ -402,8 +403,9 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     button.addEventListener("click", () => closeModal(button.dataset.close));
   });
 
+  // clic sur le fond : ferme la fenêtre, sauf la création de programme (trop facile de tout perdre)
   document.addEventListener("click", event => {
-    if (event.target.classList.contains("modal")) {
+    if (event.target.classList.contains("modal") && !event.target.classList.contains("wz-modal")) {
       event.target.classList.add("hidden");
     }
   });
@@ -868,6 +870,7 @@ function setupPotesBridge() {
     translate: (category, value) => translateExerciseValue(category, value),
     sessionTypeLabel: type => getSessionTypeLabel(type),
     myStats: mySocialStats,
+    programStats: localId => programStats(state.sessionLogs, localId),
     openFriend: openFriendPage,
     openSettings,
     openMyProfile: openMyProfileAsFriend,
@@ -898,11 +901,14 @@ function onSocialChange() {
   $("#community-btn").classList.toggle("hidden", !Social.joined);
   if (state.activeView === "home") renderHomeLine($("#potes-line"));
   // programmes : étiquettes de partage seulement si elles ont changé
-  const signature = JSON.stringify([Social.joined, SharedPrograms.shares, SharedPrograms.joined]);
+  const signature = JSON.stringify([Social.joined, SharedPrograms.shares, SharedPrograms.joined, SharedPrograms.competing]);
   if (signature !== socialSignature) {
     socialSignature = signature;
     renderPrograms();
     checkProgramUpdates();
+    // page d'un programme ouverte : la carte « compétition » suit
+    const open = state.activeView === "program-detail" && state.programs.find(item => item.id === state.currentProgramId);
+    if (open) renderProgSessions(open);
   }
   // liens ouverts avant la connexion : traités une fois la partie Potes chargée
   if (Social.loaded && (potesLink.pote || potesLink.programme)) {
@@ -933,6 +939,16 @@ function shareSessionWithPotes(recap) {
   const count = weekSessions(state.sessionLogs).length;
   if (count === Social.weeklyGoal) Social.postEvent("weekGoal", { count, goal: Social.weeklyGoal });
   Social.queuePublish();
+  pushCompetitionStats();
+}
+
+/** Compétitions de programmes partagés : mes chiffres (nombres seulement) à jour */
+function pushCompetitionStats() {
+  if (!Social.joined || !Object.keys(SharedPrograms.competing).length) return;
+  SharedPrograms.pushStats(shareId => {
+    const localId = SharedPrograms.localIdOf(shareId);
+    return localId ? programStats(state.sessionLogs, localId) : null;
+  }).catch(() => {});
 }
 
 /** Avatar dans le bouton profil et le tiroir ; la lettre du nom tant qu'il n'y a pas d'avatar */
@@ -1130,6 +1146,13 @@ function openWizard() {
     bodyweight: last ? last.weight : "",
     createExercise: (name, done) => openCustomExercise({ name, onCreated: done }),
     onNotion: () => setTimeout(() => openNotion(), 50),
+    // brouillon propre à chaque compte (un téléphone peut servir à plusieurs personnes)
+    draftKey: state.user ? `tl-wizard-draft-${state.user.id}` : null,
+    showDetails: exerciseId => {
+      const detailsModal = $("#modal-details");
+      if (detailsModal) detailsModal.style.zIndex = "60";
+      showExerciseDetails(exerciseId);
+    },
     onCreate: (generated, answers) => {
       const program = {
         id: uid(),
@@ -1380,6 +1403,7 @@ function renderHome() {
       state.sessionLogs = DB.getSessionLogs();
       renderHome();
       Social.queuePublish();
+      pushCompetitionStats();
       showToast(t("sessionDeleted"), {
         label: t("undo"),
         onClick: () => {
@@ -1387,6 +1411,7 @@ function renderHome() {
           state.sessionLogs = DB.getSessionLogs();
           renderHome();
           Social.queuePublish();
+          pushCompetitionStats();
         }
       });
     });
@@ -1876,11 +1901,20 @@ function renderProgSessions(program) {
     return;
   }
 
-  container.innerHTML = program.sessions.map(session => `
+  // programme partagé (le mien) ou suivi : la compétition entre membres
+  const shareId = Social.joined ? (SharedPrograms.shares[program.id]
+    || Object.entries(SharedPrograms.joined).find(([, entry]) => entry.localId === program.id)?.[0]) : null;
+  const competeCard = shareId ? `
+    <div class="card cp-card">
+      <div><b>${escapeHtml(t("cpCardTitle"))}</b><small>${escapeHtml(t(SharedPrograms.competing[shareId] ? "cpCardIn" : "cpCardOut"))}</small></div>
+      <button type="button" class="btn btn-ghost btn-sm" data-open-compete="${escapeHtml(shareId)}">${escapeHtml(t("cpCardBtn"))}</button>
+    </div>` : "";
+
+  container.innerHTML = competeCard + program.sessions.map(session => `
     <div class="program-item card">
       <div class="program-item-head">
         <div>
-          <div class="item-title">${session.name}</div>
+          <div class="item-title">${escapeHtml(session.name)}</div>
           <span class="badge mt-12">${getSessionTypeLabel(session.type)}</span>
           <div class="small-meta mt-4">${t("configuredExercisesCount", { count: (session.exerciseIds || []).length })}</div>
         </div>
@@ -1889,6 +1923,7 @@ function renderProgSessions(program) {
           <button class="btn btn-primary btn-sm" data-play-sess="${session.id}">${t("play")}</button>
         </div>
       </div>
+      ${sessionExercisesHtml(session)}
     </div>
   `).join("");
 
@@ -1898,6 +1933,7 @@ function renderProgSessions(program) {
       openManageExercises(event.target.dataset.editSess);
     });
   });
+  container.querySelector("[data-open-compete]")?.addEventListener("click", event => openProgramCompetition(event.currentTarget.dataset.openCompete));
 
   $all("[data-play-sess]").forEach(button => {
     button.addEventListener("click", event => {
@@ -1962,21 +1998,158 @@ function deleteCurrentProgram() {
   showToast(t("programDeleted"));
 }
 
+/** Prévu pour un exercice : « 4 × 8 · 60 kg » */
+function planLabel(plan) {
+  if (!plan) return "";
+  const work = plan.setList?.filter(item => !item.kind || item.kind === "work");
+  const sets = work?.length || plan.sets;
+  const reps = work?.[0]?.reps || plan.reps;
+  const weight = Number(plan.weight) || Number(work?.[0]?.weight) || 0;
+  return `${sets || 3} × ${reps || 10}${weight ? ` · ${String(weight).replace(".", ",")} kg` : ""}`;
+}
+
+/** Liste des exercices d'une séance, dans l'ordre, sur la page du programme */
+function sessionExercisesHtml(session) {
+  const ids = session.exerciseIds || [];
+  if (!ids.length) return "";
+  return `<ol class="ps-ex">${ids.map(id => {
+    const exercise = getExerciseById(id, state.exercises);
+    const name = exercise ? getExerciseName(exercise) : id;
+    const plan = planLabel(session.plan?.[id]);
+    return `<li><span>${escapeHtml(name)}</span>${plan ? `<small>${escapeHtml(plan)}</small>` : ""}</li>`;
+  }).join("")}</ol>`;
+}
+
+function currentEditSession() {
+  const program = state.programs.find(item => item.id === state.currentProgramId);
+  return program?.sessions.find(item => item.id === state.currentEditSessionId) || null;
+}
+
+/** Modifie la séance en cours d'édition et enregistre */
+function updateEditSession(change) {
+  const data = DB.getData();
+  const dbProgram = data.programs.find(item => item.id === state.currentProgramId);
+  const dbSession = dbProgram?.sessions.find(item => item.id === state.currentEditSessionId);
+  if (!dbSession) return;
+  dbSession.exerciseIds = dbSession.exerciseIds || [];
+  change(dbSession);
+  DB.saveData(data);
+  state.programs = DB.getPrograms();
+  const program = state.programs.find(item => item.id === state.currentProgramId);
+  if (program) renderProgSessions(program);
+}
+
 function openManageExercises(sessionId) {
   state.currentEditSessionId = sessionId;
   $("#search-manage-exercises").value = "";
+  renderManageSession();
   renderManageExercisesList();
   openModal("modal-manage-exercises");
+  bindManageSession();
+}
+
+/** Les exercices de la séance : ordre, séries, reps, charge, détails, retrait */
+function renderManageSession(flashId = null) {
+  const session = currentEditSession();
+  const box = $("#manage-session-items");
+  if (!session || !box) return;
+  const ids = session.exerciseIds || [];
+  const rows = ids.map((id, i) => {
+    const exercise = getExerciseById(id, state.exercises);
+    const label = exercise ? getExerciseName(exercise) : id;
+    const name = escapeHtml(label);
+    const plan = session.plan?.[id] || {};
+    const work = plan.setList?.filter(item => !item.kind || item.kind === "work");
+    const sets = work?.length || plan.sets || 3;
+    const reps = work?.[0]?.reps || plan.reps || 10;
+    const weight = plan.weight ?? work?.[0]?.weight ?? "";
+    return `
+      <li class="wz-item${flashId === id ? " is-new" : ""}" data-ms-item="${escapeHtml(id)}">
+        <div class="wz-item-h">
+          <span class="wz-item-n">${i + 1}</span>
+          <span class="wz-item-name">${name}</span>
+          <span class="wz-item-tools">
+            <button type="button" class="wz-tool" data-ms-act="info" data-ms-id="${escapeHtml(id)}" aria-label="${escapeHtml(t("msDetailsOf", { name: label }))}">i</button>
+            <button type="button" class="wz-tool" data-ms-act="up" data-ms-i="${i}" aria-label="${escapeHtml(t("msUp", { name: label }))}"${i === 0 ? " disabled" : ""}>↑</button>
+            <button type="button" class="wz-tool" data-ms-act="down" data-ms-i="${i}" aria-label="${escapeHtml(t("msDown", { name: label }))}"${i === ids.length - 1 ? " disabled" : ""}>↓</button>
+            <button type="button" class="wz-tool wz-tool-x" data-ms-act="remove" data-ms-id="${escapeHtml(id)}" aria-label="${escapeHtml(t("msRemove", { name: label }))}">✕</button>
+          </span>
+        </div>
+        <div class="wz-item-f">
+          <label><em>${t("msSets")}</em><input type="number" inputmode="numeric" min="1" max="20" data-ms-field="sets" data-ms-id="${escapeHtml(id)}" value="${escapeHtml(sets)}"></label>
+          <label><em>${t("msReps")}</em><input type="number" inputmode="numeric" min="1" max="100" data-ms-field="reps" data-ms-id="${escapeHtml(id)}" value="${escapeHtml(reps)}"></label>
+          <label><em>${t("msWeight")}</em><input type="number" inputmode="decimal" min="0" max="500" step="0.5" placeholder="—" data-ms-field="weight" data-ms-id="${escapeHtml(id)}" value="${escapeHtml(weight || "")}"></label>
+        </div>
+      </li>`;
+  }).join("");
+  box.innerHTML = `
+    <h4 class="ms-title">${t("msInSession", { count: ids.length })}</h4>
+    ${ids.length ? `<ol class="wz-items ms-items">${rows}</ol><p class="ms-hint">${t("msPlanHint")}</p>` : `<p class="ms-empty">${t("msEmpty")}</p>`}`;
+}
+
+let manageBound = false;
+function bindManageSession() {
+  if (manageBound) return;
+  manageBound = true;
+  const box = $("#manage-session-items");
+  box.addEventListener("click", event => {
+    const btn = event.target.closest("[data-ms-act]");
+    if (!btn) return;
+    const act = btn.dataset.msAct;
+    if (act === "info") {
+      const detailsModal = $("#modal-details");
+      if (detailsModal) detailsModal.style.zIndex = "60";
+      showExerciseDetails(btn.dataset.msId);
+      return;
+    }
+    if (act === "remove") {
+      const id = btn.dataset.msId;
+      updateEditSession(session => {
+        session.exerciseIds = session.exerciseIds.filter(item => item !== id);
+        if (session.plan) delete session.plan[id];
+      });
+      renderManageSession();
+      renderManageExercisesList();
+      return;
+    }
+    const from = Number(btn.dataset.msI);
+    const to = act === "up" ? from - 1 : from + 1;
+    updateEditSession(session => {
+      if (to < 0 || to >= session.exerciseIds.length) return;
+      [session.exerciseIds[from], session.exerciseIds[to]] = [session.exerciseIds[to], session.exerciseIds[from]];
+    });
+    renderManageSession();
+    // le focus suit l'exercice déplacé
+    const same = box.querySelector(`[data-ms-act="${act}"][data-ms-i="${to}"]`);
+    const other = box.querySelector(`[data-ms-act="${act === "up" ? "down" : "up"}"][data-ms-i="${to}"]`);
+    (same && !same.disabled ? same : other)?.focus();
+  });
+  // séries / reps / charge prévues : enregistrées quand on quitte le champ
+  box.addEventListener("change", event => {
+    const input = event.target.closest("[data-ms-field]");
+    if (!input) return;
+    const { msField: field, msId: id } = input.dataset;
+    const value = input.value === "" ? 0 : Number(input.value);
+    if (!Number.isFinite(value) || value < 0) return;
+    updateEditSession(session => {
+      session.plan = session.plan || {};
+      const plan = { sets: 3, reps: 10, weight: 0, ...(session.plan[id] || {}) };
+      plan[field] = field === "weight" ? Math.round(value * 2) / 2 : Math.max(1, Math.round(value));
+      // les séries détaillées (import) ne collent plus si on change séries ou reps
+      if (field !== "weight") delete plan.setList;
+      session.plan[id] = plan;
+    });
+  });
 }
 
 function renderManageExercisesList() {
-  const program = state.programs.find(item => item.id === state.currentProgramId);
-  const session = program?.sessions.find(item => item.id === state.currentEditSessionId);
+  const session = currentEditSession();
   if (!session) return;
 
   const selectedIds = session.exerciseIds || [];
   const search = normalizeText($("#search-manage-exercises").value);
-  const filtered = state.exercises.filter(exercise => !search || buildExerciseSearchText(exercise).includes(search));
+  // le catalogue ne montre que ce qui n'est pas déjà dans la séance (la séance est listée au-dessus)
+  const filtered = state.exercises.filter(exercise => !selectedIds.includes(exercise.id) && (!search || buildExerciseSearchText(exercise).includes(search)));
   const query = $("#search-manage-exercises").value.trim();
   const createRow = query && !filtered.some(exercise => normalizeText(getExerciseName(exercise)) === search)
     ? `<button type="button" class="create-row" data-create-ex>+ ${t("customCreateNamed", { name: escapeHtml(query) })}</button>`
@@ -2013,7 +2186,7 @@ function renderManageExercisesList() {
 
   $("#manage-exercises-list [data-create-ex]")?.addEventListener("click", () => {
     openCustomExercise({ name: query, onCreated: exercise => {
-      if (!(session.exerciseIds || []).includes(exercise.id)) toggleExerciseInSession(exercise.id);
+      if (!(currentEditSession()?.exerciseIds || []).includes(exercise.id)) toggleExerciseInSession(exercise.id);
       $("#search-manage-exercises").value = "";
       renderManageExercisesList();
     } });
@@ -2029,31 +2202,19 @@ function renderManageExercisesList() {
 }
 
 function toggleExerciseInSession(exerciseId) {
-  const program = state.programs.find(item => item.id === state.currentProgramId);
-  const session = program?.sessions.find(item => item.id === state.currentEditSessionId);
-  if (!session) return;
-
-  if (!session.exerciseIds) {
-    session.exerciseIds = [];
-  }
-
-  if (session.exerciseIds.includes(exerciseId)) {
-    session.exerciseIds = session.exerciseIds.filter(id => id !== exerciseId);
-  } else {
-    session.exerciseIds.push(exerciseId);
-  }
-
-  const data = DB.getData();
-  const dbProgram = data.programs.find(item => item.id === state.currentProgramId);
-  const dbSession = dbProgram?.sessions.find(item => item.id === state.currentEditSessionId);
-  if (!dbSession) return;
-
-  dbSession.exerciseIds = session.exerciseIds;
-  DB.saveData(data);
-  state.programs = DB.getPrograms();
-
+  let added = false;
+  updateEditSession(session => {
+    if (session.exerciseIds.includes(exerciseId)) {
+      session.exerciseIds = session.exerciseIds.filter(id => id !== exerciseId);
+    } else {
+      session.exerciseIds.push(exerciseId);
+      added = true;
+    }
+  });
+  renderManageSession(added ? exerciseId : null);
   renderManageExercisesList();
-  renderProgSessions(state.programs.find(item => item.id === state.currentProgramId));
+  // l'exercice ajouté apparaît en bas de la séance, à l'écran
+  if (added) $(`#manage-session-items [data-ms-item="${CSS.escape(exerciseId)}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 function launchSpecificProgSession(sessionId) {

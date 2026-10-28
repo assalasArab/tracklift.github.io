@@ -4,7 +4,7 @@
    gonfler ses chiffres. C'est accepté entre potes.
    Semaines du lundi au dimanche et mois à l'heure de Paris.
    ═══════════════════════════════════════════════════════════ */
-import { computeStreak } from "./streak.js?v=20261027b";
+import { computeStreak } from "./streak.js?v=20261028a";
 
 const WEEKDAYS = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
 const PARIS = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", year: "numeric", month: "numeric", day: "numeric", weekday: "short" });
@@ -69,6 +69,31 @@ export function recordHistory(logs) {
     }
   }
   return out;
+}
+
+/**
+ * Compétition d'un programme partagé : séances faites avec CE programme
+ * (cette semaine, au total) et records battus pendant ces séances ce mois-ci.
+ * Jamais de charge : seulement des nombres.
+ */
+export function programStats(logs, programId, now = Date.now()) {
+  const mine = (logs || []).filter(log => log.programId === programId && countsAsSession(log));
+  const week = weekKey(now), month = monthKey(now);
+  const dates = new Set(mine.filter(log => monthKey(log.date) === month).map(log => log.date));
+  return {
+    weekKey: week,
+    week: Math.min(21, mine.filter(log => weekKey(log.date) === week).length),
+    total: Math.min(100000, mine.length),
+    monthKey: month,
+    records: Math.min(1000, recordHistory(logs).filter(r => dates.has(r.date)).length)
+  };
+}
+
+/** Valeur d'un membre pour un critère de compétition (0 si sa semaine ou son mois est passé) */
+export function competitionValue(criterion, member, now = Date.now()) {
+  if (criterion === "week") return member.weekKey === weekKey(now) ? Number(member.week) || 0 : 0;
+  if (criterion === "records") return member.monthKey === monthKey(now) ? Number(member.records) || 0 : 0;
+  return Number(member.total) || 0;
 }
 
 export function weekSessions(logs, now = Date.now()) {

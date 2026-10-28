@@ -4,8 +4,8 @@
    Les correspondances programme local ↔ programme partagé sont gardées
    dans social/<uid> (privé) : users/<uid> garde sa structure.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261027b";
-import { Social } from "./social.js?v=20261027b";
+import { firestore } from "./firebase-config.js?v=20261028a";
+import { Social } from "./social.js?v=20261028a";
 
 export const COMMUNITY_LIMIT = 10;
 const ref = path => firestore.doc(path);
@@ -82,7 +82,9 @@ export const SharedPrograms = {
     await batch.commit();
     const shares = { ...this.shares };
     delete shares[localId];
-    await this._saveLinks({ progShares: shares });
+    const competing = { ...this.competing };
+    delete competing[id];
+    await this._saveLinks({ progShares: shares, progCompete: competing });
   },
 
   async get(id) {
@@ -111,12 +113,63 @@ export const SharedPrograms = {
     try { await ref(`sharedPrograms/${id}/members/${Social.uid}`).delete(); } catch { /* programme déjà retiré */ }
     const joined = { ...this.joined };
     delete joined[id];
-    await this._saveLinks({ progJoined: joined });
+    const competing = { ...this.competing };
+    delete competing[id];
+    await this._saveLinks({ progJoined: joined, progCompete: competing });
+  },
+
+  /* ─── Compétition entre les membres d'un programme ─── */
+  /** compétitions où je suis inscrit : { idPartagé: true } */
+  get competing() { return Social.social?.progCompete || {}; },
+
+  /** programme local qui correspond à un programme partagé (le mien ou celui que je suis) */
+  localIdOf(id) {
+    const own = Object.entries(this.shares).find(([, shareId]) => shareId === id);
+    return own ? own[0] : this.joined[id]?.localId || null;
+  },
+
+  /** membres et leurs chiffres (visible par l'auteur et les membres) */
+  async membersData(id) {
+    try { return (await col(`sharedPrograms/${id}/members`).get()).docs.map(d => ({ uid: d.id, ...d.data() })); }
+    catch { return null; }
+  },
+
+  /** Entrer dans la compétition (ou en sortir) : mes chiffres sur ce programme, jamais mes charges */
+  async setCompete(id, on, stats) {
+    if (!Social.joined) throw fail("not-joined");
+    if (navigator.onLine === false) throw fail("offline");
+    const memberRef = ref(`sharedPrograms/${id}/members/${Social.uid}`);
+    const snap = await memberRef.get();
+    const data = on ? { compete: true, ...stats, updatedAt: Date.now() } : { compete: false, week: 0, total: 0, records: 0, updatedAt: Date.now() };
+    if (snap.exists) await memberRef.update(data);
+    else if (on) await memberRef.set({ joinedAt: Date.now(), ...data });
+    const competing = { ...this.competing };
+    if (on) competing[id] = true;
+    else delete competing[id];
+    this._lastStats[id] = on ? JSON.stringify(stats) : null;
+    await this._saveLinks({ progCompete: competing });
+  },
+  _lastStats: {},
+
+  /** Après une séance : mes chiffres à jour dans chaque compétition où je suis */
+  async pushStats(statsOf) {
+    if (!Social.joined || navigator.onLine === false) return;
+    for (const id of Object.keys(this.competing)) {
+      const stats = statsOf(id);
+      if (!stats) continue;
+      const signature = JSON.stringify(stats);
+      if (this._lastStats[id] === signature) continue;
+      try {
+        await ref(`sharedPrograms/${id}/members/${Social.uid}`).update({ ...stats, updatedAt: Date.now() });
+        this._lastStats[id] = signature;
+      } catch (err) { console.warn("[TrackLift] compétition :", err?.code || err); }
+    }
   },
 
   async _saveLinks(patch) {
     Social.social = { ...(Social.social || {}), ...patch };
-    await ref(`social/${Social.uid}`).set(patch, { merge: true });
+    // mergeFields : chaque carte est remplacée en entier (une clé retirée l'est aussi dans Firestore)
+    await ref(`social/${Social.uid}`).set(patch, { mergeFields: Object.keys(patch) });
     Social.queuePublish(200);
     Social._emit();
   },

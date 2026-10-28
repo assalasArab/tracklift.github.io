@@ -4,7 +4,8 @@
    matériel, durée, charges de référence) puis construit un
    programme complet avec séries, répétitions et charges de départ.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261027b";
+import { illu } from "./illustrations.js?v=20261028a";
+import { showToast } from "./utils.js?v=20261028a";
 
 /* ---------- bibliothèque de mouvements ----------
    gym / db / bw : exercice pour salle complète, haltères seuls, poids du corps (null = pas d'équivalent)
@@ -520,10 +521,14 @@ function renderSearchResults(query) {
   if (!box) return;
   const session = wiz.custom.sessions[visibleSteps()[wiz.index].session];
   const list = searchExercises(query, new Set(session.items.map(item => item.id)));
+  const name = ex => wiz.nameOf(ex) || ex.name;
   box.innerHTML = list.length ? list.map(ex => `
-    <button type="button" class="wz-result" data-act="add-ex" data-id="${esc(ex.id)}">
-      <span>${esc(wiz.nameOf(ex) || ex.name)}</span><small>${esc(String(ex.muscle_focus || "").replace(/_/g, " "))}</small>
-    </button>`).join("")
+    <div class="wz-result-row">
+      <button type="button" class="wz-result" data-act="add-ex" data-id="${esc(ex.id)}">
+        <span>+ ${esc(name(ex))}</span><small>${esc(String(ex.muscle_focus || "").replace(/_/g, " "))}</small>
+      </button>
+      ${wiz.showDetails ? `<button type="button" class="wz-info" data-act="info" data-id="${esc(ex.id)}" aria-label="Détails : ${esc(name(ex))}">i</button>` : ""}
+    </div>`).join("")
     : query.trim() ? `<div class="wz-noresult">Aucun exercice trouvé</div>` : "";
   if (query.trim() && wiz.createExercise) {
     box.insertAdjacentHTML("beforeend", `<button type="button" class="wz-result wz-create" data-act="create-ex" data-name="${esc(query.trim())}"><span>+ Créer « ${esc(query.trim())} »</span><small>exercice perso</small></button>`);
@@ -553,11 +558,22 @@ function weekBody() {
 function buildBody(step) {
   const session = wiz.custom.sessions[step.session];
   const total = wiz.custom.sessions.length;
+  const count = session.items.length;
   const items = session.items.map((item, i) => {
     const bodyweight = BODYWEIGHT_IDS.has(item.id);
+    const name = esc(exerciseName(item.id));
     return `
-      <div class="wz-item">
-        <div class="wz-item-h"><span>${esc(exerciseName(item.id))}</span><button type="button" class="wz-x" data-act="del-ex" data-i="${i}" aria-label="retirer">✕</button></div>
+      <div class="wz-item${wiz.flash === item.id ? " is-new" : ""}" data-item="${esc(item.id)}">
+        <div class="wz-item-h">
+          <span class="wz-item-n">${i + 1}</span>
+          <span class="wz-item-name">${name}</span>
+          <span class="wz-item-tools">
+            ${wiz.showDetails ? `<button type="button" class="wz-tool" data-act="info" data-id="${esc(item.id)}" aria-label="Détails : ${name}">i</button>` : ""}
+            <button type="button" class="wz-tool" data-act="up" data-i="${i}" aria-label="Monter ${name}"${i === 0 ? " disabled" : ""}>↑</button>
+            <button type="button" class="wz-tool" data-act="down" data-i="${i}" aria-label="Descendre ${name}"${i === count - 1 ? " disabled" : ""}>↓</button>
+            <button type="button" class="wz-tool wz-tool-x" data-act="del-ex" data-i="${i}" aria-label="Retirer ${name}">✕</button>
+          </span>
+        </div>
         <div class="wz-item-f">
           <label><em>Séries</em><input type="number" inputmode="numeric" data-field="sets" data-i="${i}" value="${esc(item.sets)}" min="1" max="10"></label>
           <label><em>${item.id === "plank" ? "Secondes" : "Reps"}</em><input type="number" inputmode="numeric" data-field="reps" data-i="${i}" value="${esc(item.reps)}" min="1" max="100"></label>
@@ -567,11 +583,12 @@ function buildBody(step) {
   }).join("");
   return `
     <div class="wz-build-sub">Séance ${step.session + 1} sur ${total} · ${session.items.length} exercice${session.items.length > 1 ? "s" : ""}</div>
+    <div class="wz-items">${items || `<div class="wz-empty">Aucun exercice pour l'instant : cherche-en un juste en dessous.</div>`}</div>
     <div class="wz-search">
-      <input type="search" data-search placeholder="Rechercher un exercice (ex : développé, squat, curl…)" autocomplete="off">
+      <label class="wz-search-label" for="wz-search">Ajouter un exercice</label>
+      <input type="search" id="wz-search" data-search placeholder="ex : développé, squat, curl…" autocomplete="off" enterkeyhint="done">
       <div class="wz-results"></div>
     </div>
-    <div class="wz-items">${items || `<div class="wz-empty">Aucun exercice pour l'instant.</div>`}</div>
     ${session.items.length < 3 ? `<button type="button" class="wz-add" data-act="suggest">✨ Suggère-moi des exercices</button>` : ""}
     <p class="wz-help wz-help-sm">Mets les charges et reps que tu fais <b>actuellement</b> : elles servent de point de départ et à calculer ton niveau.</p>`;
 }
@@ -656,7 +673,7 @@ function canContinue(step) {
   return a[step.key] !== undefined;
 }
 
-function renderStep() {
+function renderStep(keepScroll = false) {
   const steps = visibleSteps();
   wiz.index = Math.min(wiz.index, steps.length - 1);
   const step = steps[wiz.index];
@@ -738,11 +755,51 @@ function renderStep() {
       ${wiz.index > 0 ? `<button type="button" class="btn btn-surface" data-wz="back">Retour</button>` : `<button type="button" class="btn btn-surface" data-wz="later">Plus tard</button>`}
       <button type="button" class="btn btn-primary btn-grow" data-wz="${isLast ? "create" : "next"}" ${canContinue(step) ? "" : "disabled"}>${isLast ? "Créer mon programme" : "Continuer"}</button>
     </div>`;
-  wiz.el.querySelector(".wz-card").scrollTop = 0;
+  if (!keepScroll) wiz.el.querySelector(".wz-card").scrollTop = 0;
+  saveDraft();
+}
+
+/* ---------- brouillon : gardé à chaque changement, repris à la prochaine ouverture ---------- */
+function saveDraft() {
+  if (!wiz?.draftKey || wiz.resuming) return;
+  if (wiz.index === 0 && !wiz.answers.mode) return;
+  try {
+    localStorage.setItem(wiz.draftKey, JSON.stringify({ v: 1, index: wiz.index, answers: wiz.answers, custom: wiz.custom, savedAt: Date.now() }));
+  } catch { /* stockage indisponible : pas de brouillon */ }
+}
+function readDraft(key) {
+  if (!key) return null;
+  try {
+    const draft = JSON.parse(localStorage.getItem(key) || "null");
+    return draft && draft.v === 1 && draft.answers && draft.custom ? draft : null;
+  } catch { return null; }
+}
+function clearDraft(key) {
+  try { if (key) localStorage.removeItem(key); } catch { /* idem */ }
+}
+
+function renderResume(draft) {
+  const date = new Date(draft.savedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  const custom = draft.answers.mode === "custom";
+  const exercises = draft.custom.sessions.reduce((sum, s) => sum + s.items.length, 0);
+  const sessions = draft.custom.sessions.length;
+  const what = custom
+    ? `${esc(draft.custom.name || "Programme sans nom")} · ${sessions} séance${sessions > 1 ? "s" : ""} · ${exercises} exercice${exercises > 1 ? "s" : ""}`
+    : "Questionnaire du programme guidé";
+  wiz.el.querySelector(".wz-body").innerHTML = `
+    <h3 class="wz-q">Tu as un brouillon</h3>
+    <p class="wz-hand">gardé le ${date}</p>
+    <div class="wz-draft"><b>${what}</b><span>Tu reprends exactement là où tu t'étais arrêté.</span></div>
+    <div class="wz-actions">
+      <button type="button" class="btn btn-surface" data-wz="restart">Recommencer</button>
+      <button type="button" class="btn btn-primary btn-grow" data-wz="resume">Reprendre</button>
+    </div>`;
 }
 
 function close(done) {
   if (!wiz) return;
+  if (done) clearDraft(wiz.draftKey);
+  else if (!wiz.resuming && readDraft(wiz.draftKey)) showToast("Brouillon gardé : tu reprendras là où tu en étais");
   wiz.el.remove();
   const cb = done ? null : wiz.onDismiss;
   wiz = null;
@@ -758,6 +815,18 @@ function handleCustomAction(act, target) {
   if (act === "add-session") c.sessions.push({ name: `Séance ${c.sessions.length + 1}`, type: "full", dayKey: null, items: [] });
   if (act === "del-session") c.sessions.splice(i, 1);
   if (act === "del-ex" && session) session.items.splice(i, 1);
+  if (act === "info") { wiz.showDetails?.(target.dataset.id); return; }
+  if ((act === "up" || act === "down") && session) {
+    const to = act === "up" ? i - 1 : i + 1;
+    if (to < 0 || to >= session.items.length) return;
+    [session.items[i], session.items[to]] = [session.items[to], session.items[i]];
+    renderStep(true);
+    // le focus suit l'exercice déplacé
+    const same = wiz.el.querySelector(`[data-act="${act}"][data-i="${to}"]`);
+    const other = wiz.el.querySelector(`[data-act="${act === "up" ? "down" : "up"}"][data-i="${to}"]`);
+    (same && !same.disabled ? same : other)?.focus();
+    return;
+  }
   if (act === "suggest" && session) suggestItems(session);
   if (act === "create-ex" && session) {
     const index = step.session;
@@ -765,23 +834,33 @@ function handleCustomAction(act, target) {
       if (!wiz) return;
       if (!wiz.exercises.some(ex => ex.id === exercise.id)) wiz.exercises.unshift(exercise);
       wiz.custom.sessions[index].items.push({ id: exercise.id, sets: 3, reps: 10, weight: "" });
-      renderStep();
+      showAdded(exercise.id, false);
     });
     return;
   }
   if (act === "add-ex" && session) {
     const id = target.dataset.id;
     session.items.push({ id, sets: 3, reps: id === "plank" ? 45 : 10, weight: "" });
-    renderStep();
-    wiz.el.querySelector("[data-search]")?.focus();
+    showAdded(id, wiz.viaKeyboard);
     return;
   }
-  renderStep();
+  renderStep(["del-ex", "suggest"].includes(act));
+}
+
+/** Après un ajout : l'exercice apparaît dans la liste, à l'écran, mis en valeur */
+function showAdded(id, keepTyping) {
+  wiz.flash = id;
+  renderStep(true);
+  wiz.flash = null;
+  const item = wiz.el.querySelector(`[data-item="${CSS.escape(id)}"]`);
+  item?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (keepTyping) wiz.el.querySelector("[data-search]")?.focus();
 }
 
 /**
  * Ouvre le questionnaire.
- * opts: { exercises, nameOf(exercise), bodyweight, onCreate(program, answers), onDismiss() }
+ * opts: { exercises, nameOf(exercise), bodyweight, onCreate(program, answers), onDismiss(),
+ *         draftKey (clé du brouillon, propre au compte), showDetails(exerciseId) }
  */
 export function openProgramWizard(opts) {
   if (wiz) return;
@@ -797,13 +876,27 @@ export function openProgramWizard(opts) {
     exercises: opts.exercises || [],
     nameOf: opts.nameOf || (ex => ex?.name),
     onCreate: opts.onCreate, onDismiss: opts.onDismiss, createExercise: opts.createExercise, onNotion: opts.onNotion,
+    draftKey: opts.draftKey || null, showDetails: opts.showDetails || null, resuming: false,
     answers: { bodyweight: opts.bodyweight || "", lifts: {}, liftReps: {}, liftAlt: {}, sex: "male" },
     custom: { preset: null, name: "", sessions: [] }
   };
   applyPreset("ppl_upper");
 
+  // un clic à côté de la fenêtre ne ferme plus rien : seuls « Plus tard » et ✕ ferment
   el.addEventListener("click", event => {
-    if (event.target === el) { close(false); return; }
+    const resume = event.target.closest('[data-wz="resume"], [data-wz="restart"]');
+    if (resume) {
+      const draft = readDraft(wiz.draftKey);
+      wiz.resuming = false;
+      if (resume.dataset.wz === "resume" && draft) {
+        Object.assign(wiz.answers, draft.answers);
+        wiz.custom = draft.custom;
+        wiz.index = draft.index;
+      } else clearDraft(wiz.draftKey);
+      renderStep();
+      return;
+    }
+    if (wiz.resuming && !event.target.closest('[data-wz="later"]')) return;
     const custom = event.target.closest("[data-act]");
     if (custom) { handleCustomAction(custom.dataset.act, custom); return; }
     const sex = event.target.closest("[data-sex]");
@@ -845,6 +938,7 @@ export function openProgramWizard(opts) {
   el.addEventListener("input", event => {
     const t = event.target;
     const d = t.dataset;
+    if (d.search === undefined) queueMicrotask(saveDraft);
     if (d.lift) {
       if (d.lift === "bodyweight") wiz.answers.bodyweight = t.value;
       else wiz.answers.lifts[d.lift] = t.value;
@@ -872,6 +966,7 @@ export function openProgramWizard(opts) {
     const session = wiz.custom.sessions[Number(d.stype)];
     session.type = event.target.value;
     session.dayKey = null;
+    saveDraft();
   });
 
   // Entrée dans la recherche : ajoute le premier résultat
@@ -879,8 +974,13 @@ export function openProgramWizard(opts) {
     if (event.key !== "Enter" || event.target.dataset.search === undefined) return;
     event.preventDefault();
     const first = el.querySelector(".wz-result");
-    if (first) handleCustomAction(first.dataset.act, first);
+    if (!first) return;
+    wiz.viaKeyboard = true;
+    handleCustomAction(first.dataset.act, first);
+    wiz.viaKeyboard = false;
   });
 
-  renderStep();
+  const draft = readDraft(wiz.draftKey);
+  if (draft) { wiz.resuming = true; renderResume(draft); }
+  else renderStep();
 }

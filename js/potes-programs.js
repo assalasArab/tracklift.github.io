@@ -2,10 +2,12 @@
    Programmes partagés (partager, voir, rejoindre, mettre à jour)
    et exercices de la communauté (ajouter, proposer, 10 maximum).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261027b";
-import { Social } from "./social.js?v=20261027b";
-import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261027b";
-import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge, shareLink } from "./potes-ui.js?v=20261027b";
+import { showToast } from "./utils.js?v=20261028a";
+import { i18n } from "./i18n.js?v=20261028a";
+import { Social } from "./social.js?v=20261028a";
+import { rankEntries, competitionValue } from "./social-stats.js?v=20261028a";
+import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261028a";
+import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge, shareLink } from "./potes-ui.js?v=20261028a";
 
 const errorText = err => t(err?.code === "offline" ? "potesNeedOnline" : err?.code === "limit" ? "cmLimit" : "potesJoinError", { limit: COMMUNITY_LIMIT });
 
@@ -28,6 +30,7 @@ export function openProgramShare(localId) {
         <div class="sp-link"><code>${esc(SharedPrograms.link(shareId))}</code></div>
         <p class="sp-members">${esc(members === null ? t("potesLoading") : members.length ? tn("spMembers", members.length) : t("spNoMembers"))}</p>
         ${members?.length ? `<div class="sp-faces">${members.slice(0, 8).map(uid => personAvatar(Social.profileOf(uid), 34)).join("")}</div>` : ""}
+        <button type="button" class="btn btn-surface btn-block" data-sp-compete>${esc(t("cpOpen"))}</button>
         <button type="button" class="btn btn-surface btn-block" data-sp-update>${esc(t("spUpdate"))}</button>
         <button type="button" class="text-danger-btn" data-sp-stop>${esc(t("spStop"))}</button>`;
     sheet.innerHTML = `
@@ -42,7 +45,7 @@ export function openProgramShare(localId) {
   const loadMembers = async () => {
     const id = SharedPrograms.shares[localId];
     if (!id) return;
-    members = (await SharedPrograms.members(id)) || [];
+    members = ((await SharedPrograms.members(id)) || []).filter(uid => uid !== Social.uid);
     await Social._fetchProfiles(members);
     draw();
   };
@@ -50,6 +53,7 @@ export function openProgramShare(localId) {
 
   sheet.addEventListener("click", async event => {
     const program = Bridge.getPrograms().find(p => p.id === localId);
+    if (event.target.closest("[data-sp-compete]")) { openProgramCompetition(SharedPrograms.shares[localId]); return; }
     const btn = event.target.closest("[data-sp-send], [data-sp-update], [data-sp-stop]");
     if (!btn || !program) return;
     btn.disabled = true;
@@ -91,7 +95,7 @@ export async function openProgramPreview(id) {
     return;
   }
   await Social._fetchProfiles([program.owner]);
-  const members = Social.joined ? await SharedPrograms.members(id) : null;
+  const members = Social.joined ? ((await SharedPrograms.members(id)) || []).filter(uid => uid !== program.owner) : null;
   if (members) await Social._fetchProfiles(members);
 
   const draw = () => {
@@ -100,10 +104,11 @@ export async function openProgramPreview(id) {
     const joined = SharedPrograms.joined[id];
     const outdated = joined && joined.version < program.version;
     let action;
-    if (mine) action = `<p class="sp-note">${esc(t("spIsMine"))}</p>`;
+    if (mine) action = `<p class="sp-note">${esc(t("spIsMine"))}</p><button type="button" class="btn btn-surface btn-block" data-sp-compete>${esc(t("cpOpen"))}</button>`;
     else if (!Social.joined) action = `<button type="button" class="btn btn-primary btn-block" data-sp-need-join>${esc(t("spNeedJoin"))}</button>`;
     else if (joined) action = `
       <p class="sp-note">${esc(t("spFollowing"))}</p>
+      <button type="button" class="btn btn-surface btn-block" data-sp-compete>${esc(t("cpOpen"))}</button>
       ${outdated ? `<button type="button" class="btn btn-primary btn-block" data-sp-refresh>${esc(t("spRefreshCopy"))}</button>` : ""}
       <button type="button" class="hero-other" data-sp-unfollow>${esc(t("spUnfollow"))}</button>`;
     else action = `<button type="button" class="btn btn-primary btn-block" data-sp-join>${esc(t("spJoin"))}</button>`;
@@ -128,6 +133,7 @@ export async function openProgramPreview(id) {
 
   sheet.addEventListener("click", async event => {
     if (event.target.closest("[data-sp-need-join]")) { close(); Bridge.goPotes?.(); return; }
+    if (event.target.closest("[data-sp-compete]")) { openProgramCompetition(id); return; }
     const btn = event.target.closest("[data-sp-join], [data-sp-refresh], [data-sp-unfollow]");
     if (!btn) return;
     btn.disabled = true;
@@ -147,6 +153,125 @@ export async function openProgramPreview(id) {
       Bridge.refresh?.();
       draw();
     } catch (err) { console.error("[TrackLift] programme partagé :", err); showToast(errorText(err)); btn.disabled = false; }
+  });
+}
+
+/* ─── Compétition entre les membres d'un programme ─────────
+   Chacun choisit d'y entrer. On compare des nombres faits avec CE programme :
+   séances de la semaine, séances au total, records du mois. Jamais de charge. */
+const CP_CRITERIA = ["week", "total", "records"];
+const cpUnit = (criterion, value) => t(`pbUnit.${criterion === "records" ? "records" : "sessions"}${(i18n.getLanguage() === "en" ? value !== 1 : value > 1) ? "Many" : ""}`);
+
+export async function openProgramCompetition(id) {
+  const { sheet } = openSheet();
+  let crit = "week";
+  let busy = false;
+  sheet.innerHTML = `<div class="tl-sheet-inner">${sheetHead(t("cpTitle"))}<p class="pt-loading" role="status">${esc(t("potesLoading"))}</p></div>`;
+  sheet.querySelector("#tl-sheet-title").focus();
+  const program = id ? await SharedPrograms.get(id) : null;
+  if (!sheet.isConnected) return;
+  if (!program) {
+    sheet.innerHTML = `<div class="tl-sheet-inner">${sheetHead(t("cpTitle"))}<div class="card pt-card pt-empty"><img class="pt-mascot pt-mascot-sm" src="${MASCOT}" alt="" width="70" height="184"><p class="pt-text">${esc(t("spGone"))}</p></div></div>`;
+    return;
+  }
+  const localId = SharedPrograms.localIdOf(id);
+  const myStats = () => (localId ? Bridge.programStats?.(localId) : null);
+  // mes chiffres à jour avant d'afficher le classement
+  if (SharedPrograms.competing[id]) await SharedPrograms.pushStats(other => (other === id ? myStats() : null));
+  let members = (await SharedPrograms.membersData(id)) || [];
+  await Social._fetchProfiles([...members.map(m => m.uid), program.owner]);
+  if (!sheet.isConnected) return;
+
+  const draw = () => {
+    const competing = !!SharedPrograms.competing[id];
+    const now = Date.now();
+    const ranked = rankEntries(members.filter(m => m.compete).map(m => {
+      const me = m.uid === Social.uid;
+      const profile = me ? Social.profile : Social.profileOf(m.uid);
+      return { uid: m.uid, me, profile, name: me ? Social.username : nameOf(profile), value: competitionValue(crit, m, now) };
+    }));
+    const tabs = `
+      <div class="pb-tabs" role="radiogroup" aria-label="${esc(t("pbCriterion"))}">
+        ${CP_CRITERIA.map(c => `<button type="button" role="radio" class="pb-tab" aria-checked="${c === crit}" tabindex="${c === crit ? 0 : -1}" data-cp-crit="${c}">${esc(t(`cpCrit.${c}`))}</button>`).join("")}
+      </div>
+      <p class="pb-period">${esc(t(`cpPeriod.${crit}`))}</p>`;
+    const list = ranked.length ? `
+      <ol class="pb-list">${ranked.map(e => `
+        <li class="pb-row${e.me ? " is-me" : ""}">
+          <span class="pb-rank">${e.place}</span>
+          ${personAvatar(e.profile, 36)}
+          <span class="pb-row-name">${esc(e.me ? t("pbYou") : e.name)}</span>
+          <span class="pb-row-value"><b>${e.value}</b> ${esc(cpUnit(crit, e.value))}</span>
+        </li>`).join("")}</ol>`
+      : `<div class="card pt-card pt-empty"><img class="pt-mascot pt-mascot-sm" src="${MASCOT}" alt="" width="70" height="184"><p class="pt-text">${esc(t("cpEmpty"))}</p></div>`;
+    const status = competing
+      ? `<p class="cp-note">${esc(t("cpYouAreIn"))}</p>`
+      : `<div class="card pt-card cp-join"><p class="pt-text"><b>${esc(t("cpNotIn"))}</b> ${esc(t("cpWhat"))}</p></div>`;
+    sheet.innerHTML = `
+      <div class="tl-sheet-inner">
+        ${sheetHead(t("cpTitle"), program.name)}
+        ${status}
+        ${tabs}
+        ${list}
+        <p class="pb-note">${esc(t("cpNote"))}</p>
+        ${competing ? `<button type="button" class="hero-other cp-leave" data-cp-leave>${esc(t("cpLeave"))}</button>` : ""}
+      </div>
+      <div class="tl-dock">
+        ${competing
+          ? `<button type="button" class="btn btn-primary btn-block" data-cp-invite>${esc(t("cpInvite"))}</button>`
+          : `<button type="button" class="btn btn-primary btn-block" data-cp-join${localId ? "" : " disabled"}>${esc(t("cpJoin"))}</button>`}
+      </div>`;
+  };
+  draw();
+
+  const refresh = async () => {
+    members = (await SharedPrograms.membersData(id)) || members;
+    await Social._fetchProfiles(members.map(m => m.uid));
+    if (sheet.isConnected) draw();
+  };
+
+  sheet.addEventListener("keydown", event => {
+    const tab = event.target.closest("[data-cp-crit]");
+    if (!tab || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    const i = CP_CRITERIA.indexOf(crit) + (event.key === "ArrowRight" ? 1 : -1);
+    crit = CP_CRITERIA[(i + CP_CRITERIA.length) % CP_CRITERIA.length];
+    draw();
+    sheet.querySelector(`[data-cp-crit="${crit}"]`)?.focus();
+  });
+
+  sheet.addEventListener("click", async event => {
+    const tab = event.target.closest("[data-cp-crit]");
+    if (tab) { crit = tab.dataset.cpCrit; draw(); sheet.querySelector(`[data-cp-crit="${crit}"]`)?.focus(); return; }
+    if (event.target.closest("[data-cp-invite]")) {
+      const how = await shareLink(SharedPrograms.link(id), program.name);
+      if (how === "copied") showToast(t("potesLinkCopied"));
+      return;
+    }
+    const btn = event.target.closest("[data-cp-join], [data-cp-leave]");
+    if (!btn || busy) return;
+    busy = true;
+    btn.disabled = true;
+    try {
+      if (btn.matches("[data-cp-join]")) {
+        await SharedPrograms.setCompete(id, true, myStats());
+        showToast(t("cpJoined"));
+      } else {
+        const ok = await confirmSheet({ title: t("cpLeaveTitle"), text: t("cpLeaveText"), confirmLabel: t("cpLeave") });
+        if (!ok) { busy = false; openProgramCompetition(id); return; }
+        await SharedPrograms.setCompete(id, false);
+        showToast(t("cpLeft"));
+        busy = false;
+        openProgramCompetition(id);
+        return;
+      }
+      await refresh();
+    } catch (err) {
+      console.error("[TrackLift] compétition :", err);
+      showToast(errorText(err));
+    }
+    busy = false;
+    if (sheet.isConnected) draw();
   });
 }
 

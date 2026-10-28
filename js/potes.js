@@ -4,15 +4,15 @@
    - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages)
      et « Classement », réglages de partage, quitter.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261027b";
-import { Social, checkUsername } from "./social.js?v=20261027b";
-import { SharedPrograms, Community } from "./community.js?v=20261027b";
-import { streakAlive, weekKey } from "./social-stats.js?v=20261027b";
-import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomAvatar } from "./avatar.js?v=20261027b";
-import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261027b";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261027b";
-import { openSettings } from "./potes-settings.js?v=20261027b";
-import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261027b";
+import { showToast } from "./utils.js?v=20261028a";
+import { Social, checkUsername } from "./social.js?v=20261028a";
+import { SharedPrograms, Community } from "./community.js?v=20261028a";
+import { streakAlive, weekKey } from "./social-stats.js?v=20261028a";
+import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomAvatar } from "./avatar.js?v=20261028a";
+import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261028a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261028a";
+import { openSettings } from "./potes-settings.js?v=20261028a";
+import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261028a";
 
 let root = null;
 let unsubscribe = null;
@@ -32,6 +32,12 @@ export function unmountPotes() {
   unsubscribe?.();
   unsubscribe = null;
   root = null;
+}
+
+/** Déconnexion : on oublie la recherche et l'invitation (le téléphone peut changer de main) */
+export function resetPotesView() {
+  Object.assign(view, { tab: "friends", crit: "sessions", query: "", search: null, invite: null });
+  lastHtml = "";
 }
 
 /** Invitation par lien (?pote=pseudo) : à rejoindre puis à ajouter */

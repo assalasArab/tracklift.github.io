@@ -2,9 +2,9 @@
    Partie Potes : outils d'écran partagés (feuilles plein écran,
    confirmation, dates relatives) et pont vers les données de l'appli.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261027b";
-import { escapeHtml } from "./utils.js?v=20261027b";
-import { avatarSvg } from "./avatar.js?v=20261027b";
+import { i18n } from "./i18n.js?v=20261028a";
+import { escapeHtml } from "./utils.js?v=20261028a";
+import { avatarSvg } from "./avatar.js?v=20261028a";
 
 export const t = (key, vars) => i18n.t(key, vars);
 /** singulier / pluriel : clé « …One » pour 1 (et 0 en français) */
@@ -20,8 +20,9 @@ export const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: r
  */
 export const Bridge = {};
 
-/** Feuille plein écran (ou petite carte en bas avec small: true). Échap ferme ; le focus revient au bouton d'origine. */
-export function openSheet({ labelledBy = "tl-sheet-title", small = false, onClose } = {}) {
+/** Feuille plein écran (ou petite carte en bas avec small: true). Échap ferme ; le focus revient au bouton d'origine.
+    beforeClose() peut renvoyer false pour retenir la fermeture (changements pas enregistrés) ; close(true) force. */
+export function openSheet({ labelledBy = "tl-sheet-title", small = false, onClose, beforeClose } = {}) {
   document.querySelector(".tl-sheet")?.remove();
   const opener = document.activeElement;
   const sheet = document.createElement("div");
@@ -32,8 +33,9 @@ export function openSheet({ labelledBy = "tl-sheet-title", small = false, onClos
   document.body.appendChild(sheet);
   document.documentElement.classList.add("ob-open");
   const onKey = event => { if (event.key === "Escape") close(); };
-  function close() {
+  function close(force = false) {
     if (!sheet.isConnected) return;
+    if (!force && beforeClose && beforeClose() === false) return;
     sheet.remove();
     document.documentElement.classList.remove("ob-open");
     document.removeEventListener("keydown", onKey);
