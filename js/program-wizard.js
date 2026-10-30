@@ -4,8 +4,8 @@
    matériel, durée, charges de référence) puis construit un
    programme complet avec séries, répétitions et charges de départ.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261030a";
-import { showToast } from "./utils.js?v=20261030a";
+import { illu } from "./illustrations.js?v=20261030b";
+import { showToast } from "./utils.js?v=20261030b";
 
 /* ---------- bibliothèque de mouvements ----------
    gym / db / bw : exercice pour salle complète, haltères seuls, poids du corps (null = pas d'équivalent)
@@ -402,30 +402,30 @@ let wiz = null;
 
 /* note manuscrite, explication et dessin de chaque étape (clé d'étape, ou type pour les séances) */
 const WZ_META = {
-  mode: { img: "prog-01-depart.png", hand: "tu pourras tout modifier ensuite",
+  mode: { img: "prog-01-depart.png", hand: "Tu pourras tout modifier ensuite",
     x: "Pas encore de programme ? L'appli en construit un pour toi. Tu en as déjà un ? Remplis-le ici ou importe-le depuis Notion." },
-  goal: { img: "prog-02-objectif.png", hand: "ça change tes séries et tes reps",
+  goal: { img: "prog-02-objectif.png", hand: "Ça change tes séries et tes reps",
     x: "Pour le muscle : 8 à 12 répétitions. Pour la force : moins de répétitions, plus lourd. En sèche, on garde des charges lourdes pour conserver ton muscle." },
-  level: { img: "prog-03-experience.png", hand: "sois honnête, personne ne regarde",
+  level: { img: "prog-03-experience.png", hand: "Sois honnête, personne ne regarde",
     x: "Un débutant progresse vite avec peu de volume. Plus tu es avancé, plus il faut de séries et de variété pour continuer à progresser." },
   days: { img: "prog-04-seances.png", hand: "3 séances tenues valent mieux que 5 ratées",
     x: "Choisis un nombre que tu peux tenir toute l'année. La régularité compte plus que le nombre de séances." },
-  split: { img: "prog-05-organisation.png", hand: "dans le doute, laisse-nous choisir",
+  split: { img: "prog-05-organisation.png", hand: "Dans le doute, laisse-nous choisir",
     x: "C'est la façon de répartir les muscles sur la semaine. « Choisis pour moi » prend l'organisation la plus adaptée à ton nombre de séances." },
-  equipment: { img: "prog-06-materiel.png", hand: "salle, maison ou rien du tout",
+  equipment: { img: "prog-06-materiel.png", hand: "Salle, maison ou rien du tout",
     x: "L'appli ne choisit que des exercices faisables avec ton matériel." },
-  duration: { img: "prog-07-duree.png", hand: "échauffement compris",
+  duration: { img: "prog-07-duree.png", hand: "Échauffement compris",
     x: "Le nombre d'exercices et de séries s'adapte pour tenir dans ce temps." },
-  lifts: { img: "prog-08-charges.png", hand: "laisse vide si tu ne sais pas",
+  lifts: { img: "prog-08-charges.png", hand: "Laisse vide si tu ne sais pas",
     x: "" },
-  recap: { img: "prog-09-programme.png", hand: "prêt à soulever ?", x: "" },
-  week: { img: "prog-10-semaine-type.png", hand: "renomme, ajoute, retire",
+  recap: { img: "prog-09-programme.png", hand: "Prêt à soulever ?", x: "" },
+  week: { img: "prog-10-semaine-type.png", hand: "Renomme, ajoute, retire",
     x: "" },
-  build: { img: "prog-11-seance.png", hand: "cherche, ajoute, remplis",
+  build: { img: "prog-11-seance.png", hand: "Cherche, ajoute, remplis",
     x: "" },
-  body: { img: "prog-12-gabarit.png", hand: "pour te comparer à toi-même",
+  body: { img: "prog-12-gabarit.png", hand: "Pour te comparer à toi-même",
     x: "" },
-  levelRecap: { img: "prog-13-niveau.png", hand: "et ça ne fera que monter", x: "" }
+  levelRecap: { img: "prog-13-niveau.png", hand: "Et ça ne fera que monter", x: "" }
 };
 function metaHtml(step) {
   const m = WZ_META[step.kind === "build" ? "build" : step.key === "level" && step.kind === "levelRecap" ? "levelRecap" : step.key] || WZ_META[step.kind];

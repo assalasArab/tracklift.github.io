@@ -4,7 +4,7 @@
    Monté à la demande dans #view-nutrition. IDs et classes préfixés nx-.
    ═══════════════════════════════════════════════════════════ */
 
-import { illu as illuHtml } from "./illustrations.js?v=20261030a";
+import { illu as illuHtml } from "./illustrations.js?v=20261030b";
 
 /* ---------- catalogue MET (Compendium of Physical Activities 2024) ---------- */
 const MET = [
@@ -95,36 +95,36 @@ const PHASE_CHOICES = [
 
 const STEPS = [
   { tag: "Ton objectif", img: "nutri-01-objectif.webp",
-    q: () => "Qu'est-ce que tu veux faire en ce moment ?", hand: () => "tout le calcul s'adapte à ça",
+    q: () => "Qu'est-ce que tu veux faire en ce moment ?", hand: () => "Tout le calcul s'adapte à ça",
     x: () => "Tu pourras changer d'objectif plus tard sans tout refaire." },
   { tag: "Ton profil", img: "nutri-02-profil.png",
-    q: () => "Parle-moi un peu de toi", hand: () => "sexe, âge, taille, poids",
+    q: () => "Parle-moi un peu de toi", hand: () => "Sexe, âge, taille, poids",
     x: () => "Ces infos servent à calculer ton <b>métabolisme de base</b> : l'énergie que ton corps brûle au repos, juste pour fonctionner (cœur, cerveau, respiration). C'est en général 60 à 70 % de ce que tu dépenses dans une journée. Ton poids est repris de ta dernière pesée." },
   { tag: "Composition", img: "nutri-03-masse-grasse.png",
-    q: () => "Tu connais ton taux de masse grasse ?", hand: () => "pas grave si non",
+    q: () => "Tu connais ton taux de masse grasse ?", hand: () => "Pas grave si non",
     x: () => "Ton muscle brûle bien plus d'énergie que ton gras. Connaître ton % de masse grasse rend le calcul plus précis. Pas d'idée ? Choisis <b>Ruban</b> et mesure ton tour de cou et ton tour de taille au niveau du nombril (2 minutes), ou <b>Aucune idée</b> : l'appli l'estimera." },
   { tag: "Au quotidien", img: "nutri-04-quotidien.png",
-    q: () => "Tu bouges combien en dehors du sport ?", hand: () => "marche, boulot, bougeotte",
+    q: () => "Tu bouges combien en dehors du sport ?", hand: () => "Marche, boulot, bougeotte",
     x: () => "C'est le <b>NEAT</b> : tout ce que tu dépenses hors entraînement, en marchant, en restant debout ou en gigotant. D'une personne à l'autre, l'écart dépasse souvent 500 kcal par jour. Ta moyenne de pas est dans l'appli Santé ou Google Fit de ton téléphone." },
   { tag: "Entraînement", img: "nutri-05-entrainement.png",
-    q: () => "Quelles séances fais-tu chaque semaine ?", hand: () => "muscu, cardio, sports…",
+    q: () => "Quelles séances fais-tu chaque semaine ?", hand: () => "Muscu, cardio, sports…",
     x: () => "Ajoute chaque activité avec sa durée et son nombre de séances par semaine. Chaque sport a une intensité (sa valeur <b>MET</b>). L'appli compte seulement l'énergie dépensée en plus de ce que tu aurais brûlé au repos, pour ne rien compter deux fois." },
   { tag: "Le rythme", img: "nutri-06-rythme.png",
     q: () => S.phase === "cut" ? "À quelle vitesse veux-tu perdre ?" : S.phase === "gain" ? "À quelle vitesse veux-tu prendre ?" : "On garde ton poids stable",
-    hand: () => S.phase === "cut" ? "doucement, c'est plus de muscle gardé" : S.phase === "gain" ? "trop vite, c'est surtout du gras" : "ajuste si besoin",
+    hand: () => S.phase === "cut" ? "Doucement, c'est plus de muscle gardé" : S.phase === "gain" ? "Trop vite, c'est surtout du gras" : "Ajuste si besoin",
     x: () => S.phase === "cut"
       ? "Le plus simple : une vitesse en % de ton poids par semaine. Entre <b>0,5 et 1 %</b>, tu perds du gras sans sacrifier ton muscle ni ta force. Le <b>%MG visé</b> sert à estimer quand tu atteindras ton objectif. Avec le recalibrage, les calories s'ajustent toutes les 2 semaines, au fur et à mesure que ton poids baisse."
       : S.phase === "gain"
         ? "Ton muscle ne peut se construire qu'à une certaine vitesse : au-delà, le surplus part en gras. Entre <b>0,25 et 0,5 %</b> de ton poids par semaine, c'est l'idéal pour la plupart des gens. Ton expérience compte : un débutant progresse plus vite qu'un pratiquant avancé."
         : "Tes calories sont calées sur ta dépense : ton poids ne bouge pas, ton entraînement continue de progresser. Si ta balance monte ou descend sur 2 à 3 semaines, ajoute ou retire 100 à 200 kcal ici." },
   { tag: "Macros", img: "nutri-07-macros.png",
-    q: () => "Comment répartir tes calories ?", hand: () => "les réglages par défaut sont bons",
+    q: () => "Comment répartir tes calories ?", hand: () => "Les réglages par défaut sont bons",
     x: () => "<b>Protéines</b> : 1,8 à 2,4 g par kg de poids, pour garder et construire ton muscle. <b>Lipides</b> : au moins 0,6 à 0,8 g/kg, pour tes hormones. Le reste va aux <b>glucides</b>, ton carburant à l'entraînement. Le <b>cyclage</b> met plus de glucides les jours de séance et moins les jours de repos, sans changer le total de la semaine." },
   { tag: "Ta journée", img: "nutri-08-journee.png",
-    q: () => "À quoi ressemble ta journée type ?", hand: () => "pour placer tes repas",
+    q: () => "À quoi ressemble ta journée type ?", hand: () => "Pour placer tes repas",
     x: () => "Choisis tes jours d'entraînement et tes horaires. Ça ne change pas tes calories : ça sert à construire ton <b>plan de journée</b>, avec les repas placés autour de ta séance et la caféine coupée assez tôt pour que tu dormes bien." },
   { tag: "Compléments", img: "nutri-09-complements.png",
-    q: () => "Tu prends des compléments ?", hand: () => "le café compte aussi",
+    q: () => "Tu prends des compléments ?", hand: () => "Le café compte aussi",
     x: () => "Coche ce que tu prends vraiment et ajuste la dose. L'appli les place au bon moment dans ta journée et te prévient en cas de souci, par exemple un pre-workout trop tard pour ton heure de coucher. Rien n'est obligatoire : ton alimentation passe avant." }
 ];
 

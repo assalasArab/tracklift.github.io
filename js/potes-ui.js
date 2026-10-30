@@ -2,14 +2,16 @@
    Partie Potes : outils d'écran partagés (feuilles plein écran,
    confirmation, dates relatives) et pont vers les données de l'appli.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261030a";
-import { escapeHtml } from "./utils.js?v=20261030a";
-import { avatarSvg } from "./avatar.js?v=20261030a";
+import { i18n } from "./i18n.js?v=20261030b";
+import { escapeHtml } from "./utils.js?v=20261030b";
+import { avatarSvg } from "./avatar.js?v=20261030b";
 
 export const t = (key, vars) => i18n.t(key, vars);
 /** singulier / pluriel : clé « …One » pour 1 (et 0 en français) */
 export const tn = (key, count, vars = {}) => i18n.t(count === 1 || (count === 0 && i18n.getLanguage() !== "en") ? `${key}One` : key, { count, ...vars });
 export const esc = escapeHtml;
+/** Majuscule en début de ligne (pour une ligne qui commence par un morceau de phrase) */
+export const cap = text => (text ? text.charAt(0).toUpperCase() + text.slice(1) : text);
 export const MASCOT = "./assets/illustrations/intro-01-bienvenue.webp";
 export const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 

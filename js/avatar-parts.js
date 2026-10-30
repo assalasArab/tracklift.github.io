@@ -9,7 +9,7 @@
    Ajouter un dessin : une page de plus dans le PDF, relancer le script,
    puis ajouter son nom dans js/i18n.js (clé avatarParts).
    ═══════════════════════════════════════════════════════════ */
-import { ART } from "./avatar-art.js?v=20261030a";
+import { ART } from "./avatar-art.js?v=20261030b";
 
 /* ─── Couleurs ─────────────────────────────────────────── */
 export const SKINS = [
@@ -29,7 +29,8 @@ export const HAIR_COLORS = [
   { id: "blond", color: "#ecc56c" },
   { id: "blanc", color: "#e9e4dc" },
   { id: "rose", color: "#f2a3b6" },
-  { id: "bleu", color: "#6fa8d6" }
+  { id: "bleu", color: "#6fa8d6" },
+  { id: "violet", color: "#9068d6" }
 ];
 
 export const EYE_COLORS = [
@@ -39,7 +40,9 @@ export const EYE_COLORS = [
   { id: "bleu", color: "#2f7fe0" },
   { id: "gris", color: "#8394a3" },
   { id: "noir", color: "#2b2522" },
-  { id: "ambre", color: "#d8901c" }
+  { id: "ambre", color: "#d8901c" },
+  { id: "violet", color: "#7b4fd4" },
+  { id: "rouge", color: "#c93a30" }
 ];
 
 export const BACKGROUNDS = [
@@ -77,6 +80,24 @@ function viewOf(cat, pad = 4, min = 30) {
   const r = n => Math.round(n * 10) / 10;
   return `${r(cx - size / 2)} ${r(cy - size / 2)} ${r(size)} ${r(size)}`;
 }
+
+/* ─── Boutique : pièces à débloquer avec les flammes ────
+   Un tiers environ de chaque catégorie ; le reste est libre.
+   Toujours libres : les formes de visage et les teintes de peau
+   (chacun doit pouvoir se dessiner tel qu'il est). */
+export const SHOP_PRICES = {
+  hair: { c4: 150, c6: 180, c9: 180 },
+  eyes: { y6: 100, y7: 120, y8: 100, y11: 100 },
+  nose: { n4: 60, n6: 60 },
+  mouth: { m3: 90, m5: 90, m9: 110 },
+  beard: { x2: 120 },
+  body: { b6: 200, b7: 300, b8: 400 },
+  accessory: { l3: 100 },
+  hairColor: { rose: 80, bleu: 80, violet: 80 },
+  eyeColor: { violet: 90, rouge: 90 },
+  bg: { lilas: 50, soleil: 50, rose: 50 }
+};
+export const priceOf = (key, id) => SHOP_PRICES[key]?.[id] || 0;
 
 /* ─── Catégories de l'éditeur ──────────────────────────── */
 // kind "color" : pastilles ; kind "shape" : vignettes. view : cadrage de la vignette.

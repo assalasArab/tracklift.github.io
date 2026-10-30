@@ -1,31 +1,34 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261030a";
-import { DB } from "./db.js?v=20261030a";
-import { Auth } from "./auth.js?v=20261030a";
-import { i18n } from "./i18n.js?v=20261030a";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261030a";
-import { muscleName } from "./muscles.js?v=20261030a";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261030a";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261030a";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261030a";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261030a";
-import { renderWeightChart } from "./charts.js?v=20261030a";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261030a";
-import { openProgramWizard } from "./program-wizard.js?v=20261030a";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261030a";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261030a";
-import { openIntro } from "./onboarding.js?v=20261030a";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261030a";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261030a";
-import { Social } from "./social.js?v=20261030a";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261030a";
-import { avatarSvg } from "./avatar.js?v=20261030a";
-import { Bridge } from "./potes-ui.js?v=20261030a";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261030a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261030a";
-import { openSettings } from "./potes-settings.js?v=20261030a";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261030a";
-import { SharedPrograms } from "./community.js?v=20261030a";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261030a";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261030b";
+import { DB } from "./db.js?v=20261030b";
+import { Auth } from "./auth.js?v=20261030b";
+import { i18n } from "./i18n.js?v=20261030b";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261030b";
+import { muscleName } from "./muscles.js?v=20261030b";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261030b";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261030b";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261030b";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261030b";
+import { renderWeightChart } from "./charts.js?v=20261030b";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261030b";
+import { openProgramWizard } from "./program-wizard.js?v=20261030b";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261030b";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261030b";
+import { openIntro } from "./onboarding.js?v=20261030b";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261030b";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261030b";
+import { Social } from "./social.js?v=20261030b";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261030b";
+import { avatarSvg } from "./avatar.js?v=20261030b";
+import { Bridge } from "./potes-ui.js?v=20261030b";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261030b";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261030b";
+import { openSettings } from "./potes-settings.js?v=20261030b";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261030b";
+import { SharedPrograms } from "./community.js?v=20261030b";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261030b";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261030b";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261030b";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261030b";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -167,6 +170,13 @@ function applyStaticTranslations() {
 function init() {
   applyStaticTranslations();
   bindGlobalEvents();
+  // mode nuit : choix gardé sur l'appareil ; les graphiques se redessinent aux bonnes couleurs
+  applyTheme();
+  document.addEventListener("click", event => {
+    const choice = event.target.closest("[data-theme-set]");
+    if (choice) applyTheme(choice.dataset.themeSet);
+  });
+  onThemeChange(() => { if (state.activeView === "progress") renderProgress(); });
   DB.onSaveState = onSaveState;
   // un enregistrement raté repart dès que le réseau revient
   window.addEventListener("online", () => { if (DB.saveError) DB._saveToCloud(); });
@@ -217,6 +227,9 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#drawer-progress-btn").addEventListener("click", () => { closeProfileDrawer(); setView("progress"); });
   // partie Potes et avatar
   $("#drawer-potes-btn").addEventListener("click", () => { closeProfileDrawer(); setView("potes"); });
+  $("#drawer-shop-btn").addEventListener("click", () => { closeProfileDrawer(); openShop(); });
+  // une pièce débloquée : la réserve affichée sur la carte flamme suit
+  Shop.onChange(() => renderStreak());
   ["#drawer-avatar", "#drawer-avatar-link"].forEach(sel => $(sel).addEventListener("click", () => { closeProfileDrawer(); editMyAvatar(); }));
   bindPotes($("#view-potes"));
   setupPotesBridge();
@@ -279,6 +292,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     if (event.target.closest("[data-kcal-edit]")) { state.kcalEditing = true; renderStreak(); focusField("#kcal-input"); }
     if (event.target.closest("[data-kcal-cancel]")) { state.kcalEditing = false; renderStreak(); }
     if (event.target.closest("[data-streak-history]")) openWeightModal();
+    if (event.target.closest("[data-open-shop]")) openShop();
   });
   $("#streak-card").addEventListener("keydown", event => {
     if (event.key === "Enter" && event.target.id === "streak-input") saveStreakWeight();
@@ -949,6 +963,7 @@ function setupPotesBridge() {
 let socialSignature = "";
 function onSocialChange() {
   renderMyAvatar();
+  if (Social.loaded && !Social.error && Social.avatar && !DB.getProfile()?.shopGranted) Shop.grantWorn(Social.avatar);
   $("#community-btn").classList.toggle("hidden", !Social.joined);
   if (state.activeView === "home") renderHomeLine($("#potes-line"));
   // programmes : étiquettes de partage seulement si elles ont changé
@@ -1524,13 +1539,15 @@ function logWeight(weight, { silent = false } = {}) {
     showToast(t("weightSaved"));
     return;
   }
+  const wallet = Shop.wallet();
+  const gain = ` · ${t("shopGainToast", { gain: wallet.todayGain, mult: formatMult(wallet.mult) })}`;
   if (STREAK_MILESTONES.includes(after.current)) {
-    showToast(t("streakMilestone", { count: after.current }));
+    showToast(t("streakMilestone", { count: after.current }) + gain);
     const card = $("#streak-card");
     card?.classList.add("streak-celebrate");
     setTimeout(() => card?.classList.remove("streak-celebrate"), 1600);
   } else {
-    showToast(after.current > 1 ? t("streakLit", { count: after.current }) : t("streakFirst"));
+    showToast((after.current > 1 ? t("streakLit", { count: after.current }) : t("streakFirst")) + gain);
   }
 }
 
@@ -1631,11 +1648,22 @@ function renderStreak() {
       ${state.kcalEditing ? `<button type="button" class="hero-other streak-cancel" data-kcal-cancel>${t("streakCancel")}</button>` : ""}
     </div>`;
 
+  // le prochain palier de flamme coïncide avec un palier de bonus : on le dit
+  const tier = s.next ? nextBonusTier(s.current) : null;
+  const nextText = s.next && tier && tier.from === s.next
+    ? t("streakNextBonus", { count: s.next - s.current, target: s.next, mult: formatMult(tier.mult) })
+    : s.next ? t("streakNext", { count: s.next - s.current, target: s.next }) : "";
   const nextHtml = s.next ? `
     <div class="streak-next">
       <div class="streak-next-bar"><div style="width:${Math.round(s.current / s.next * 100)}%"></div></div>
-      <span>${t("streakNext", { count: s.next - s.current, target: s.next })}</span>
+      <span>${nextText}</span>
     </div>` : "";
+  const wallet = Shop.wallet();
+  const walletHtml = `
+    <div class="streak-wallet">
+      <p class="streak-wallet-text">${FLAME_SVG}<span><b>${wallet.balance}</b> ${t("shopFlamesShort")}${wallet.run ? ` · ${t("shopBonus", { mult: formatMult(wallet.mult) })}` : ""}</span></p>
+      <button type="button" class="btn btn-ghost btn-sm" data-open-shop>${t("shopOpen")}</button>
+    </div>`;
 
   card.classList.toggle("lit", lit);
   card.classList.toggle("risk", s.atRisk);
@@ -1653,6 +1681,7 @@ function renderStreak() {
     ${kcalHtml}
     <div class="streak-week">${week}</div>
     ${nextHtml}
+    ${walletHtml}
     <button type="button" class="hero-other streak-history" data-streak-history>${t("weightHistory")}</button>`;
 }
 

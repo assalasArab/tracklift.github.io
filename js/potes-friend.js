@@ -2,10 +2,10 @@
    Page d'un pote : uniquement ce qu'il partage.
    Sert aussi à « voir mon profil comme un pote » (relu depuis Firestore).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261030a";
-import { Social } from "./social.js?v=20261030a";
-import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261030a";
-import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261030a";
+import { showToast } from "./utils.js?v=20261030b";
+import { Social } from "./social.js?v=20261030b";
+import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261030b";
+import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261030b";
 
 const FLAME = `<svg class="pf-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg>`;
 const ORDER = ["streak", "sessions", "records", "curves", "program", "weight", "nutrition", "programs"];

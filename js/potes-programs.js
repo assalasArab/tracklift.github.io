@@ -5,13 +5,13 @@
    avec CE programme, jamais les charges).
    Plus bas : exercices de la communauté (10 maximum par personne).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261030a";
-import { i18n } from "./i18n.js?v=20261030a";
-import { Social } from "./social.js?v=20261030a";
-import { rankEntries, competitionValue } from "./social-stats.js?v=20261030a";
-import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261030a";
-import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261030a";
-import { ordinal } from "./potes-board.js?v=20261030a";
+import { showToast } from "./utils.js?v=20261030b";
+import { i18n } from "./i18n.js?v=20261030b";
+import { Social } from "./social.js?v=20261030b";
+import { rankEntries, competitionValue } from "./social-stats.js?v=20261030b";
+import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261030b";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261030b";
+import { ordinal } from "./potes-board.js?v=20261030b";
 
 const errorText = err => t(err?.code === "offline" ? "potesNeedOnline" : err?.code === "limit" ? "cmLimit" : err?.code === "gone" ? "spGone" : "potesJoinError", { limit: COMMUNITY_LIMIT });
 const CHEVRON = `<svg class="gr-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
@@ -88,12 +88,12 @@ export function groupsPanelHtml() {
       if (me) bits.push(t("grMyPlace", { place: ordinal(me.place) }));
     }
     return `<li><button type="button" class="card gr-row" data-gr-open="${esc(g.id)}" data-k="gro-${esc(g.id)}">
-      <span class="gr-row-text"><b>${esc(g.name)}</b><small>${esc(bits.filter(Boolean).join(" · "))}</small></span>${CHEVRON}</button></li>`;
+      <span class="gr-row-text"><b>${esc(g.name)}</b><small>${esc(cap(bits.filter(Boolean).join(" · ")))}</small></span>${CHEVRON}</button></li>`;
   }).join("");
   const mineIds = new Set([...groups.map(g => g.id), ...Social.invitesIn.map(inv => inv.programId)]);
   const others = friendsPrograms(mineIds).map(p => `
     <li><button type="button" class="card gr-row" data-gr-preview="${esc(p.id)}" data-k="grp-${esc(p.id)}">
-      <span class="gr-row-text"><b>${esc(p.name)}</b><small>${esc(t("spBy", { name: nameOf(Social.profileOf(p.owner)) }))}</small></span>
+      <span class="gr-row-text"><b>${esc(p.name)}</b><small>${esc(cap(t("spBy", { name: nameOf(Social.profileOf(p.owner)) })))}</small></span>
       <span class="gr-row-cta">${esc(t("grSee"))}</span></button></li>`).join("");
   return `
     <div class="pt-panel" role="tabpanel" id="pt-panel" aria-labelledby="pt-tab-programs">
@@ -286,7 +286,7 @@ export async function openProgramPreview(id) {
   sheet.innerHTML = `
     <div class="tl-sheet-inner">
       ${sheetHead(program.name, t("grKicker"))}
-      <div class="sp-owner">${personAvatar(owner, 40)}<span>${esc(t("spBy", { name: nameOf(owner) }))}</span></div>
+      <div class="sp-owner">${personAvatar(owner, 40)}<span>${esc(cap(t("spBy", { name: nameOf(owner) })))}</span></div>
       ${program.description ? `<p class="pt-text">${esc(program.description)}</p>` : ""}
       ${sessionsHtml(program)}
     </div>
@@ -365,7 +365,7 @@ export async function openProgramGroup(id) {
     sheet.innerHTML = `
       <div class="tl-sheet-inner">
         ${sheetHead(program.name, t("grKicker"))}
-        <div class="sp-owner">${personAvatar(owner, 40)}<span>${esc(mine ? t("grMineLong") : t("spBy", { name: nameOf(owner) }))} · ${esc(tn("grPeople", people.length))}</span></div>
+        <div class="sp-owner">${personAvatar(owner, 40)}<span>${esc(cap(mine ? t("grMineLong") : t("spBy", { name: nameOf(owner) })))} · ${esc(tn("grPeople", people.length))}</span></div>
         ${outdated ? `<button type="button" class="btn btn-surface btn-block gr-refresh" data-gr-refresh>${esc(t("spRefreshCopy"))}</button>` : ""}
         <h3 class="gr-sub">${esc(t("grRanking"))}</h3>
         ${tabs}

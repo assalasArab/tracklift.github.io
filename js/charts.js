@@ -1,4 +1,5 @@
-import { i18n } from "./i18n.js?v=20261030a";
+import { i18n } from "./i18n.js?v=20261030b";
+import { isDark } from "./theme.js?v=20261030b";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];
@@ -21,14 +22,19 @@ export function buildProgressSummary(sessionLogs, weightLog) {
 
 let charts = {};
 
-const CHART_BASE_OPTIONS = {
+/* axes et grille aux couleurs du thème (clair ou nuit), relues à chaque dessin */
+function axis() {
+  const dark = isDark();
+  return {
+    grid: { color: dark ? "rgba(243,234,216,0.12)" : "rgba(76,46,5,0.12)" },
+    ticks: { color: dark ? "#cbbca2" : "#6b5232", font: { family: "Poppins", size: 11 } }
+  };
+}
+const baseOptions = () => ({
   responsive: true,
   plugins: { legend: { display: false } },
-  scales: {
-    x: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Poppins", size: 11 } } },
-    y: { grid: { color: "rgba(76,46,5,0.12)" }, ticks: { color: "#6b5232", font: { family: "Poppins", size: 11 } } }
-  }
-};
+  scales: { x: axis(), y: axis() }
+});
 
 function destroyChart(id) {
   if (!charts[id]) return;
@@ -66,7 +72,7 @@ export function renderWeightChart(weightLogArray, canvasId = "chart-weight") {
         borderWidth: 2
       }]
     },
-    options: CHART_BASE_OPTIONS
+    options: baseOptions()
   });
 }
 
@@ -124,7 +130,7 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
         borderWidth: 2
       }]
     },
-    options: CHART_BASE_OPTIONS
+    options: baseOptions()
   });
 
   charts.volume = new Chart(document.getElementById("chart-volume").getContext("2d"), {
@@ -137,7 +143,7 @@ export function renderExerciseCharts(sessionLogs, exerciseId, exerciseName) {
         borderRadius: 4
       }]
     },
-    options: CHART_BASE_OPTIONS
+    options: baseOptions()
   });
 
   const allWeights = points.map(point => point.maxWeight);

@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261030a";
-import { EXERCISE_SEED } from "./exercises.js?v=20261030a";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261030a";
-import { firestore } from "./firebase-config.js?v=20261030a";
+import { uid } from "./utils.js?v=20261030b";
+import { EXERCISE_SEED } from "./exercises.js?v=20261030b";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261030b";
+import { firestore } from "./firebase-config.js?v=20261030b";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.
@@ -16,7 +16,7 @@ import { firestore } from "./firebase-config.js?v=20261030a";
    ═══════════════════════════════════════════════════════════ */
 
 const INSTANCE = `${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
-const LIST_KEYS = ["programs", "sessionLogs", "weightLog", "customExercises"];
+const LIST_KEYS = ["programs", "sessionLogs", "weightLog", "customExercises", "purchases"];
 
 /** Jour local au format AAAA-MM-JJ */
 export function localDayKey(date = Date.now()) {
@@ -47,12 +47,13 @@ function fromRaw(raw) {
     exerciseDb: raw.exerciseDb || null,
     customExercises: raw.customExercises || [],
     notion: raw.notion || null,
+    purchases: raw.purchases || [],
     deletedIds: raw.deletedIds || [],
     createdAt: raw.createdAt || Date.now()
   };
 }
 
-const emptyData = () => ({ profile: null, programs: [], sessionLogs: [], weightLog: [], customExercises: [], deletedIds: [], createdAt: Date.now() });
+const emptyData = () => ({ profile: null, programs: [], sessionLogs: [], weightLog: [], customExercises: [], purchases: [], deletedIds: [], createdAt: Date.now() });
 
 /* Supprimés (séance, programme, exercice perso) : gardés quelques mois pour qu'une fusion ne les fasse pas revenir */
 function tombstones(...docs) {
@@ -291,6 +292,8 @@ export const DB = {
   getSessionLogs(){ return [...(this._cache?.sessionLogs || [])].sort((a, b) => b.date - a.date); },
   getNutrition()  { return this._cache?.nutrition || null; },
   getNotion()     { return this._cache?.notion || null; },
+  /** Pièces débloquées dans la boutique : [{ id: "hair:c6", price, at }] */
+  getPurchases()  { return this._cache?.purchases || []; },
 
   /** Pesées, une par jour : documents du jour, complétés par les anciennes pesées du gros document */
   getWeightLog() {
@@ -379,6 +382,15 @@ export const DB = {
   /** Kcal mangées aujourd'hui (null pour effacer) */
   setDayKcal(kcal, key = localDayKey()) {
     this.setDay(key, { kcal: kcal == null ? null : Math.round(Number(kcal)) });
+  },
+
+  /** Débloque une pièce (une seule fois par pièce) */
+  addPurchase(item) {
+    const data = this.getData();
+    if (!data || (data.purchases || []).some(p => p.id === item.id)) return false;
+    data.purchases = [...(data.purchases || []), item];
+    this.saveData(data);
+    return true;
   },
 
   /** Connexion Notion de l'utilisateur (jeton OAuth) ; null = déconnecté. Exclue de l'export JSON. */

@@ -4,16 +4,16 @@
    - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages),
      « Classement » et « Programmes » (programmes en commun, invitations), réglages, quitter.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261030a";
-import { Social, checkUsername } from "./social.js?v=20261030a";
-import { SharedPrograms, Community } from "./community.js?v=20261030a";
-import { streakAlive, weekKey } from "./social-stats.js?v=20261030a";
-import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomAvatar } from "./avatar.js?v=20261030a";
-import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261030a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261030a";
-import { openSettings } from "./potes-settings.js?v=20261030a";
-import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261030a";
-import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261030a";
+import { showToast } from "./utils.js?v=20261030b";
+import { Social, checkUsername } from "./social.js?v=20261030b";
+import { SharedPrograms, Community } from "./community.js?v=20261030b";
+import { streakAlive, weekKey } from "./social-stats.js?v=20261030b";
+import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomOwnedAvatar, lockedParts } from "./avatar.js?v=20261030b";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261030b";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261030b";
+import { openSettings } from "./potes-settings.js?v=20261030b";
+import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261030b";
+import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261030b";
 
 const TABS = ["friends", "board", "programs"];
 
@@ -164,7 +164,7 @@ function friendLine(friend) {
   if (items.streak) bits.push(t("ptLineStreak", { count: streakAlive(items.streak) }));
   if (items.sessions) bits.push(tn("ptLineSessions", items.sessions.weekKey === weekKey(Date.now()) ? Number(items.sessions.count) || 0 : 0));
   if (!friend.itemsLoaded) return t("potesLoading");
-  return bits.length ? bits.join(" · ") : t("ptLineNothing");
+  return cap(bits.length ? bits.join(" · ") : t("ptLineNothing"));
 }
 
 function searchResultHtml() {
@@ -421,7 +421,7 @@ function claimErrorMessage(err) {
 /* ─── Rejoindre : pseudo → avatar → ce que tes potes voient ── */
 function openJoinFlow() {
   const { sheet, close } = openSheet();
-  const flow = { step: 0, name: null, typed: "", avatar: Social.avatar || randomAvatar(), busy: false };
+  const flow = { step: 0, name: null, typed: "", avatar: Social.avatar || randomOwnedAvatar(), busy: false };
   const steps = ["name", "avatar", "see"];
   const stepLabel = () => t("potesStepOf", { n: flow.step + 1, total: steps.length });
 
@@ -479,6 +479,9 @@ function openJoinFlow() {
     if (event.target.closest("[data-pj-back]")) { flow.step = Math.max(0, flow.step - 1); draw(); return; }
     if (event.target.closest("[data-pj-next]")) {
       if (flow.step === 0 && !flow.name) return;
+      // avatar : une pièce essayée mais pas débloquée ne passe pas
+      const locked = flow.step === 1 ? lockedParts(flow.avatar) : [];
+      if (locked.length) { showToast(t("shopUnlockFirst", { name: cap(t(`avatarParts.${locked[0].key}.${locked[0].id}`)), price: locked[0].price })); return; }
       flow.step += 1;
       draw();
       return;
