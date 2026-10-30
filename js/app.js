@@ -1,31 +1,31 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261028a";
-import { DB } from "./db.js?v=20261028a";
-import { Auth } from "./auth.js?v=20261028a";
-import { i18n } from "./i18n.js?v=20261028a";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261028a";
-import { muscleName } from "./muscles.js?v=20261028a";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261028a";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261028a";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261028a";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261028a";
-import { renderWeightChart } from "./charts.js?v=20261028a";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261028a";
-import { openProgramWizard } from "./program-wizard.js?v=20261028a";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261028a";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261028a";
-import { openIntro } from "./onboarding.js?v=20261028a";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261028a";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261028a";
-import { Social } from "./social.js?v=20261028a";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite } from "./potes.js?v=20261028a";
-import { avatarSvg } from "./avatar.js?v=20261028a";
-import { Bridge } from "./potes-ui.js?v=20261028a";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261028a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261028a";
-import { openSettings } from "./potes-settings.js?v=20261028a";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261028a";
-import { SharedPrograms } from "./community.js?v=20261028a";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261028a";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261030a";
+import { DB } from "./db.js?v=20261030a";
+import { Auth } from "./auth.js?v=20261030a";
+import { i18n } from "./i18n.js?v=20261030a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261030a";
+import { muscleName } from "./muscles.js?v=20261030a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261030a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261030a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261030a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog } from "./workout.js?v=20261030a";
+import { renderWeightChart } from "./charts.js?v=20261030a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261030a";
+import { openProgramWizard } from "./program-wizard.js?v=20261030a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261030a";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261030a";
+import { openIntro } from "./onboarding.js?v=20261030a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261030a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261030a";
+import { Social } from "./social.js?v=20261030a";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261030a";
+import { avatarSvg } from "./avatar.js?v=20261030a";
+import { Bridge } from "./potes-ui.js?v=20261030a";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261030a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261030a";
+import { openSettings } from "./potes-settings.js?v=20261030a";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261030a";
+import { SharedPrograms } from "./community.js?v=20261030a";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261030a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -167,6 +167,9 @@ function applyStaticTranslations() {
 function init() {
   applyStaticTranslations();
   bindGlobalEvents();
+  DB.onSaveState = onSaveState;
+  // un enregistrement raté repart dès que le réseau revient
+  window.addEventListener("online", () => { if (DB.saveError) DB._saveToCloud(); });
   showLoading(true);
 
   Auth.onAuthStateChanged(async firebaseUser => {
@@ -182,6 +185,7 @@ function init() {
     state.sessionLogs = [];
     state.weightLog = [];
     state.workout = null;
+    DB.stopListening();
     unmountNutrition();
     unmountPotes();
     resetPotesView();
@@ -221,6 +225,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   bindHomeLine($("#potes-line"));
   $("#community-btn").addEventListener("click", openCommunity);
   $("#programs-list").addEventListener("click", event => {
+    if (event.target.closest("[data-groups-go]")) { event.stopPropagation(); goToGroups(); return; }
     const share = event.target.closest("[data-share-program]");
     const update = event.target.closest("[data-program-update]");
     if (share) { event.stopPropagation(); openProgramShare(share.dataset.shareProgram); }
@@ -268,10 +273,17 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#streak-pill").addEventListener("click", focusStreakCard);
   $("#streak-card").addEventListener("click", event => {
     if (event.target.closest("[data-streak-save]")) saveStreakWeight();
-    if (event.target.closest("[data-streak-edit]")) openWeightModal();
+    if (event.target.closest("[data-streak-edit]")) { state.streakEditing = true; renderStreak(); focusField("#streak-input"); }
+    if (event.target.closest("[data-streak-cancel]")) { state.streakEditing = false; renderStreak(); }
+    if (event.target.closest("[data-kcal-save]")) saveKcal();
+    if (event.target.closest("[data-kcal-edit]")) { state.kcalEditing = true; renderStreak(); focusField("#kcal-input"); }
+    if (event.target.closest("[data-kcal-cancel]")) { state.kcalEditing = false; renderStreak(); }
+    if (event.target.closest("[data-streak-history]")) openWeightModal();
   });
   $("#streak-card").addEventListener("keydown", event => {
     if (event.key === "Enter" && event.target.id === "streak-input") saveStreakWeight();
+    if (event.key === "Enter" && event.target.id === "kcal-input") saveKcal();
+    if (event.key === "Escape" && (state.streakEditing || state.kcalEditing)) { state.streakEditing = state.kcalEditing = false; renderStreak(); }
   });
   $("#save-weight-btn").addEventListener("click", saveWeight);
   $("#open-export-btn").addEventListener("click", () => { closeProfileDrawer(); openModal("modal-export"); });
@@ -674,7 +686,8 @@ async function loadApp(firebaseUser) {
 
     const data = DB.getData();
     migrateExerciseIds(data);
-    data.profile = {
+    const profile = {
+      ...(data.profile || {}),
       id: firebaseUser.uid,
       email: firebaseUser.email,
       name: firebaseUser.displayName || firebaseUser.email,
@@ -684,7 +697,12 @@ async function loadApp(firebaseUser) {
       trainingProfile: data.profile?.trainingProfile || null,
       introSeen: data.profile?.introSeen || false
     };
-    DB.saveData(data);
+    // on n'écrit au démarrage que si le profil a vraiment changé (une vieille fenêtre ne réécrit plus tout)
+    if (JSON.stringify(profile) !== JSON.stringify(data.profile)) {
+      data.profile = profile;
+      DB.saveData(data);
+    }
+    if (DB.loadFailed) setTimeout(() => showToast(t("dataLoadFailed")), 600);
 
     state.user = { id: firebaseUser.uid, email: firebaseUser.email, name: firebaseUser.displayName };
     state.profile = DB.getProfile();
@@ -709,6 +727,8 @@ async function loadApp(firebaseUser) {
 
     applyStaticTranslations();
     renderAll();
+    // changements faits dans une autre fenêtre ou sur un autre appareil : repris en direct
+    DB.listen(onRemoteData);
     // partie Potes : chargée à côté, sans retarder l'appli ; une erreur la laisse simplement de côté
     Social.load(firebaseUser.uid);
 
@@ -733,6 +753,35 @@ async function loadApp(firebaseUser) {
   } finally {
     showLoading(false);
   }
+}
+
+/** Données changées ailleurs (autre fenêtre, autre appareil) : on se remet à jour sans rien perdre */
+function onRemoteData(kind) {
+  state.profile = DB.getProfile();
+  state.programs = DB.getPrograms();
+  state.exercises = DB.getExercises();
+  state.sessionLogs = DB.getSessionLogs();
+  state.weightLog = DB.getWeightLog();
+  const view = state.activeView;
+  if (view === "home") renderHome();
+  else renderStreak();
+  if (view === "programs") renderPrograms();
+  if (view === "program-detail") {
+    const program = state.programs.find(item => item.id === state.currentProgramId);
+    if (program) renderProgSessions(program);
+  }
+  if (view === "progress") renderProgress();
+  if (kind === "main" || kind === "days") Social.queuePublish();
+}
+
+/** Enregistrement impossible : on le dit (une seule fois), et on réessaie au retour du réseau */
+let saveWarned = false;
+function onSaveState(stateName, error) {
+  if (stateName === "ok") { if (saveWarned) showToast(t("dataSavedAgain")); saveWarned = false; return; }
+  if (saveWarned) return;
+  saveWarned = true;
+  if (stateName === "blocked") showToast(t("dataLoadFailed"));
+  else showToast(t("dataSaveFailed", { code: error?.code || "?" }));
 }
 
 function renderAll() {
@@ -875,7 +924,9 @@ function setupPotesBridge() {
     openSettings,
     openMyProfile: openMyProfileAsFriend,
     openProgram: openProgramPreview,
-    goPotes: () => setView("potes"),
+    goPotes: tab => { setView("potes"); if (tab) showPotesTab(tab); },
+    openProgramDetail: localId => { if (state.programs.some(p => p.id === localId)) openProgramDetail(localId); },
+    newProgram: then => openWizard({ afterCreate: then }),
     joinProgram: joinSharedProgram,
     updateProgramCopy,
     addCommunityExercise: ex => { DB.saveCustomExercise(foreignExercise(ex, { communityId: ex.id })); refreshExercises(); },
@@ -901,7 +952,7 @@ function onSocialChange() {
   $("#community-btn").classList.toggle("hidden", !Social.joined);
   if (state.activeView === "home") renderHomeLine($("#potes-line"));
   // programmes : étiquettes de partage seulement si elles ont changé
-  const signature = JSON.stringify([Social.joined, SharedPrograms.shares, SharedPrograms.joined, SharedPrograms.competing]);
+  const signature = JSON.stringify([Social.loaded, Social.joined, SharedPrograms.shares, SharedPrograms.joined, SharedPrograms.competing, Social.invitesIn.length]);
   if (signature !== socialSignature) {
     socialSignature = signature;
     renderPrograms();
@@ -1138,7 +1189,7 @@ function renderPerfCard() {
   `;
 }
 
-function openWizard() {
+function openWizard({ afterCreate } = {}) {
   const last = state.weightLog[state.weightLog.length - 1];
   openProgramWizard({
     exercises: state.exercises,
@@ -1172,6 +1223,8 @@ function openWizard() {
       renderHome();
       renderPrograms();
       showToast(t("wizardCreated"));
+      // créé depuis « mettre un programme en commun » : on enchaîne sur la mise en commun
+      if (afterCreate) setTimeout(() => afterCreate(program.id), 300);
     },
     onDismiss: () => {
       if (!state.profile?.onboardingDone) state.profile = DB.updateProfile({ onboardingDone: true });
@@ -1419,18 +1472,31 @@ function renderHome() {
 }
 
 function openWeightModal() {
-  $("#weight-input").value = "";
-  $("#weight-history").innerHTML = state.weightLog.slice(-6).reverse().map(item => `
-    <div class="progress-item" style="padding:10px;">
-      <div class="item-title">${item.weight} kg</div>
-      <div class="item-subtitle" style="margin-top:0;">${formatDateForUi(item.date)}</div>
+  const today = computeStreak(state.weightLog).todayEntry;
+  $("#weight-input").value = today ? String(today.weight).replace(".", ",") : "";
+  $("#weight-history").innerHTML = DB.getRecentDays(10).map(day => `
+    <div class="progress-item weight-day">
+      <div class="item-subtitle">${formatDateForUi(new Date(`${day.key}T12:00:00`).getTime())}</div>
+      <div class="weight-day-values">
+        <b>${day.weight != null ? `${formatNumber(day.weight, 1)} kg` : "—"}</b>
+        <span>${day.kcal != null ? `${formatNumber(day.kcal, 0)} kcal` : ""}</span>
+      </div>
     </div>
   `).join("");
   openModal("modal-weight");
 }
 
+/** Nombre tapé avec une virgule ou un point */
+function parseDecimal(value) {
+  return Number(String(value ?? "").trim().replace(/\s/g, "").replace(",", "."));
+}
+
+function focusField(selector) {
+  setTimeout(() => { const input = $(selector); input?.focus(); input?.select?.(); }, 30);
+}
+
 function saveWeight() {
-  const weight = Number($("#weight-input").value);
+  const weight = parseDecimal($("#weight-input").value);
   if (!weight || weight < 20 || weight > 300) {
     showToast(t("invalidWeight"));
     return;
@@ -1445,6 +1511,7 @@ function logWeight(weight, { silent = false } = {}) {
   const before = computeStreak(state.weightLog);
   DB.setDayWeight(weight);
   state.weightLog = DB.getWeightLog();
+  state.streakEditing = false;
   const after = computeStreak(state.weightLog);
   renderHome();
   if (state.activeView === "progress") renderProgress();
@@ -1469,13 +1536,29 @@ function logWeight(weight, { silent = false } = {}) {
 
 function saveStreakWeight() {
   const input = $("#streak-input");
-  const weight = Number(String(input?.value || "").replace(",", "."));
+  const weight = parseDecimal(input?.value);
   if (!weight || weight < 20 || weight > 300) {
     showToast(t("invalidWeight"));
     input?.focus();
     return;
   }
   logWeight(weight);
+}
+
+/** Kcal mangées aujourd'hui (champ vide = effacer) */
+function saveKcal() {
+  const input = $("#kcal-input");
+  const raw = String(input?.value || "").trim();
+  const kcal = raw === "" ? null : Math.round(parseDecimal(raw));
+  if (kcal !== null && (!Number.isFinite(kcal) || kcal < 0 || kcal > 20000)) {
+    showToast(t("kcalInvalid"));
+    input?.focus();
+    return;
+  }
+  DB.setDayKcal(kcal);
+  state.kcalEditing = false;
+  renderStreak();
+  showToast(t(kcal === null ? "kcalCleared" : "kcalSaved"));
 }
 
 function focusStreakCard() {
@@ -1508,7 +1591,7 @@ function renderStreak() {
     : t("streakPromptStart");
 
   let action;
-  if (lit) {
+  if (lit && !state.streakEditing) {
     const delta = s.previousEntry ? s.todayEntry.weight - s.previousEntry.weight : null;
     const deltaHtml = delta === null ? "" : `<span class="streak-delta">${delta > 0 ? "+" : ""}${formatNumber(delta, 1)} kg</span>`;
     action = `
@@ -1518,14 +1601,35 @@ function renderStreak() {
         <button class="btn btn-ghost btn-sm" data-streak-edit>${t("streakEdit")}</button>
       </div>`;
   } else {
+    // pesée du jour, ou correction de celle déjà faite (pré-remplie)
+    const value = lit ? formatNumber(s.todayEntry.weight, 1) : "";
     const last = s.previousEntry ? formatNumber(s.previousEntry.weight, 1) : "75";
     action = `
       <div class="streak-form">
-        <input id="streak-input" class="streak-input" type="text" inputmode="decimal" placeholder="${last}" aria-label="${t("weightToday")}">
+        <input id="streak-input" class="streak-input" type="text" inputmode="decimal" value="${value}" placeholder="${last}" aria-label="${t("weightToday")}">
         <span class="streak-unit">kg</span>
         <button class="btn btn-primary btn-sm" data-streak-save>${t("streakSave")}</button>
-      </div>`;
+      </div>
+      ${lit ? `<button type="button" class="hero-other streak-cancel" data-streak-cancel>${t("streakCancel")}</button>` : ""}`;
   }
+
+  // kcal mangées aujourd'hui : facultatif, modifiable à tout moment
+  const kcal = DB.getDay()?.kcal ?? null;
+  const kcalHtml = kcal !== null && !state.kcalEditing ? `
+    <div class="streak-kcal">
+      <span class="streak-kcal-label">${t("kcalLabel")}</span>
+      <b class="streak-kcal-value">${formatNumber(kcal, 0)}<small>kcal</small></b>
+      <button class="btn btn-ghost btn-sm" data-kcal-edit>${t("streakEdit")}</button>
+    </div>` : `
+    <div class="streak-kcal">
+      <label class="streak-kcal-label" for="kcal-input">${t("kcalLabel")}</label>
+      <div class="streak-form streak-form-kcal">
+        <input id="kcal-input" class="streak-input" type="text" inputmode="numeric" value="${kcal ?? ""}" placeholder="${t("kcalPlaceholder")}">
+        <span class="streak-unit">kcal</span>
+        <button class="btn btn-ghost btn-sm" data-kcal-save>${t("kcalSave")}</button>
+      </div>
+      ${state.kcalEditing ? `<button type="button" class="hero-other streak-cancel" data-kcal-cancel>${t("streakCancel")}</button>` : ""}
+    </div>`;
 
   const nextHtml = s.next ? `
     <div class="streak-next">
@@ -1546,8 +1650,10 @@ function renderStreak() {
     </div>
     <div class="streak-msg">${message}</div>
     ${action}
+    ${kcalHtml}
     <div class="streak-week">${week}</div>
-    ${nextHtml}`;
+    ${nextHtml}
+    <button type="button" class="hero-other streak-history" data-streak-history>${t("weightHistory")}</button>`;
 }
 
 function exportData() {
@@ -1825,10 +1931,33 @@ function parseDateStr(str) {
   return isNaN(parsed) ? Date.now() : parsed;
 }
 
+/** Carte « programmes en commun » en tête de l'onglet Programmes */
+function groupsEntryHtml() {
+  if (!Social.loaded || Social.error) return "";
+  if (!Social.joined) return `
+    <div class="card gr-entry">
+      <div><b>${escapeHtml(t("grEntryTitle"))}</b><small>${escapeHtml(t("grEntryJoin"))}</small></div>
+      <button type="button" class="btn btn-ghost btn-sm" data-groups-go>${escapeHtml(t("grEntryJoinBtn"))}</button>
+    </div>`;
+  const groups = SharedPrograms.myGroups(state.programs).length;
+  const invites = Social.invitesIn.length;
+  const line = invites ? t("grEntryInvites", { count: invites }) : groups ? t("grEntryCount", { count: groups }) : t("grEntryEmpty");
+  return `
+    <div class="card gr-entry${invites ? " has-news" : ""}">
+      <div><b>${escapeHtml(t("grEntryTitle"))}</b><small>${escapeHtml(line)}</small></div>
+      <button type="button" class="btn btn-ghost btn-sm" data-groups-go>${escapeHtml(t(invites ? "grEntrySeeInvites" : "grEntrySee"))}</button>
+    </div>`;
+}
+
+function goToGroups() {
+  setView("potes");
+  showPotesTab(Social.joined ? "programs" : "friends");
+}
+
 function renderPrograms() {
-  // partie Potes : étiquette « partagé » / « programme d'un pote » et bouton « partager » (seulement si rejoint)
+  // partie Potes : étiquette « partagé » / « programme d'un pote » et bouton « en commun » (seulement si rejoint)
   const followed = Object.entries(Social.joined ? SharedPrograms.joined : {});
-  $("#programs-list").innerHTML = state.programs.length ? state.programs.map(program => {
+  $("#programs-list").innerHTML = groupsEntryHtml() + (state.programs.length ? state.programs.map(program => {
     const shared = Social.joined && SharedPrograms.shares[program.id];
     const follow = followed.find(([, entry]) => entry.localId === program.id);
     const update = follow && state.programUpdates?.has(program.id);
@@ -1842,10 +1971,10 @@ function renderPrograms() {
           ${shared ? `<span class="prog-tag">${escapeHtml(t("spTagShared"))}</span>` : follow ? `<span class="prog-tag">${escapeHtml(t("spTagFollowed"))}</span>` : ""}
           ${update ? `<button type="button" class="prog-update" data-program-update="${escapeHtml(follow[0])}">${escapeHtml(t("spUpdateAvailable"))}</button>` : ""}
         </div>
-        ${Social.joined && !follow ? `<button type="button" class="btn btn-surface btn-sm" data-share-program="${program.id}">${escapeHtml(t("spShareShort"))}</button>` : ""}
+        ${Social.joined && !follow ? `<button type="button" class="btn btn-surface btn-sm" data-share-program="${program.id}">${escapeHtml(t(shared ? "grShortOpen" : "grShareShort"))}</button>` : ""}
       </div>
     </div>`;
-  }).join("") : `<div class="card">${t("noProgramsYet")}</div>`;
+  }).join("") : `<div class="card">${t("noProgramsYet")}</div>`);
 
   $all("[data-program-id]").forEach(card => {
     card.addEventListener("click", () => openProgramDetail(card.dataset.programId));
@@ -1988,9 +2117,7 @@ function deleteCurrentProgram() {
   if (!state.currentProgramId) return;
   if (!confirm(t("deleteProgramConfirm"))) return;
 
-  const data = DB.getData();
-  data.programs = data.programs.filter(program => program.id !== state.currentProgramId);
-  DB.saveData(data);
+  DB.deleteProgram(state.currentProgramId);
 
   state.programs = DB.getPrograms();
   state.currentProgramId = null;

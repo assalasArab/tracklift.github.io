@@ -3,9 +3,10 @@
    « bravo » en un toucher, une ligne sur l'accueil, message en direct.
    En direct quand l'appli est ouverte ; au retour sinon (badge).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261028a";
-import { Social } from "./social.js?v=20261028a";
-import { t, tn, esc, openSheet, sheetHead, personAvatar, nameOf, kg, timeAgo, MASCOT, Bridge, bump } from "./potes-ui.js?v=20261028a";
+import { showToast } from "./utils.js?v=20261030a";
+import { Social } from "./social.js?v=20261030a";
+import { t, tn, esc, openSheet, sheetHead, personAvatar, nameOf, kg, timeAgo, MASCOT, Bridge, bump } from "./potes-ui.js?v=20261030a";
+import { acceptProgramInvite, declineProgramInvite } from "./potes-programs.js?v=20261030a";
 
 const DAY = 86400000;
 const GROUP_WINDOW = 6 * 3600000; // les événements d'un même pote à moins de 6 h se regroupent
@@ -23,6 +24,7 @@ export function buildNotifications() {
   const mute = Social.mute;
   const out = [];
   if (!mute.request) for (const r of Social.requestsIn) out.push({ key: `req:${r.from}`, kind: "request", uid: r.from, at: r.createdAt });
+  if (!mute.invite) for (const inv of Social.invitesIn) out.push({ key: `inv:${inv.id}`, kind: "invite", uid: inv.from, invite: inv, at: inv.createdAt });
   if (!mute.accepted) for (const f of Social.friends.values()) {
     if (f.createdBy && f.createdBy !== Social.uid && f.since > Date.now() - 30 * DAY) out.push({ key: `acc:${f.uid}`, kind: "accepted", uid: f.uid, at: f.since });
   }
@@ -65,6 +67,7 @@ function textOf(n, plain = false) {
   } else {
     name = nameOf(Social.profileOf(n.uid));
     if (n.kind === "request") raw = t("nfRequest", { name: MARK });
+    else if (n.kind === "invite") raw = t("nfInvite", { name: MARK, program: n.invite.name });
     else if (n.kind === "accepted") raw = t("nfAccepted", { name: MARK });
     else {
       const e = n.events[0], count = n.events.length, d = e.data || {};
@@ -83,6 +86,11 @@ function actionsHtml(n) {
       <button type="button" class="btn btn-ghost btn-sm" data-nf-accept="${esc(n.uid)}">${esc(t("pqAccept"))}</button>
       <button type="button" class="btn btn-surface btn-sm" data-nf-refuse="${esc(n.uid)}">${esc(t("pqRefuse"))}</button>
     </div>`;
+  if (n.kind === "invite") return `
+    <div class="nf-actions">
+      <button type="button" class="btn btn-ghost btn-sm" data-nf-join="${esc(n.invite.id)}">${esc(t("grAccept"))}</button>
+      <button type="button" class="btn btn-surface btn-sm" data-nf-nojoin="${esc(n.invite.id)}">${esc(t("grDecline"))}</button>
+    </div>`;
   if (n.kind === "event") {
     const eventId = n.events[0].id;
     return Social.hasCheered(eventId)
@@ -94,7 +102,7 @@ function actionsHtml(n) {
 
 function itemHtml(n, seenAt) {
   const who = n.kind === "cheer" ? n.from[0] : n.uid;
-  const openable = n.kind !== "request" && Social.isFriend(who);
+  const openable = n.kind !== "request" && n.kind !== "invite" && Social.isFriend(who);
   const inner = `${personAvatar(Social.profileOf(who), 40)}<span class="nf-text"><span>${textOf(n)}</span><small>${esc(timeAgo(n.at))}</small></span>`;
   return `
     <li class="nf-item${n.at > seenAt ? " is-new" : ""}">
@@ -111,6 +119,10 @@ export function bindNotifActions(container) {
     const refuse = event.target.closest("[data-nf-refuse]");
     const bravo = event.target.closest("[data-nf-bravo]");
     const open = event.target.closest("[data-nf-open]");
+    const join = event.target.closest("[data-nf-join]");
+    const nojoin = event.target.closest("[data-nf-nojoin]");
+    if (join) { join.disabled = true; acceptProgramInvite(join.dataset.nfJoin); return; }
+    if (nojoin) { nojoin.disabled = true; declineProgramInvite(nojoin.dataset.nfNojoin); return; }
     try {
       if (accept) { accept.disabled = true; await Social.acceptRequest(accept.dataset.nfAccept); showToast(t("pqAccepted", { name: nameOf(Social.profileOf(accept.dataset.nfAccept)) })); }
       else if (refuse) { refuse.disabled = true; await Social.refuseRequest(refuse.dataset.nfRefuse); showToast(t("pqRefused")); }
@@ -202,8 +214,8 @@ export function watchLive() {
 /* ─── Une seule ligne d'activité sur l'accueil ─────────── */
 export function renderHomeLine(el) {
   if (!el) return;
-  const list = Social.joined ? buildNotifications().filter(n => n.kind === "request" || (n.kind === "event" && n.at > Date.now() - 3 * DAY)) : [];
-  const top = list.find(n => n.kind === "request") || list[0];
+  const list = Social.joined ? buildNotifications().filter(n => n.kind === "request" || n.kind === "invite" || (n.kind === "event" && n.at > Date.now() - 3 * DAY)) : [];
+  const top = list.find(n => n.kind === "request" || n.kind === "invite") || list[0];
   if (!top) { el.innerHTML = ""; el.classList.add("hidden"); return; }
   el.classList.remove("hidden");
   const who = top.uid;

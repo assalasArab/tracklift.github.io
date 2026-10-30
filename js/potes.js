@@ -1,18 +1,21 @@
 /* ═══════════════════════════════════════════════════════════
    Partie Potes : la page.
    - pas encore rejoint : présentation + parcours (pseudo → avatar → ce que tes potes voient)
-   - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages)
-     et « Classement », réglages de partage, quitter.
+   - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages),
+     « Classement » et « Programmes » (programmes en commun, invitations), réglages, quitter.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261028a";
-import { Social, checkUsername } from "./social.js?v=20261028a";
-import { SharedPrograms, Community } from "./community.js?v=20261028a";
-import { streakAlive, weekKey } from "./social-stats.js?v=20261028a";
-import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomAvatar } from "./avatar.js?v=20261028a";
-import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261028a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261028a";
-import { openSettings } from "./potes-settings.js?v=20261028a";
-import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261028a";
+import { showToast } from "./utils.js?v=20261030a";
+import { Social, checkUsername } from "./social.js?v=20261030a";
+import { SharedPrograms, Community } from "./community.js?v=20261030a";
+import { streakAlive, weekKey } from "./social-stats.js?v=20261030a";
+import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomAvatar } from "./avatar.js?v=20261030a";
+import { t, tn, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261030a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261030a";
+import { openSettings } from "./potes-settings.js?v=20261030a";
+import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261030a";
+import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261030a";
+
+const TABS = ["friends", "board", "programs"];
 
 let root = null;
 let unsubscribe = null;
@@ -38,6 +41,13 @@ export function unmountPotes() {
 export function resetPotesView() {
   Object.assign(view, { tab: "friends", crit: "sessions", query: "", search: null, invite: null });
   lastHtml = "";
+}
+
+/** Ouvre la page sur un onglet (« programs » depuis l'onglet Programmes de l'appli) */
+export function showPotesTab(tab) {
+  if (TABS.includes(tab)) view.tab = tab;
+  lastHtml = "";
+  render();
 }
 
 /** Invitation par lien (?pote=pseudo) : à rejoindre puis à ajouter */
@@ -68,7 +78,9 @@ function render() {
   if (!Social.loaded) body = `<p class="pt-loading" role="status">${esc(t("potesLoading"))}</p>`;
   else if (Social.error) body = errorHtml();
   else if (!Social.joined) body = joinHtml();
-  else body = meHtml() + tabsHtml() + (view.tab === "board" ? `<div class="pt-panel" role="tabpanel" id="pt-panel" aria-labelledby="pt-tab-board">${boardHtml(view.crit)}</div>` : friendsPanelHtml())
+  else body = meHtml() + tabsHtml()
+    + (view.tab === "board" ? `<div class="pt-panel" role="tabpanel" id="pt-panel" aria-labelledby="pt-tab-board">${boardHtml(view.crit)}</div>`
+      : view.tab === "programs" ? groupsPanelHtml() : friendsPanelHtml())
     + `<button type="button" class="text-danger-btn pt-leave" data-pt-leave>${esc(t("potesLeave"))}</button>`;
   const html = head + (navigator.onLine === false && Social.joined ? `<p class="pt-offline" role="status">${esc(t("potesOfflineNote"))}</p>` : "") + body;
   if (html === lastHtml) return;
@@ -137,9 +149,11 @@ function meHtml() {
 function tabsHtml() {
   const tab = (key, label) => `<button type="button" role="tab" class="pt-tab" id="pt-tab-${key}" aria-controls="pt-panel" aria-selected="${view.tab === key}" tabindex="${view.tab === key ? 0 : -1}" data-pt-tab="${key}">${esc(label)}</button>`;
   const pending = Social.requestsIn.length;
-  return `<div class="pt-tabs" role="tablist" aria-label="${esc(t("potes"))}">
+  const invites = Social.invitesIn.length;
+  return `<div class="pt-tabs pt-tabs-3" role="tablist" aria-label="${esc(t("potes"))}">
     ${tab("friends", pending ? `${t("ptTabFriends")} · ${pending}` : t("ptTabFriends"))}
     ${tab("board", t("ptTabBoard"))}
+    ${tab("programs", invites ? `${t("ptTabPrograms")} · ${invites}` : t("ptTabPrograms"))}
   </div>`;
 }
 
@@ -245,7 +259,12 @@ export function bindPotes(container) {
     const tab = event.target.closest("[data-pt-tab], [data-board-crit]");
     if (!tab || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
     event.preventDefault();
-    if (tab.dataset.ptTab) { view.tab = view.tab === "friends" ? "board" : "friends"; render(); root?.querySelector(`#pt-tab-${view.tab}`)?.focus(); }
+    if (tab.dataset.ptTab) {
+      const i = TABS.indexOf(view.tab) + (event.key === "ArrowRight" ? 1 : -1);
+      view.tab = TABS[(i + TABS.length) % TABS.length];
+      render();
+      root?.querySelector(`#pt-tab-${view.tab}`)?.focus();
+    }
     else {
       const i = CRITERIA.indexOf(view.crit);
       view.crit = CRITERIA[(i + (event.key === "ArrowRight" ? 1 : -1) + CRITERIA.length) % CRITERIA.length];
@@ -255,6 +274,7 @@ export function bindPotes(container) {
   });
   container.addEventListener("click", async event => {
     const el = selector => event.target.closest(selector);
+    if (handleGroupsClick(event)) return;
     if (el("[data-pt-join]")) return openJoinFlow();
     if (el("[data-pt-avatar]")) return editMyAvatar();
     if (el("[data-pt-rename]")) return openRename();

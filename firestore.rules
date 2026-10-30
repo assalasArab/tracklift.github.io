@@ -11,9 +11,13 @@ rules_version = '2';
 // Rappel : les stats partagées sont calculées dans le navigateur de chacun ;
 // un tricheur pourrait les gonfler. C'est accepté entre potes.
 //
-// users/<uid> : données de l'appli (programmes, séances, pesées, nutrition)
+// users/<uid> : données de l'appli (programmes, séances, nutrition)
 //   ✔ le propriétaire lit et écrit son document
 //   ✘ personne d'autre, même un ami
+//
+// users/<uid>/days/<AAAA-MM-JJ> : pesée et kcal d'un jour (un petit document par jour)
+//   ✔ le propriétaire seulement ; un poids entre 20 et 300 kg, des kcal entre 0 et 20 000
+//   ✘ personne d'autre ; un champ inconnu ; une date qui ne correspond pas au document
 //
 // social/<uid> : réglages privés de la partie Potes (avatar, partages, notifs…)
 //   ✔ le propriétaire lit et écrit
@@ -64,6 +68,10 @@ rules_version = '2';
 //   ✔ compétition : chacun écrit SES chiffres (séances, records : des nombres, jamais de charge)
 //   ✘ lister les programmes des autres ; modifier le programme d'un autre ;
 //     inscrire quelqu'un d'autre
+//
+// programInvites/<idProgramme>_<invité> : invitation (par bouton) à rejoindre un programme partagé
+//   ✔ l'auteur ou un membre invite un de ses potes ; l'invité et l'expéditeur la voient et la suppriment
+//   ✘ inviter un inconnu ; au nom d'un autre ; dans un programme dont on ne fait pas partie ; voir celles des autres
 //
 // communityExercises/<clé d'auteur>_<1 à 10> : exercices de la communauté (anonymes)
 //   ✔ lus par tout utilisateur connecté ; 10 exercices maximum par personne
@@ -162,6 +170,23 @@ service cloud.firestore {
     // ─── Données de l'appli : inchangé ────────────────────
     match /users/{userId} {
       allow read, write: if isMe(userId);
+    }
+
+    // ─── Pesée et kcal du jour ────────────────────────────
+    function validDay(day, d) {
+      return d.keys().hasOnly(['date', 'weight', 'kcal', 'weighedAt', 'updatedAt'])
+        && d.date == day
+        && (!('weight' in d) || d.weight == null || (d.weight is number && d.weight >= 20 && d.weight <= 300))
+        && (!('kcal' in d) || d.kcal == null || (d.kcal is int && d.kcal >= 0 && d.kcal <= 20000))
+        && (!('weighedAt' in d) || d.weighedAt is int)
+        && (!('updatedAt' in d) || d.updatedAt is int);
+    }
+    match /users/{userId}/days/{day} {
+      allow read: if isMe(userId);
+      allow create, update: if isMe(userId)
+        && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && validDay(day, request.resource.data);
+      allow delete: if isMe(userId);
     }
 
     // ─── Réglages privés de la partie Potes ───────────────
@@ -362,6 +387,31 @@ service cloud.firestore {
         allow delete: if isMe(memberId)
           || (signedIn() && get(programDoc(programId)).data.owner == me());
       }
+    }
+
+    // ─── Invitations à rejoindre un programme ────────────
+    function inProgram(programId, userId) {
+      return get(programDoc(programId)).data.owner == userId
+        || exists(/databases/$(database)/documents/sharedPrograms/$(programId)/members/$(userId));
+    }
+    match /programInvites/{inviteId} {
+      allow get, list: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['programId', 'name', 'from', 'to', 'createdAt'])
+        && request.resource.data.from == me()
+        && request.resource.data.to is string
+        && request.resource.data.to != me()
+        && request.resource.data.programId is string
+        && inviteId == request.resource.data.programId + '_' + request.resource.data.to
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && request.resource.data.createdAt is int
+        && exists(programDoc(request.resource.data.programId))
+        && inProgram(request.resource.data.programId, me())
+        && areFriends(me(), request.resource.data.to)
+        && !hasBlocked(request.resource.data.to, me())
+        && !hasBlocked(me(), request.resource.data.to);
+      allow update: if false;
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
     }
 
     // ─── Exercices de la communauté ───────────────────────

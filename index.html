@@ -18,7 +18,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261028a">
+  <link rel="stylesheet" href="./styles.css?v=20261030a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -522,7 +522,7 @@
         <button class="icon-btn" data-close="modal-weight" aria-label="fermer">✕</button>
       </div>
       <label class="label" for="weight-input" data-i18n="weightToday">poids du jour</label>
-      <input id="weight-input" class="input" type="number" min="20" max="300" step="0.1" placeholder="80.5">
+      <input id="weight-input" class="input" type="text" inputmode="decimal" autocomplete="off" placeholder="80,5">
       <div class="section-actions mt-12">
         <button id="save-weight-btn" class="btn btn-primary btn-block" data-i18n="save">enregistrer</button>
       </div>
@@ -588,7 +588,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261028a"></script>
+  <script type="module" src="./js/app.js?v=20261030a"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

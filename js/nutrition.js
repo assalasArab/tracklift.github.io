@@ -4,7 +4,7 @@
    Monté à la demande dans #view-nutrition. IDs et classes préfixés nx-.
    ═══════════════════════════════════════════════════════════ */
 
-import { illu as illuHtml } from "./illustrations.js?v=20261028a";
+import { illu as illuHtml } from "./illustrations.js?v=20261030a";
 
 /* ---------- catalogue MET (Compendium of Physical Activities 2024) ---------- */
 const MET = [
@@ -137,6 +137,7 @@ let lastR = null;
 let lastFlags = [];
 let proj = null;
 let saveT = null;
+let lastSavedJson = null; // dernier état enregistré : on n'écrit que si quelque chose a changé
 let defaults = null;
 
 /* ---------- helpers ---------- */
@@ -1420,7 +1421,16 @@ function snapshot() {
 function save() {
   if (!opts.save) return;
   clearTimeout(saveT);
-  saveT = setTimeout(() => { try { opts.save(snapshot()); } catch (e) { console.error("[Nutrition] save", e); } }, 800);
+  saveT = setTimeout(() => {
+    try {
+      const snap = snapshot();
+      const json = JSON.stringify(snap);
+      // ouvrir l'onglet ou tourner l'écran ne réécrit plus les données : seulement un vrai changement
+      if (json === lastSavedJson) return;
+      lastSavedJson = json;
+      opts.save(snap);
+    } catch (e) { console.error("[Nutrition] save", e); }
+  }, 800);
 }
 function restore(d) {
   if (!d) return false;
@@ -1516,6 +1526,7 @@ export function mountNutrition(container, options = {}) {
   $("resetBtn").addEventListener("click", () => {
     if (opts.save) { clearTimeout(saveT); opts.save(null); }
     reset();
+    lastSavedJson = JSON.stringify(snapshot());
   });
 
   let rT = null, lastW = 0;
@@ -1533,11 +1544,13 @@ export function mountNutrition(container, options = {}) {
     const w = opts.getLatestWeight && opts.getLatestWeight();
     if (w) $("weight").value = w;
   }
+  lastSavedJson = JSON.stringify(snapshot());
   refreshAll();
 }
 
 export function unmountNutrition() {
   clearTimeout(saveT);
+  lastSavedJson = null;
   if (root) root.innerHTML = "";
   root = null; opts = {}; lastR = null; proj = null; lastFlags = [];
   const doc = document.getElementById("nx-printDoc");

@@ -4,8 +4,8 @@
    Les correspondances programme local ↔ programme partagé sont gardées
    dans social/<uid> (privé) : users/<uid> garde sa structure.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261028a";
-import { Social } from "./social.js?v=20261028a";
+import { firestore } from "./firebase-config.js?v=20261030a";
+import { Social } from "./social.js?v=20261030a";
 
 export const COMMUNITY_LIMIT = 10;
 const ref = path => firestore.doc(path);
@@ -98,10 +98,61 @@ export const SharedPrograms = {
     catch { return null; }
   },
 
-  async join(program, localId) {
+  /**
+   * Rejoindre un programme. Avec stats : on entre aussi dans son classement
+   * (c'est écrit clairement à côté du bouton : séances et records, jamais les charges).
+   */
+  async join(program, localId, stats = null) {
     if (!Social.joined) throw fail("not-joined");
-    await ref(`sharedPrograms/${program.id}/members/${Social.uid}`).set({ joinedAt: Date.now() });
-    await this._saveLinks({ progJoined: { ...this.joined, [program.id]: { localId, version: program.version } } });
+    if (navigator.onLine === false) throw fail("offline");
+    const now = Date.now();
+    await ref(`sharedPrograms/${program.id}/members/${Social.uid}`).set({ joinedAt: now, ...(stats ? { compete: true, ...stats, updatedAt: now } : {}) });
+    const patch = { progJoined: { ...this.joined, [program.id]: { localId, version: program.version } } };
+    if (stats) {
+      patch.progCompete = { ...this.competing, [program.id]: true };
+      this._lastStats[program.id] = JSON.stringify(stats);
+    }
+    await this._saveLinks(patch);
+  },
+
+  /* ─── Invitations par bouton (à un pote) ─── */
+  /** Mes programmes en commun : ceux que je partage et ceux que je suis */
+  myGroups(programs) {
+    const nameOf = localId => programs.find(p => p.id === localId)?.name || "";
+    const own = Object.entries(this.shares).map(([localId, id]) => ({ id, localId, mine: true, name: nameOf(localId) }));
+    const followed = Object.entries(this.joined).map(([id, entry]) => ({ id, localId: entry.localId, mine: false, name: nameOf(entry.localId) }));
+    return [...own, ...followed].filter(group => group.name);
+  },
+
+  isInvited(programId, uid) { return Social.invitesOut.some(invite => invite.programId === programId && invite.to === uid); },
+
+  async invite(programId, name, uid) {
+    if (navigator.onLine === false) throw fail("offline");
+    await ref(`programInvites/${programId}_${uid}`).set({ programId, name: clip(name, 80) || "programme", from: Social.uid, to: uid, createdAt: Date.now() });
+  },
+
+  async cancelInvite(programId, uid) {
+    await ref(`programInvites/${programId}_${uid}`).delete();
+  },
+
+  async declineInvite(invite) {
+    await ref(`programInvites/${invite.id}`).delete();
+  },
+
+  /** Accepter : copie du programme chez moi (joinLocal), inscription + classement, invitation retirée */
+  async acceptInvite(invite, joinLocal, statsOf) {
+    if (navigator.onLine === false) throw fail("offline");
+    const program = await this.get(invite.programId);
+    if (!program) {
+      await ref(`programInvites/${invite.id}`).delete().catch(() => {});
+      throw fail("gone");
+    }
+    if (program.owner !== Social.uid && !this.joined[program.id]) {
+      const localId = joinLocal(program);
+      await this.join(program, localId, statsOf(localId));
+    }
+    await ref(`programInvites/${invite.id}`).delete().catch(() => {});
+    return program;
   },
 
   async markUpdated(id, version) {

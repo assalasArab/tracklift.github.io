@@ -3164,3 +3164,51 @@ button.nf-main { cursor: pointer; }
 .cp-note { margin: 0 2px 12px; font-size: 13.5px; line-height: 1.4; color: var(--text2); }
 .cp-join { margin-bottom: 14px; }
 .cp-leave { display: block; margin: 4px auto 0; }
+
+/* ─── Carte flamme : correction du poids, kcal du jour, derniers jours ─── */
+.streak-cancel { display: block; margin: 6px auto 0; }
+.streak-kcal { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 4px 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--separator); }
+.streak-kcal-label { font-size: 13px; font-weight: 600; color: var(--text2); }
+.streak-kcal-value { font-family: var(--font-round); font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.streak-kcal-value small { margin-left: 3px; font-size: 12px; font-weight: 600; color: var(--text2); }
+.streak-kcal .streak-form, .streak-kcal .streak-cancel { grid-column: 1 / -1; }
+.streak-history { display: block; margin: 10px auto 0; }
+.weight-day { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 12px; }
+.weight-day .item-subtitle { margin: 0; }
+.weight-day-values { display: flex; align-items: baseline; gap: 12px; font-variant-numeric: tabular-nums; }
+.weight-day-values span { font-size: 13px; color: var(--text2); }
+
+/* ─── Programmes en commun ─── */
+.pt-tabs-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pt-tabs-3 .pt-tab { font-size: 14px; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gr-hand { margin: -4px 2px 4px; }
+.gr-list, .gr-invites { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.gr-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; margin: 0; padding: 12px 14px; border: 0; cursor: pointer; text-align: left; font: inherit; color: var(--text); transition: transform 160ms var(--ease-out); }
+.gr-row:active { transform: scale(0.98); }
+.gr-row-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.gr-row-text b { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr-row-text small { font-size: 13px; color: var(--text2); }
+.gr-row-cta { flex: none; font-size: 14px; font-weight: 600; color: var(--accent-ink); }
+.gr-chev { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--text2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.gr-create { margin: 4px 0 8px; }
+.gr-invite { display: grid; gap: 8px; }
+.gr-invite-head { display: flex; align-items: center; gap: 12px; }
+.gr-invite-head .pt-text { margin: 0; }
+.gr-fine { margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--text2); }
+.sp-dock .gr-fine { margin-bottom: 8px; text-align: center; }
+.gr-actions { display: flex; gap: 8px; }
+.gr-sub { margin: 16px 2px 8px; font-size: 13px; font-weight: 600; color: var(--text2); }
+.gr-refresh { margin-top: 10px; }
+.gr-tools { display: grid; gap: 8px; margin-top: 16px; }
+.gr-leave { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 14px; }
+.gr-undo { margin-left: 4px; }
+.gr-new { margin-top: 10px; }
+.gr-entry { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.gr-entry div { display: grid; gap: 2px; min-width: 0; }
+.gr-entry small { font-size: 12.5px; color: var(--text2); line-height: 1.35; }
+.gr-entry.has-news { box-shadow: inset 0 0 0 2px var(--p-orange); }
+@media (prefers-reduced-motion: reduce) { .gr-row { transition: none; } }
+
+/* ─── Inviter des potes : le bouton reste sur la ligne du pote ─── */
+.gr-picker .pq-row { flex-wrap: nowrap; }
+.gr-picker .pq-actions { width: auto; flex: none; padding-left: 0; margin: 0 0 0 auto; flex-wrap: nowrap; }
