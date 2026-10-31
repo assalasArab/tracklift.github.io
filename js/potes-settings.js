@@ -4,10 +4,10 @@
    et les notifications. Rien ne part tant qu'on n'a pas appuyé
    sur « Enregistrer » ; fermer sans enregistrer est signalé.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261030b";
-import { Social, NOTIF_TYPES } from "./social.js?v=20261030b";
-import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261030b";
-import { t, tn, esc, openSheet, sheetHead, Bridge } from "./potes-ui.js?v=20261030b";
+import { showToast } from "./utils.js?v=20261031a";
+import { Social, NOTIF_TYPES } from "./social.js?v=20261031a";
+import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261031a";
+import { t, tn, esc, openSheet, sheetHead, Bridge } from "./potes-ui.js?v=20261031a";
 
 const SENSITIVE = ["weight", "nutrition"];
 

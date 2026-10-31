@@ -3417,3 +3417,95 @@ button.nf-main { cursor: pointer; }
 .sh-tag { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 600; color: var(--accent-ink); }
 .sh-missing { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; color: var(--text2); }
 .sh-soon { margin: 4px 0 8px; text-align: center; font-family: var(--font-hand); font-size: 20px; color: var(--text2); }
+
+/* ─── Scan morpho ─── */
+.mz-card { max-width: 1040px; }
+.mz-card .modal-head { position: sticky; top: -26px; z-index: 2; margin: -26px -18px 10px; padding: 20px 18px 8px; background: var(--bg); }
+.mz-lead { margin: 0 0 16px; max-width: 62ch; color: var(--text2); line-height: 1.5; }
+.mz-grid { display: grid; gap: 14px; align-items: start; }
+@media (min-width: 900px) {
+  .mz-grid { grid-template-columns: minmax(0, 1fr) 360px; }
+  .mz-main, .mz-quiz { grid-column: 1; }
+  .mz-panel { grid-column: 2; grid-row: 1 / span 2; }
+}
+.mz-box { background: var(--surface); border-radius: var(--radius-lg); padding: 16px; }
+.mz-box[hidden], .mz-stage[hidden] { display: none; }
+.mz-h { margin: 0 0 12px; font-size: 17px; font-weight: 600; }
+.mz-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mz-field { display: flex; flex-direction: column; min-width: 0; }
+.mz-field .label { margin: 0 0 6px 2px; }
+.mz-field .input { width: 100%; }
+.mz-drop { position: relative; grid-column: 1 / -1; display: flex; align-items: center; padding: 16px; border: 1.5px dashed rgba(43,38,32,0.28); border-radius: var(--radius); background: var(--surface2); color: var(--text2); cursor: pointer; }
+.mz-drop:hover, .mz-drop.is-drag, .mz-drop:focus-within { border-color: var(--accent); color: var(--text); }
+.mz-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.mz-drop-optional { padding: 12px 16px; }
+.mz-pose { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mz-pose svg { flex: none; width: 34px; height: 48px; }
+.mz-pose strong { display: block; color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
+.mz-pose small { display: block; margin-top: 2px; font-size: 13px; }
+.mz-tips { grid-column: 1 / -1; margin: 0; padding-left: 18px; color: var(--text2); font-size: 14px; line-height: 1.6; }
+.mz-run { grid-column: 1 / -1; }
+.mz-run:disabled { opacity: 0.45; cursor: default; }
+.mz-status { grid-column: 1 / -1; margin: 0; min-height: 1.4em; font-size: 14px; color: var(--text2); }
+.mz-status.is-error { color: var(--danger); }
+.mz-privacy { margin: 12px 0 0; font-size: 13px; line-height: 1.5; color: var(--text3); }
+.mz-stage { position: relative; overflow: hidden; border-radius: var(--radius); background: #2b2620; }
+.mz-stage + .mz-stage { margin-top: 10px; }
+.mz-stage canvas { display: block; width: 100%; height: auto; touch-action: manipulation; }
+.mz-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 0; font-size: 13px; color: var(--text2); }
+.mz-legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; background: var(--c); vertical-align: -1px; }
+.mz-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.mz-warn { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: rgba(201,138,18,0.14); color: #6d4a06; font-size: 14px; line-height: 1.5; }
+.mz-warn p { margin: 0; }
+.mz-warn p + p { margin-top: 4px; }
+.mz-last { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -4px 0 10px; font-size: 14px; color: var(--text2); }
+.mz-last p { margin: 0; }
+.mz-erase { flex: none; min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--text2); font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.mz-erase.is-confirming { background: var(--danger); color: var(--cream); text-decoration: none; }
+.mz-zones { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.mz-zones:empty { display: none; }
+.mz-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface2); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.mz-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.mz-chip[aria-pressed="true"], .mz-opt[aria-pressed="true"] { border-color: var(--p-brown); background: var(--p-brown); color: var(--cream); }
+.mz-empty { margin: 0; font-size: 15px; line-height: 1.5; color: var(--text2); }
+.mz-zone-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.mz-zone-head h5 { margin: 0; font-size: 19px; font-weight: 600; }
+.mz-badge { flex: none; padding: 3px 10px; border-radius: 999px; background: var(--c); color: #fff; font-size: 13px; font-weight: 600; }
+.mz-measure { margin: 0 0 10px; font-size: 14px; color: var(--text2); }
+.mz-pct { margin: 0 0 4px; font-size: 14px; }
+.mz-pct b { font-weight: 600; }
+.mz-rel { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--surface2); color: var(--text2); font-size: 12px; font-weight: 600; }
+.mz-bar { position: relative; height: 8px; margin: 8px 0 4px; border-radius: 99px; background: var(--surface3); }
+.mz-bar .band { position: absolute; top: 0; height: 8px; border-radius: 99px; background: var(--c); opacity: 0.3; }
+.mz-bar .q { position: absolute; top: -2px; width: 1px; height: 12px; background: var(--text3); opacity: 0.6; }
+.mz-bar b { position: absolute; top: -4px; width: 16px; height: 16px; border: 2px solid var(--surface); border-radius: 50%; background: var(--c); transform: translateX(-50%); }
+.mz-bar-labels { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 12px; color: var(--text3); }
+.mz-why { margin: 0 0 14px; font-size: 15px; line-height: 1.55; }
+.mz-sub { margin: 16px 0 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text3); }
+.mz-ex { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: center; width: 100%; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.mz-ex + .mz-ex { border-top: 1px solid var(--separator); }
+.mz-ex img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: var(--surface2); }
+.mz-ex strong { display: block; font-size: 15px; font-weight: 600; }
+.mz-ex span span { display: block; font-size: 13.5px; line-height: 1.45; color: var(--text2); }
+.mz-ex:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+.mz-note { margin: 14px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--text3); }
+.mz-note-top { margin: -4px 0 12px; }
+.mz-extra { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface2); font-size: 14px; line-height: 1.5; }
+.mz-extra p { margin: 0; }
+.mz-extra .mz-ex { padding: 6px 0 0; }
+.mz-q { padding: 12px 0; }
+.mz-q:first-child { padding-top: 0; }
+.mz-q + .mz-q { border-top: 1px solid var(--separator); }
+.mz-q h5 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+.mz-q p { margin: 0 0 8px; font-size: 13.5px; line-height: 1.45; color: var(--text2); }
+.mz-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.mz-opt { min-height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface2); color: var(--text); font: inherit; font-size: 13.5px; cursor: pointer; }
+/* scan morpho la nuit */
+:root[data-theme="dark"] .mz-drop { border-color: rgba(243,234,216,0.3); }
+:root[data-theme="dark"] .mz-drop:hover, :root[data-theme="dark"] .mz-drop.is-drag, :root[data-theme="dark"] .mz-drop:focus-within { border-color: var(--accent); }
+:root[data-theme="dark"] .mz-warn { background: rgba(242,196,107,0.12); color: #f2c46b; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mz-drop { border-color: rgba(243,234,216,0.3); }
+  :root:not([data-theme="light"]) .mz-drop:hover, :root:not([data-theme="light"]) .mz-drop.is-drag, :root:not([data-theme="light"]) .mz-drop:focus-within { border-color: var(--accent); }
+  :root:not([data-theme="light"]) .mz-warn { background: rgba(242,196,107,0.12); color: #f2c46b; }
+}

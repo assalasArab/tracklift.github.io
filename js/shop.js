@@ -3,14 +3,14 @@
    La réserve vient des pesées (js/flames.js) ; les prix sont dans
    js/avatar-parts.js (SHOP_PRICES). D'autres objets viendront ensuite.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261030b";
-import { i18n } from "./i18n.js?v=20261030b";
-import { DB } from "./db.js?v=20261030b";
-import { flameWallet, BONUS_TIERS, FLAME_BASE } from "./flames.js?v=20261030b";
-import { SHOP_PRICES, priceOf, AVATAR_CATEGORIES } from "./avatar-parts.js?v=20261030b";
-import { avatarSvg, AvatarLocks, normalizeAvatar } from "./avatar.js?v=20261030b";
-import { Social } from "./social.js?v=20261030b";
-import { t, esc, cap, openSheet, sheetHead } from "./potes-ui.js?v=20261030b";
+import { showToast } from "./utils.js?v=20261031a";
+import { i18n } from "./i18n.js?v=20261031a";
+import { DB } from "./db.js?v=20261031a";
+import { flameWallet, BONUS_TIERS, FLAME_BASE } from "./flames.js?v=20261031a";
+import { SHOP_PRICES, priceOf, AVATAR_CATEGORIES } from "./avatar-parts.js?v=20261031a";
+import { avatarSvg, AvatarLocks, normalizeAvatar } from "./avatar.js?v=20261031a";
+import { Social } from "./social.js?v=20261031a";
+import { t, esc, cap, openSheet, sheetHead } from "./potes-ui.js?v=20261031a";
 
 const tagOf = (key, id) => `${key}:${id}`;
 const listeners = new Set();

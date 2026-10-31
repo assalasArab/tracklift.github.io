@@ -5,11 +5,11 @@
    Jamais le poids du corps ni la charge brute.
    On n'apparaît que si on l'a accepté, critère par critère.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261030b";
-import { i18n } from "./i18n.js?v=20261030b";
-import { Social } from "./social.js?v=20261030b";
-import { boardValue, rankEntries, weekKey, monthKey } from "./social-stats.js?v=20261030b";
-import { t, esc, personAvatar, nameOf, MASCOT, Bridge, reducedMotion } from "./potes-ui.js?v=20261030b";
+import { showToast } from "./utils.js?v=20261031a";
+import { i18n } from "./i18n.js?v=20261031a";
+import { Social } from "./social.js?v=20261031a";
+import { boardValue, rankEntries, weekKey, monthKey } from "./social-stats.js?v=20261031a";
+import { t, esc, personAvatar, nameOf, MASCOT, Bridge, reducedMotion } from "./potes-ui.js?v=20261031a";
 
 export const CRITERIA = ["sessions", "streak", "records"];
 

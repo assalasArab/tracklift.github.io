@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261030b";
-import { EXERCISE_SEED } from "./exercises.js?v=20261030b";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261030b";
-import { firestore } from "./firebase-config.js?v=20261030b";
+import { uid } from "./utils.js?v=20261031a";
+import { EXERCISE_SEED } from "./exercises.js?v=20261031a";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261031a";
+import { firestore } from "./firebase-config.js?v=20261031a";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.
@@ -48,6 +48,7 @@ function fromRaw(raw) {
     customExercises: raw.customExercises || [],
     notion: raw.notion || null,
     purchases: raw.purchases || [],
+    morpho: raw.morpho || null,
     deletedIds: raw.deletedIds || [],
     createdAt: raw.createdAt || Date.now()
   };
@@ -291,6 +292,8 @@ export const DB = {
   getCustomExercises() { return this._cache?.customExercises || []; },
   getSessionLogs(){ return [...(this._cache?.sessionLogs || [])].sort((a, b) => b.date - a.date); },
   getNutrition()  { return this._cache?.nutrition || null; },
+  /** Dernier scan morpho : mesures et verdicts seulement, jamais la photo */
+  getMorpho()     { return this._cache?.morpho || null; },
   getNotion()     { return this._cache?.notion || null; },
   /** Pièces débloquées dans la boutique : [{ id: "hair:c6", price, at }] */
   getPurchases()  { return this._cache?.purchases || []; },
@@ -401,6 +404,13 @@ export const DB = {
     this.saveData(data);
   },
 
+  saveMorpho(result) {
+    const data = this.getData();
+    if (!data) return;
+    data.morpho = result || null;
+    this.saveData(data);
+  },
+
   saveNutrition(profile) {
     const data = this.getData();
     if (!data) return;
@@ -494,6 +504,7 @@ export const DB = {
       weightLog: this.getWeightLog(),
       days: [...this._days.values()].sort((a, b) => String(a.date).localeCompare(String(b.date))),
       nutrition: data.nutrition || null,
+      morpho: data.morpho || null,
       customExercises: data.customExercises || [],
       exportDate: new Date().toISOString()
     };
