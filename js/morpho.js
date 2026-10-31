@@ -5,9 +5,9 @@
    gardées, via opts.save (le document de l'utilisateur).
    Module chargé à la demande, depuis le menu du profil.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261031a";
-import { measureBody, measureSpan, combine, classify, ZONES, ZONE_ORDER } from "./morpho-engine.js?v=20261031a";
-import { morphoText, fill } from "./morpho-text.js?v=20261031a";
+import { i18n } from "./i18n.js?v=20261031b";
+import { measureBody, measureSpan, combine, classify, ZONES, ZONE_ORDER } from "./morpho-engine.js?v=20261031b";
+import { morphoText, fill } from "./morpho-text.js?v=20261031b";
 
 const MP_VERSION = "1.2.0";
 const MP_BUNDLE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}/vision_bundle.mjs`;

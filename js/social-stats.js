@@ -4,7 +4,7 @@
    gonfler ses chiffres. C'est accepté entre potes.
    Semaines du lundi au dimanche et mois à l'heure de Paris.
    ═══════════════════════════════════════════════════════════ */
-import { computeStreak } from "./streak.js?v=20261031a";
+import { computeStreak } from "./streak.js?v=20261031b";
 
 const WEEKDAYS = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
 const PARIS = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", year: "numeric", month: "numeric", day: "numeric", weekday: "short" });

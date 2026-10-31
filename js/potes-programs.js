@@ -5,13 +5,13 @@
    avec CE programme, jamais les charges).
    Plus bas : exercices de la communauté (10 maximum par personne).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261031a";
-import { i18n } from "./i18n.js?v=20261031a";
-import { Social } from "./social.js?v=20261031a";
-import { rankEntries, competitionValue } from "./social-stats.js?v=20261031a";
-import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261031a";
-import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261031a";
-import { ordinal } from "./potes-board.js?v=20261031a";
+import { showToast } from "./utils.js?v=20261031b";
+import { i18n } from "./i18n.js?v=20261031b";
+import { Social } from "./social.js?v=20261031b";
+import { rankEntries, competitionValue } from "./social-stats.js?v=20261031b";
+import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261031b";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261031b";
+import { ordinal } from "./potes-board.js?v=20261031b";
 
 const errorText = err => t(err?.code === "offline" ? "potesNeedOnline" : err?.code === "limit" ? "cmLimit" : err?.code === "gone" ? "spGone" : "potesJoinError", { limit: COMMUNITY_LIMIT });
 const CHEVRON = `<svg class="gr-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;

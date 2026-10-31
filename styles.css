@@ -3509,3 +3509,90 @@ button.nf-main { cursor: pointer; }
   :root:not([data-theme="light"]) .mz-drop:hover, :root:not([data-theme="light"]) .mz-drop.is-drag, :root:not([data-theme="light"]) .mz-drop:focus-within { border-color: var(--accent); }
   :root:not([data-theme="light"]) .mz-warn { background: rgba(242,196,107,0.12); color: #f2c46b; }
 }
+
+/* ─── Séance : vue d'ensemble et sauvegarde ─── */
+/* titre et boutons sur la première ligne, « vue d'ensemble » en dessous sur toute la largeur */
+#view-workout .guided-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 8px; }
+.guided-top-text { display: contents; }
+.guided-top-text .guided-session-name { grid-column: 1; grid-row: 1; min-width: 0; overflow-wrap: anywhere; }
+.guided-top-actions { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 8px; }
+.guided-map-btn { grid-column: 1 / -1; grid-row: 2; justify-self: start; display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 4px 12px 4px 9px; border: 0; border-radius: 999px; background: var(--surface); color: var(--text2); font: inherit; font-size: 14px; cursor: pointer; text-align: left; }
+.guided-map-btn svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--text); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.guided-map-btn .guided-progress { font-size: 14px; white-space: nowrap; }
+.guided-map-label { font-weight: 600; color: var(--accent-ink); white-space: nowrap; }
+.guided-map-label::before { content: "·"; margin-right: 7px; color: var(--text3); font-weight: 400; }
+.guided-map-btn:hover .guided-map-label { text-decoration: underline; text-underline-offset: 3px; }
+.guided-save-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; }
+.guided-save-btn svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.guided-save-btn.is-saved { background: var(--p-mint); color: var(--accent-ink); }
+@media (max-width: 400px) {
+  .guided-save-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .guided-save-btn { padding-left: 12px; padding-right: 12px; }
+}
+
+/* « dézoomer » : l'exercice rétrécit, la séance entière apparaît */
+.guided-layout.is-leaving { animation: wmShrink 180ms ease-in forwards; }
+.guided-layout.is-entering { animation: wmGrow 240ms var(--ease) both; }
+.wmap { animation: wmArrive 280ms var(--ease) both; }
+.wmap.is-leaving { animation: wmDepart 160ms ease-in forwards; }
+@keyframes wmShrink { to { transform: scale(0.9); opacity: 0; } }
+@keyframes wmGrow { from { transform: scale(0.9); opacity: 0; } }
+@keyframes wmArrive { from { transform: scale(1.08); opacity: 0; } }
+@keyframes wmDepart { to { transform: scale(1.08); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .guided-layout.is-leaving, .guided-layout.is-entering, .wmap, .wmap.is-leaving { animation: none; }
+}
+body.workout-map-open .guided-dock .guided-actions { display: none; }
+body.workout-map-open .guided-dock { padding-top: 12px; }
+body.workout-map-open.in-workout .main { padding-bottom: calc(120px + env(safe-area-inset-bottom)); }
+
+.wmap { max-width: 620px; margin: 0 auto; padding: 4px 4px 0; transform-origin: 50% 20%; }
+.wm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 2px 0 18px; }
+.wm-head > div { min-width: 0; }
+.wm-title { margin: 0; font-family: var(--font-title); font-size: 26px; font-weight: 400; letter-spacing: -0.03em; }
+.wm-summary { margin: 2px 0 0; font-size: 14px; color: var(--text2); }
+.wm-close { flex: none; min-height: 40px; }
+.wm-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 26px; }
+.wm-item { position: relative; }
+/* le lien entre deux cartes, avec son petit nœud */
+.wm-item + .wm-item::before { content: ""; position: absolute; left: 31px; top: -26px; width: 2px; height: 26px; background: var(--surface3); }
+.wm-item + .wm-item::after { content: ""; position: absolute; left: 27px; top: -18px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 2px var(--surface3); }
+.wm-item.is-done + .wm-item::before, .wm-item.is-done + .wm-item::after { background: var(--accent); }
+.wm-item.is-done + .wm-item::after { box-shadow: none; }
+.wm-card { border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--card-edge); overflow: hidden; }
+.wm-item.is-now .wm-card { box-shadow: inset 0 0 0 2.5px var(--p-orange); }
+.wm-item.is-skipped .wm-card { opacity: 0.7; }
+.wm-card-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 14px 14px 12px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.wm-marker { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--surface2); font-family: var(--font-round); font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wm-marker svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.wm-item.is-done .wm-marker { background: var(--p-mint); color: var(--accent-ink); }
+.wm-item.is-now .wm-marker { background: var(--p-orange); color: #2b2620; }
+.wm-card-text { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.wm-name { font-size: 16px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.wm-meta { font-size: 13px; color: var(--text2); }
+.wm-squares { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.wm-sq { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: var(--surface2); color: var(--text2); font-size: 11px; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wm-sq.is-done { background: var(--accent); color: var(--cream); }
+.wm-sq.is-now { background: transparent; box-shadow: inset 0 0 0 2px var(--p-orange); color: var(--text); }
+.wm-sq.is-skipped { background: transparent; box-shadow: inset 0 0 0 1.5px var(--surface3); text-decoration: line-through; }
+.wm-tag { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 999px; background: var(--surface2); color: var(--text2); font-size: 12px; font-weight: 600; vertical-align: 1px; }
+.wm-item.is-now .wm-tag { background: var(--p-orange); color: #2b2620; }
+.wm-item.is-done .wm-tag { background: var(--p-mint); color: var(--accent-ink); }
+.wm-body { padding: 0 14px 14px; border-top: 1px solid var(--separator); }
+.wm-body[hidden] { display: none; }
+.wm-set { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; min-height: 52px; padding: 6px 0; font-size: 14px; }
+.wm-set + .wm-set { border-top: 1px solid var(--separator); }
+.wm-set-n { flex: none; min-width: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.wm-set-text { color: var(--text2); }
+.wm-set.is-now .wm-set-text { color: var(--text); font-weight: 600; }
+.wm-input { width: 68px; min-height: 40px; padding: 6px 8px; text-align: center; font-size: 16px; font-variant-numeric: tabular-nums; }
+.wm-unit, .wm-x { color: var(--text2); font-size: 13px; }
+.wm-check { display: inline-flex; margin-left: auto; color: var(--accent-ink); }
+.wm-check svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.wm-link { margin-left: auto; min-height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--p-mint); color: var(--accent-ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.wm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.wm-actions .btn { min-height: 40px; }
+
+/* reprendre une séance pas finie */
+.resume-text { margin: 0 0 16px; color: var(--text2); line-height: 1.5; }
+.resume-actions { display: grid; gap: 8px; }

@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261031a";
-import { getExerciseById } from "./exercises.js?v=20261031a";
+import { uid } from "./utils.js?v=20261031b";
+import { getExerciseById } from "./exercises.js?v=20261031b";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -71,12 +71,49 @@ export function buildWorkoutFromRecentLog(log, exercises) { const exerciseIds = 
 export function getCurrentBlock(workout) { return workout?.blocks?.[workout.currentExerciseIndex] || null; }
 export function getCurrentSet(workout) { const block = getCurrentBlock(workout); return block?.sets?.[workout.currentSetIndex] || null; }
 export function isWorkoutComplete(workout) { return workout.currentExerciseIndex >= workout.blocks.length; }
-function goNext(workout) { const block = getCurrentBlock(workout); if (!block) return; if (workout.currentSetIndex < block.sets.length - 1) { workout.currentSetIndex += 1; return; } workout.currentExerciseIndex += 1; workout.currentSetIndex = 0; }
+const firstPendingSet = block => (block ? block.sets.findIndex(set => set.status === "pending") : -1);
+/* Exercice suivant qui a encore des séries à faire : d'abord après l'exercice donné, puis depuis le début
+   (on peut faire les exercices dans le désordre depuis la vue d'ensemble). Plus rien : la séance est finie. */
+function moveToNextPending(workout, fromIndex) {
+  const count = workout.blocks.length;
+  for (let step = 1; step <= count; step += 1) {
+    const index = (fromIndex + step) % count;
+    const setIndex = firstPendingSet(workout.blocks[index]);
+    if (setIndex >= 0) { workout.currentExerciseIndex = index; workout.currentSetIndex = setIndex; return; }
+  }
+  workout.currentExerciseIndex = count;
+  workout.currentSetIndex = 0;
+}
+function goNext(workout) {
+  const block = getCurrentBlock(workout);
+  if (!block) return;
+  const nextSet = block.sets.findIndex((set, index) => index > workout.currentSetIndex && set.status === "pending");
+  if (nextSet >= 0) { workout.currentSetIndex = nextSet; return; }
+  moveToNextPending(workout, workout.currentExerciseIndex);
+}
+/** Vue d'ensemble : passer directement à un exercice qui a encore des séries à faire */
+export function goToBlock(workout, blockIndex) {
+  const setIndex = firstPendingSet(workout?.blocks?.[blockIndex]);
+  if (setIndex < 0) return false;
+  workout.currentExerciseIndex = blockIndex;
+  workout.currentSetIndex = setIndex;
+  return true;
+}
+/** Vue d'ensemble : corriger une série faite, ou valider une série passée par erreur */
+export function updateSet(workout, blockIndex, setIndex, { reps, weight, markDone = false } = {}) {
+  const set = workout?.blocks?.[blockIndex]?.sets?.[setIndex];
+  if (!set) return null;
+  if (set.status !== "done" && !(markDone && set.status === "skipped")) return null;
+  if (reps != null) set.reps = Math.max(0, Number(reps) || 0);
+  if (weight != null) set.weight = Math.max(0, Number(weight) || 0);
+  if (markDone) set.status = "done";
+  return set;
+}
 export function completeCurrentSet(workout, reps, weight) { const set = getCurrentSet(workout); if (!set) return workout; set.reps = Number(reps) || 0; set.weight = Number(weight) || 0; set.status = "done"; goNext(workout); return workout; }
 export function skipCurrentSet(workout) { const set = getCurrentSet(workout); if (!set) return workout; set.status = "skipped"; goNext(workout); return workout; }
-export function skipCurrentExercise(workout) { const block = getCurrentBlock(workout); if (!block) return workout; for (let index = workout.currentSetIndex; index < block.sets.length; index += 1) { if (block.sets[index].status === "pending") block.sets[index].status = "skipped"; } workout.currentExerciseIndex += 1; workout.currentSetIndex = 0; return workout; }
+export function skipCurrentExercise(workout) { const block = getCurrentBlock(workout); if (!block) return workout; block.sets.forEach(set => { if (set.status === "pending") set.status = "skipped"; }); moveToNextPending(workout, workout.currentExerciseIndex); return workout; }
 export function replaceCurrentExercise(workout, newExerciseId, exercises, sessionLogs) { const nextExercise = getExerciseById(newExerciseId, exercises); const currentBlock = getCurrentBlock(workout); if (!nextExercise || !currentBlock) return workout; const previousExerciseLog = findLatestExerciseLog(nextExercise.id, sessionLogs); currentBlock.exerciseId = nextExercise.id; currentBlock.restSeconds = getRestBase(nextExercise); currentBlock.sets = buildSuggestedSets(nextExercise, previousExerciseLog); workout.currentSetIndex = 0; return workout; }
-export function buildSessionLogFromWorkout(workout, exercises) {
+export function buildSessionLogFromWorkout(workout, exercises, endedAt = Date.now()) {
   const completedExercises = workout.blocks.map(block => { const exercise = getExerciseById(block.exerciseId, exercises); return { exerciseId: block.exerciseId, exerciseName: exercise?.name || "exercice", muscleFocus: exercise?.muscle_focus || "other", type: exercise?.type || "other", sets: block.sets.map(item => ({ reps: item.reps, weight: item.weight, targetReps: item.targetReps, status: item.status, ...(item.kind ? { kind: item.kind } : {}) })), restSeconds: block.restSeconds }; });
-  return { id: uid(), sessionName: workout.sessionName, type: workout.type, programId: workout.programId || null, date: Date.now(), durationMs: Date.now() - workout.startedAt, exercises: completedExercises };
+  return { id: uid(), workoutId: workout.id || null, sessionName: workout.sessionName, type: workout.type, programId: workout.programId || null, date: endedAt, durationMs: Math.max(0, endedAt - workout.startedAt), exercises: completedExercises };
 }

@@ -19,7 +19,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261031a">
+  <link rel="stylesheet" href="./styles.css?v=20261031b">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -328,11 +328,21 @@
       <section id="view-workout" class="view">
         <div class="guided-layout">
           <div class="guided-top">
-            <div>
+            <div class="guided-top-text">
               <h1 id="guided-session-name" class="guided-session-name">séance</h1>
-              <div id="guided-progress" class="guided-progress">exercice 1 sur 1</div>
+              <button type="button" id="workout-map-btn" class="guided-map-btn">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3.5" width="8" height="6.5" rx="2"/><rect x="13" y="14" width="8" height="6.5" rx="2"/><path d="M11 6.75h3.5a3 3 0 0 1 3 3V14"/></svg>
+                <span id="guided-progress" class="guided-progress">exercice 1 sur 1</span>
+                <span class="guided-map-label" data-i18n="wmOpen">Vue d'ensemble</span>
+              </button>
             </div>
-            <button id="stop-workout-btn" class="btn btn-surface btn-sm" data-i18n="stop">arrêter</button>
+            <div class="guided-top-actions">
+              <button type="button" id="workout-save-btn" class="btn btn-surface btn-sm guided-save-btn">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/></svg>
+                <span data-i18n="saveWorkout">Sauvegarder</span>
+              </button>
+              <button id="stop-workout-btn" class="btn btn-surface btn-sm" data-i18n="stop">arrêter</button>
+            </div>
           </div>
           <div class="guided-progressbar" role="progressbar" aria-label="séries faites" aria-valuemin="0" aria-valuemax="100"><div id="guided-progressbar-fill"></div></div>
 
@@ -599,7 +609,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261031a"></script>
+  <script type="module" src="./js/app.js?v=20261031b"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

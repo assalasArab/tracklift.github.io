@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261031a";
-import { EXERCISE_SEED } from "./exercises.js?v=20261031a";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261031a";
-import { firestore } from "./firebase-config.js?v=20261031a";
+import { uid } from "./utils.js?v=20261031b";
+import { EXERCISE_SEED } from "./exercises.js?v=20261031b";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261031b";
+import { firestore } from "./firebase-config.js?v=20261031b";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.
@@ -49,6 +49,7 @@ function fromRaw(raw) {
     notion: raw.notion || null,
     purchases: raw.purchases || [],
     morpho: raw.morpho || null,
+    activeWorkout: raw.activeWorkout || null,
     deletedIds: raw.deletedIds || [],
     createdAt: raw.createdAt || Date.now()
   };
@@ -294,6 +295,8 @@ export const DB = {
   getNutrition()  { return this._cache?.nutrition || null; },
   /** Dernier scan morpho : mesures et verdicts seulement, jamais la photo */
   getMorpho()     { return this._cache?.morpho || null; },
+  /** Séance commencée et pas encore finie (copie de secours sur le compte) */
+  getActiveWorkout() { return this._cache?.activeWorkout || null; },
   getNotion()     { return this._cache?.notion || null; },
   /** Pièces débloquées dans la boutique : [{ id: "hair:c6", price, at }] */
   getPurchases()  { return this._cache?.purchases || []; },
@@ -402,6 +405,14 @@ export const DB = {
     if (!data) return;
     data.notion = connection || null;
     this.saveData(data);
+  },
+
+  /** save: false = changé seulement en mémoire, partira avec le prochain enregistrement */
+  setActiveWorkout(entry, { save = true } = {}) {
+    const data = this.getData();
+    if (!data) return;
+    data.activeWorkout = entry || null;
+    if (save) this.saveData(data);
   },
 
   saveMorpho(result) {
