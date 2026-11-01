@@ -3,10 +3,10 @@
    « bravo » en un toucher, une ligne sur l'accueil, message en direct.
    En direct quand l'appli est ouverte ; au retour sinon (badge).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261031c";
-import { Social } from "./social.js?v=20261031c";
-import { t, tn, esc, openSheet, sheetHead, personAvatar, nameOf, kg, timeAgo, MASCOT, Bridge, bump } from "./potes-ui.js?v=20261031c";
-import { acceptProgramInvite, declineProgramInvite } from "./potes-programs.js?v=20261031c";
+import { showToast } from "./utils.js?v=20261101a";
+import { Social } from "./social.js?v=20261101a";
+import { t, tn, esc, openSheet, sheetHead, personAvatar, nameOf, kg, timeAgo, MASCOT, Bridge, bump } from "./potes-ui.js?v=20261101a";
+import { acceptProgramInvite, declineProgramInvite } from "./potes-programs.js?v=20261101a";
 
 const DAY = 86400000;
 const GROUP_WINDOW = 6 * 3600000; // les événements d'un même pote à moins de 6 h se regroupent

@@ -4,16 +4,16 @@
    - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages),
      « Classement » et « Programmes » (programmes en commun, invitations), réglages, quitter.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261031c";
-import { Social, checkUsername } from "./social.js?v=20261031c";
-import { SharedPrograms, Community } from "./community.js?v=20261031c";
-import { streakAlive, weekKey } from "./social-stats.js?v=20261031c";
-import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomOwnedAvatar, lockedParts } from "./avatar.js?v=20261031c";
-import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261031c";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261031c";
-import { openSettings } from "./potes-settings.js?v=20261031c";
-import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261031c";
-import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261031c";
+import { showToast } from "./utils.js?v=20261101a";
+import { Social, checkUsername } from "./social.js?v=20261101a";
+import { SharedPrograms, Community } from "./community.js?v=20261101a";
+import { streakAlive, weekKey } from "./social-stats.js?v=20261101a";
+import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomOwnedAvatar, lockedParts } from "./avatar.js?v=20261101a";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261101a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261101a";
+import { openSettings } from "./potes-settings.js?v=20261101a";
+import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261101a";
+import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261101a";
 
 const TABS = ["friends", "board", "programs"];
 

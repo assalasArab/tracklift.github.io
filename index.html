@@ -19,7 +19,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261031c">
+  <link rel="stylesheet" href="./styles.css?v=20261101a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -118,6 +118,7 @@
         <button id="drawer-progress-btn" class="drawer-menu-item" data-i18n="progress">progression</button>
         <button id="drawer-potes-btn" class="drawer-menu-item"><span data-i18n="potesMenu">potes</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-shop-btn" class="drawer-menu-item"><span data-i18n="shopMenu">Boutique</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
+        <button id="drawer-bilan-btn" class="drawer-menu-item"><span data-i18n="bilanMenu">Bilan de la semaine</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-morpho-btn" class="drawer-menu-item"><span data-i18n="morphoMenu">Scan morpho</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-about-btn" class="drawer-menu-item" data-i18n="about">a propos</button>
         <button id="drawer-wizard-btn" class="drawer-menu-item" data-i18n="wizardMenu">créer mon programme</button>
@@ -190,6 +191,8 @@
         </div>
 
         <div id="streak-card" class="card streak-card mb-12"></div>
+
+        <div id="bilan-line" class="card potes-line bilan-line mb-12 hidden"></div>
 
         <div id="potes-line" class="card potes-line mb-12 hidden"></div>
 
@@ -609,7 +612,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261031c"></script>
+  <script type="module" src="./js/app.js?v=20261101a"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">
