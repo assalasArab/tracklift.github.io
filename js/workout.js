@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261031b";
-import { getExerciseById } from "./exercises.js?v=20261031b";
+import { uid } from "./utils.js?v=20261031c";
+import { getExerciseById } from "./exercises.js?v=20261031c";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -98,6 +98,14 @@ export function goToBlock(workout, blockIndex) {
   workout.currentExerciseIndex = blockIndex;
   workout.currentSetIndex = setIndex;
   return true;
+}
+/** Vue d'ensemble : faire quand même un exercice passé (ses séries passées redeviennent à faire) */
+export function reopenBlock(workout, blockIndex) {
+  const block = workout?.blocks?.[blockIndex];
+  if (!block) return false;
+  let reopened = false;
+  for (const set of block.sets) if (set.status === "skipped") { set.status = "pending"; reopened = true; }
+  return reopened && goToBlock(workout, blockIndex);
 }
 /** Vue d'ensemble : corriger une série faite, ou valider une série passée par erreur */
 export function updateSet(workout, blockIndex, setIndex, { reps, weight, markDone = false } = {}) {

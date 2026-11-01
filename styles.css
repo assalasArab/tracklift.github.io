@@ -3596,3 +3596,40 @@ body.workout-map-open.in-workout .main { padding-bottom: calc(120px + env(safe-a
 /* reprendre une séance pas finie */
 .resume-text { margin: 0 0 16px; color: var(--text2); line-height: 1.5; }
 .resume-actions { display: grid; gap: 8px; }
+
+/* faire un exercice avant les autres, sans ouvrir la carte */
+.wm-quick { padding: 0 14px 14px 64px; margin-top: -4px; }
+.wm-now-btn { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 16px 0 12px; border: 0; border-radius: 999px; background: var(--p-mint); color: var(--accent-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.wm-now-btn svg { flex: none; width: 15px; height: 15px; fill: currentColor; }
+.wm-now-btn.is-soft { background: var(--surface2); color: var(--text2); }
+.wm-now-btn:hover { filter: brightness(0.97); }
+.wm-now-btn:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) { .wm-now-btn:active { transform: none; } }
+
+/* ─── Scan morpho : corriger les points à la main ─── */
+.mz-info { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--p-mint); color: var(--accent-ink); font-size: 14px; line-height: 1.5; }
+.mz-info p { margin: 0; }
+.mz-info p + p { margin-top: 4px; }
+.mz-actions .btn[hidden], .mz-legend[hidden], .mz-actions[hidden], [data-mz-warnings][hidden] { display: none; }
+.mz-adjust { display: grid; gap: 12px; scroll-margin-top: 72px; }
+.mz-adjust-stage { display: flex; justify-content: center; border-radius: var(--radius); background: #2b2620; overflow: hidden; }
+.mz-adjust-canvas { display: block; max-width: 100%; touch-action: none; cursor: crosshair; outline: none; }
+.mz-adjust-canvas:focus-visible { box-shadow: inset 0 0 0 3px var(--p-orange); }
+.mz-adjust-panel { display: flex; align-items: flex-start; gap: 12px; }
+.mz-loupe { flex: none; border-radius: 50%; background: #2b2620; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--p-orange); touch-action: none; cursor: grab; }
+.mz-loupe:active { cursor: grabbing; }
+.mz-adjust-text { min-width: 0; }
+.mz-adjust-count { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: 13px; font-weight: 600; color: var(--text2); }
+.mz-adjust-cancel { min-height: 32px; padding: 0 2px; border: 0; background: none; color: var(--text2); font: inherit; font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.mz-adjust-text h5 { margin: 1px 0 4px; font-size: 17px; line-height: 1.25; }
+.mz-adjust-text p { margin: 0; font-size: 13.5px; line-height: 1.4; color: var(--text2); }
+.mz-adjust-text h5 + p { color: var(--text); }
+.mz-adjust-status { margin: 0; font-size: 14px; line-height: 1.45; color: var(--accent-ink); }
+.mz-adjust-status:empty { display: none; }
+.mz-adjust-actions { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: nowrap; gap: 8px; margin: 0 -16px -16px; padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-radius: 0 0 var(--radius-lg) var(--radius-lg); box-shadow: 0 -8px 16px -12px rgba(43,38,32,0.35); }
+.mz-adjust-actions .btn { min-height: 44px; }
+.mz-adjust-actions .mz-adjust-next { flex: 1 1 140px; min-height: 48px; font-size: 16px; border-radius: 999px; }
+@media (max-width: 380px) {
+  .mz-adjust-panel { gap: 10px; }
+  .mz-adjust-text h5 { font-size: 16px; }
+}

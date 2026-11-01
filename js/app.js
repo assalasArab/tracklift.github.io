@@ -1,35 +1,35 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261031b";
-import { DB } from "./db.js?v=20261031b";
-import { Auth } from "./auth.js?v=20261031b";
-import { i18n } from "./i18n.js?v=20261031b";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261031b";
-import { muscleName } from "./muscles.js?v=20261031b";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261031b";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261031b";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261031b";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, updateSet } from "./workout.js?v=20261031b";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261031b";
-import { renderWeightChart } from "./charts.js?v=20261031b";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261031b";
-import { openProgramWizard } from "./program-wizard.js?v=20261031b";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261031b";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261031b";
-import { openIntro } from "./onboarding.js?v=20261031b";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261031b";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261031b";
-import { Social } from "./social.js?v=20261031b";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261031b";
-import { avatarSvg } from "./avatar.js?v=20261031b";
-import { Bridge } from "./potes-ui.js?v=20261031b";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261031b";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261031b";
-import { openSettings } from "./potes-settings.js?v=20261031b";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261031b";
-import { SharedPrograms } from "./community.js?v=20261031b";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261031b";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261031b";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261031b";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261031b";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261031c";
+import { DB } from "./db.js?v=20261031c";
+import { Auth } from "./auth.js?v=20261031c";
+import { i18n } from "./i18n.js?v=20261031c";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261031c";
+import { muscleName } from "./muscles.js?v=20261031c";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261031c";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261031c";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261031c";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet } from "./workout.js?v=20261031c";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261031c";
+import { renderWeightChart } from "./charts.js?v=20261031c";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261031c";
+import { openProgramWizard } from "./program-wizard.js?v=20261031c";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261031c";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261031c";
+import { openIntro } from "./onboarding.js?v=20261031c";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261031c";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261031c";
+import { Social } from "./social.js?v=20261031c";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261031c";
+import { avatarSvg } from "./avatar.js?v=20261031c";
+import { Bridge } from "./potes-ui.js?v=20261031c";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261031c";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261031c";
+import { openSettings } from "./potes-settings.js?v=20261031c";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261031c";
+import { SharedPrograms } from "./community.js?v=20261031c";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261031c";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261031c";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261031c";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261031c";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -1325,7 +1325,7 @@ function openIntroFlow({ replay = false } = {}) {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261031b");
+    const { openMorpho } = await import("./morpho.js?v=20261031c");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),
@@ -3473,6 +3473,12 @@ function openSessionMap() {
     },
     onJump: blockIndex => {
       if (!state.workout || !goToBlock(state.workout, blockIndex)) return;
+      persistWorkout();
+      const exercise = getExerciseById(getCurrentBlock(state.workout)?.exerciseId, state.exercises);
+      showToast(t("wmJumped", { name: exercise ? getExerciseName(exercise) : t("exerciseFallback") }));
+    },
+    onReopen: blockIndex => {
+      if (!state.workout || !reopenBlock(state.workout, blockIndex)) return;
       persistWorkout();
       const exercise = getExerciseById(getCurrentBlock(state.workout)?.exerciseId, state.exercises);
       showToast(t("wmJumped", { name: exercise ? getExerciseName(exercise) : t("exerciseFallback") }));

@@ -91,17 +91,25 @@ export const CALIB = {
            femurTrunkNoCrotch: 0.23, tibiaFemurNoCrotch: 0.45, trunkHNoCrotch: 0.53 },
   /* Bruit relatif (%) mesuré sur le banc avec le modèle heavy, après correction de la pente :
      part propre à la personne + part qui diminue avec le nombre de photos.
-     Pour fémur/tronc, tibia/fémur et tronc/taille, il s'agit du bruit sur les repères visibles. */
+     Pour fémur/tronc, tibia/fémur et tronc/taille, il s'agit du bruit sur les repères visibles.
+     spanHWrist (envergure estimée par les poignets, mains fermées) n'est pas passée sur le banc :
+     marge volontairement large. */
   noise: {
-    persistent: { femurTrunk: 2.8, tibiaFemur: 2.5, trunkH: 1.7, armH: 1.35, forearmHumerus: 11.6, spanH: 0.55, shoulderHip: 3,
+    persistent: { femurTrunk: 2.8, tibiaFemur: 2.5, trunkH: 1.7, armH: 1.35, forearmHumerus: 11.6, spanH: 0.55, spanHWrist: 1.2, shoulderHip: 3,
                   femurTrunkNoCrotch: 22, tibiaFemurNoCrotch: 10, trunkHNoCrotch: 4.3 },
-    perPhoto: { femurTrunk: 2.0, tibiaFemur: 3.5, trunkH: 1.1, armH: 0.65, forearmHumerus: 6.1, spanH: 0.4, shoulderHip: 3,
+    perPhoto: { femurTrunk: 2.0, tibiaFemur: 3.5, trunkH: 1.1, armH: 0.65, forearmHumerus: 6.1, spanH: 0.4, spanHWrist: 1.0, shoulderHip: 3,
                 femurTrunkNoCrotch: 8, tibiaFemurNoCrotch: 6, trunkHNoCrotch: 2 },
     realWorld: 1.5,       // marge pour une vraie photo (vêtements, pose, lumière) par rapport au banc
-    /* incertitude sur les décalages anatomiques (entrejambe ±1 cm, genou ±1 cm, acromion ±1 cm,
-       cheville ±0,8 cm, bras et avant-bras ±1 cm), propagée à chaque rapport */
-    systematic: { femurTrunk: 5.6, tibiaFemur: 6.3, trunkH: 2.6, armH: 2.6, forearmHumerus: 4.8, spanH: 1.4, shoulderHip: 4,
-                  femurTrunkNoCrotch: 6.5, tibiaFemurNoCrotch: 5.4, trunkHNoCrotch: 2.8 }
+    /* incertitude sur les décalages anatomiques (entrejambe ±1 cm, genou ±1 cm, acromion ±2,5 cm,
+       cheville ±0,8 cm, bras et avant-bras ±1 cm), propagée à chaque rapport.
+       Acromion : ±1 cm sur le banc, mais sur des photos réelles (octobre 2026) le point d'épaule
+       MediaPipe tombait jusqu'à 3,5 cm plus bas que prévu : tout ce qui passe par l'épaule
+       (bras de face, tronc, cuisse / tronc, avant-bras / bras) a une marge plus large. */
+    systematic: { femurTrunk: 6.9, tibiaFemur: 6.3, trunkH: 5.0, armH: 4.8, forearmHumerus: 8.4, spanH: 1.4, spanHWrist: 4.0, shoulderHip: 4,
+                  femurTrunkNoCrotch: 7.8, tibiaFemurNoCrotch: 5.4, trunkHNoCrotch: 5.1 },
+    /* points placés à la main sur les repères visibles : plus de décalage MediaPipe → anatomie,
+       il reste l'erreur de placement (environ ±1 cm par point, comme sur le banc) */
+    systematicByHand: { femurTrunk: 5.6, trunkH: 2.6, armH: 2.6, forearmHumerus: 4.8, femurTrunkNoCrotch: 6.5, trunkHNoCrotch: 2.8 }
   }
 };
 
@@ -189,6 +197,8 @@ function readPoints(landmarks, w, h) {
    (malléole à 4,15 % de la taille chez l'homme, 3,85 % chez la femme, ANSUR II ;
    point de cheville MediaPipe ~2,8 cm au-dessus). Si les cheveux dépassent nettement
    (sommet du crâne ~13 cm au-dessus de l'oreille), on recale le sommet sur les oreilles. */
+/* entrejambe / taille : plus petite et plus grande valeur d'ANSUR II (H 0,435-0,532, F 0,422-0,541), ± 0,005 */
+const CROTCH_RANGE = [[0.43, 0.537], [0.417, 0.546]];
 const ANKLE_RATIO = { male: 0.0415 + 2.8 / 175, female: 0.0385 + 2.8 / 175 };
 const TRAGION_TOP = { male: 13.1, female: 12.6 };   // cm, ANSUR II
 const STATURE_FIX = 1.012;                          // biais résiduel moyen du banc (2 à 3,3 m)
@@ -235,8 +245,13 @@ function stature(p, mask, w, h, sex = "male", heightCm = 175) {
  * Photo de face, bras tendus écartés (pose A).
  * @param {Array} landmarks 33 points normalisés {x, y, visibility}
  * @param {{data: Float32Array, width: number, height: number}|null} mask
+ * @param {{x0, y0, x1, y1}} [frame] la vraie photo dans l'image (si on l'a entourée d'une marge)
+ * @param {object|null} [manual] points placés par la personne (repères anatomiques visibles) :
+ *   { top, floor, crotch: {x, y}, moved: [groupes déplacés], twist, shoulderHip }.
+ *   Les épaules sont alors sur l'acromion, les chevilles sur la malléole, l'entrejambe à sa vraie
+ *   place : on n'applique plus les décalages entre points MediaPipe et repères anatomiques.
  */
-export function measureBody(landmarks, mask, w, h, heightCm, sex = "male") {
+export function measureBody(landmarks, mask, w, h, heightCm, sex = "male", frame = { x0: 0, y0: 0, x1: w, y1: h }, manual = null) {
   const p = readPoints(landmarks, w, h);
   const warnings = [];
   const flags = {};
@@ -244,12 +259,15 @@ export function measureBody(landmarks, mask, w, h, heightCm, sex = "male") {
   const needed = ["lShoulder", "rShoulder", "lHip", "rHip", "lKnee", "rKnee", "lAnkle", "rAnkle"];
   if (needed.some(k => p[k].vis < 0.3)) { warnings.push("partial"); flags.partial = true; }
 
-  const st = stature(p, mask, w, h, sex, heightCm);
-  if (st.source !== "silhouette") { warnings.push("scale"); flags.scale = true; }
+  const st = manual
+    ? { topY: manual.top, bottomY: manual.floor, source: "manual", maskBottom: null, hair: 0 }
+    : stature(p, mask, w, h, sex, heightCm);
+  if (st.source === "points") { warnings.push("scale"); flags.scale = true; }
   if (st.hair > 2.5) warnings.push("hair");
   const staturePx = st.bottomY - st.topY;
   const cmPerPx = heightCm / staturePx;
-  if (st.topY < h * 0.01 || (st.maskBottom ?? st.bottomY) > h * 0.995) { warnings.push("edge"); flags.scale = true; }
+  const frameH = frame.y1 - frame.y0;
+  if (st.topY < frame.y0 + frameH * 0.01 || (st.maskBottom ?? st.bottomY) > frame.y1 - frameH * 0.005) { warnings.push("edge"); flags.scale = true; }
   if (staturePx < 500) { warnings.push("small"); flags.small = true; }
 
   /* posture */
@@ -259,8 +277,20 @@ export function measureBody(landmarks, mask, w, h, heightCm, sex = "male") {
   if (kneeAngle < 165) { warnings.push("legs"); flags.legs = true; }
   if (elbowAngle < 160) { warnings.push("arms"); flags.arms = true; }
   /* de face : écart de profondeur entre les deux épaules (coordonnée z de MediaPipe) */
-  const twist = Math.abs((landmarks[LM.lShoulder].z ?? 0) - (landmarks[LM.rShoulder].z ?? 0)) / Math.max(1e-6, dist(p.lShoulder, p.rShoulder) / w);
+  const twist = manual?.twist ?? Math.abs((landmarks[LM.lShoulder].z ?? 0) - (landmarks[LM.rShoulder].z ?? 0)) / Math.max(1e-6, dist(p.lShoulder, p.rShoulder) / w);
   if (twist > 0.6) { warnings.push("twist"); flags.twist = true; }
+  /* angle de chaque bras avec la verticale : 0° le long du corps, 90° à l'horizontale, 180° levé */
+  const lift = (sh, wr) => Math.atan2(Math.abs(wr.x - sh.x), wr.y - sh.y) * 180 / Math.PI;
+  const armLift = [lift(p.lShoulder, p.lWrist), lift(p.rShoulder, p.rWrist)];
+  /* bras le long du corps (moins de 15°) : les mains collent aux hanches */
+  if (Math.min(...armLift) < 15) { warnings.push("armsDown"); flags.armsDown = true; }
+  /* bras à l'horizontale ou levés (plus de 70°) : les épaules montent de 4 à 7 cm (photos réelles),
+     ce qui fausse le tronc, la carrure et le rapport cuisse / tronc */
+  if (Math.max(...armLift) > 70) { warnings.push("armsUp"); flags.armsUp = true; }
+  /* de profil : les deux épaules se superposent (de face, elles sont écartées d'environ 20 % de la taille) */
+  if (dist(p.lShoulder, p.rShoulder) / staturePx < 0.1) flags.side = true;
+  /* de dos : MediaPipe le reconnaît et place l'épaule gauche à gauche de la photo (à droite de face) */
+  else if (p.lShoulder.x < p.rShoulder.x && p.lHip.x < p.rHip.x) { warnings.push("back"); flags.back = true; }
 
   const seg = (a, b) => ({ len: dist(p[a], p[b]), vis: Math.min(p[a].vis, p[b].vis) });
   const lenPx = {
@@ -275,7 +305,7 @@ export function measureBody(landmarks, mask, w, h, heightCm, sex = "male") {
   /* hauteurs au-dessus du sol (cm) : entrejambe, genoux, hanches, épaules */
   const floorY = st.bottomY;
   const hgt = y => (floorY - y) * cmPerPx;
-  const crotchY = crotchFromMask(mask, p, w, h);
+  const crotchY = manual?.crotch ? manual.crotch.y : crotchFromMask(mask, p, w, h);
   const heights = {
     crotch: crotchY == null ? null : hgt(crotchY),
     knee: hgt((p.lKnee.y + p.rKnee.y) / 2),
@@ -284,17 +314,18 @@ export function measureBody(landmarks, mask, w, h, heightCm, sex = "male") {
     ankle: hgt((p.lAnkle.y + p.rAnkle.y) / 2)
   };
   if (crotchY == null) { warnings.push("crotch"); flags.crotch = true; }
-  else if (heights.crotch / heightCm < 0.40 || heights.crotch / heightCm > 0.56) {
-    /* ANSUR II : entrejambe à 48 % de la taille (écart-type 1,5 %) : au-delà, c'est un vêtement ou la posture */
+  else if (heights.crotch / heightCm < CROTCH_RANGE[sex === "female" ? 1 : 0][0] || heights.crotch / heightCm > CROTCH_RANGE[sex === "female" ? 1 : 0][1]) {
+    /* ANSUR II : entrejambe à 48 % de la taille (écart-type 1,4 %). Hors des valeurs observées chez les
+       6 068 personnes mesurées, c'est un vêtement (short ample) ou la posture */
     heights.crotch = null; flags.crotch = true;
-    warnings.push("crotchHidden");
+    warnings.push(manual?.crotch ? "crotchManual" : "crotchHidden");
   }
   /* inclinaison des jambes (pieds écartés) pour passer des hauteurs aux longueurs */
   const legCos = Math.cos(Math.atan2(Math.abs(p.lKnee.x - p.lHip.x) + Math.abs(p.rKnee.x - p.rHip.x), Math.abs(p.lKnee.y - p.lHip.y) + Math.abs(p.rKnee.y - p.rHip.y)));
 
   /* carrure : largeur de silhouette aux épaules et aux hanches (vêtements inclus) */
-  let shoulderHip = null;
-  if (mask) {
+  let shoulderHip = manual && manual.shoulderHip !== undefined ? manual.shoulderHip : null;
+  if (!manual && mask && !flags.armsDown && !flags.armsUp && !flags.side) {
     const sx = mask.width / w, sy = mask.height / h;
     const shoulderW = dist(p.lShoulder, p.rShoulder);
     const sRow = (shMid.y + (hipMid.y - shMid.y) * 0.08) * sy;
@@ -304,17 +335,58 @@ export function measureBody(landmarks, mask, w, h, heightCm, sex = "male") {
   }
 
   return {
-    kind: "A", points: p, raw, heights, legCos, crotchY, sex, cm: toAnatomical(raw, heightCm, heights, legCos, sex), cmPerPx, staturePx,
+    kind: "A", points: p, raw, heights, legCos, crotchY, sex, cm: toAnatomical(raw, heightCm, heights, legCos, sex, !!manual), cmPerPx, staturePx,
     topY: st.topY, bottomY: st.bottomY, statureSource: st.source,
-    shoulderHip, quality: { kneeAngle, elbowAngle, twist }, flags, warnings, heightCm
+    manual: manual ? { moved: [...(manual.moved || [])] } : null,
+    shoulderHip, quality: { kneeAngle, elbowAngle, twist, armLift }, flags,
+    /* de profil, les autres avertissements n'ont pas de sens : un seul message */
+    warnings: flags.side ? ["side"] : warnings, heightCm
   };
+}
+
+/* Repères anatomiques de départ pour la correction à la main : les points MediaPipe décalés
+   comme le fait le calcul automatique (acromion au-dessus du point d'épaule, malléole sous le
+   point de cheville, entrejambe au-dessus du haut de l'espace entre les jambes). Sans rien
+   déplacer, la correction à la main redonne donc le même résultat. */
+export function anatomicalStart(m) {
+  const k = m.heightCm / 175, px = 1 / m.cmPerPx, A = CALIB.anat, p = m.points;
+  const up = (q, cm) => ({ x: q.x, y: q.y - cm * k * px });
+  const hipMid = mid(p.lHip, p.rHip);
+  /* entrejambe lue sur la silhouette si elle a été retenue, sinon estimée depuis la hanche */
+  const crotchY = m.heights?.crotch != null && m.crotchY != null ? m.crotchY - A.crotchMaskBelow * k * px
+    : hipMid.y + (A.hipAboveTroch + (A.trochAboveCrotch[m.sex] ?? A.trochAboveCrotch.male)) * k * px;
+  return {
+    top: { x: p.nose.x, y: m.topY },
+    floor: { x: (p.lAnkle.x + p.rAnkle.x) / 2, y: m.bottomY },
+    lShoulder: up(p.lShoulder, A.acromionAboveShoulder), rShoulder: up(p.rShoulder, A.acromionAboveShoulder),
+    lElbow: { x: p.lElbow.x, y: p.lElbow.y }, rElbow: { x: p.rElbow.x, y: p.rElbow.y },
+    lWrist: { x: p.lWrist.x, y: p.lWrist.y }, rWrist: { x: p.rWrist.x, y: p.rWrist.y },
+    crotch: { x: hipMid.x, y: crotchY },
+    lKnee: { x: p.lKnee.x, y: p.lKnee.y }, rKnee: { x: p.rKnee.x, y: p.rKnee.y },
+    lAnkle: up(p.lAnkle, -A.ankleAboveMalleolus), rAnkle: up(p.rAnkle, -A.ankleAboveMalleolus)
+  };
+}
+
+/* nouvelle mesure de la même photo avec les points corrigés à la main (pas de nouvelle détection) */
+export function measureManual(m, pts, moved, mask, w, h, heightCm, sex = "male", frame = { x0: 0, y0: 0, x1: w, y1: h }) {
+  const lm = Array.from({ length: 33 }, () => ({ x: 0.5, y: 0.5, z: 0, visibility: 0 }));
+  for (const [k, i] of Object.entries(LM)) {
+    const q = pts[k] || m.points[k];
+    lm[i] = { x: q.x / w, y: q.y / h, z: 0, visibility: 1 };
+  }
+  /* entrejambe pas touchée et pas lue automatiquement (short ample…) : elle reste inconnue */
+  const crotch = moved.includes("crotch") || m.heights?.crotch != null ? pts.crotch : null;
+  return measureBody(lm, mask, w, h, heightCm, sex, frame, {
+    top: pts.top.y, floor: pts.floor.y, crotch, moved,
+    twist: m.quality?.twist ?? 0, shoulderHip: m.shoulderHip ?? null
+  });
 }
 
 /**
  * Photo de face, bras tendus à l'horizontale (pose T) : envergure / taille,
  * mesurée directement sur la silhouette (bout des doigts → bout des doigts).
  */
-export function measureSpan(landmarks, mask, w, h, heightCm, sex = "male") {
+export function measureSpan(landmarks, mask, w, h, heightCm, sex = "male", frame = { x0: 0, y0: 0, x1: w, y1: h }) {
   const p = readPoints(landmarks, w, h);
   const warnings = [];
   if (!mask) return { kind: "T", ok: false, warnings: ["spanNoMask"] };
@@ -326,28 +398,103 @@ export function measureSpan(landmarks, mask, w, h, heightCm, sex = "male") {
   const shoulderW = dist(p.lShoulder, p.rShoulder);
   const r0 = Math.max(0, Math.floor((Math.min(...ys) - shoulderW * 0.35) * sy));
   const r1 = Math.min(mh - 1, Math.ceil((Math.max(...ys) + shoulderW * 0.35) * sy));
+  const shMid = mid(p.lShoulder, p.rShoulder);
+  /* bords de la silhouette reliée au buste : un objet ou une autre personne ailleurs
+     sur la photo n'allonge plus l'envergure */
+  const seedY = Math.min(r1, Math.round((shMid.y + shoulderW * 0.2) * sy));
+  const bounds = connectedBounds(mask, r0, r1, shMid.x * sx, seedY) || extremeBounds(mask, r0, r1);
+  const { left, right } = bounds;
+  const staturePx = st.bottomY - st.topY;
+  /* Chaque côté : bout des doigts lu sur la silhouette, sauf si la main est fermée, coupée
+     par le bord, ou si quelque chose la touche. Dans ce cas on part du poignet + longueur
+     de main (ANSUR II, du stylion au bout du majeur), avec une incertitude plus grande. */
+  const HAND = HAND_RATIO[sex] ?? HAND_RATIO.male;
+  const MIN_EXT = 0.095;          // poing : 7 à 8,5 % de la taille au-delà du poignet (photos réelles) ; main ouverte : ~12 %
+  const MAX_EXT = HAND + 0.05;    // au-delà, la silhouette a « attrapé » autre chose que la main
+  const margin = Math.max(1, mw * 0.005);
+  const wrists = [p.lWrist, p.rWrist].sort((a, b) => a.x - b.x);
+  const sideOf = (edgePx, wrist, dir) => {
+    const edge = edgePx / sx;
+    const ext = (dir < 0 ? wrist.x - edge : edge - wrist.x) / staturePx;
+    const cut = dir < 0 ? edgePx <= frame.x0 * sx + margin : edgePx >= frame.x1 * sx - margin;
+    if (!cut && ext >= MIN_EXT && ext <= MAX_EXT) return { x: edge, from: "silhouette" };
+    /* poignet caché ou hors de la photo : on ne peut rien estimer de ce côté */
+    if (wrist.vis < 0.5 || wrist.x <= frame.x0 || wrist.x >= frame.x1) return { x: edge, from: "missing", cut };
+    return { x: wrist.x + dir * HAND * staturePx, from: "wrist", cut, fist: !cut && ext < MIN_EXT, touch: !cut && ext > MAX_EXT };
+  };
+  const L = sideOf(left, wrists[0], -1), R = sideOf(right + 1, wrists[1], 1);
+  const viaWrist = L.from === "wrist" || R.from === "wrist";
+  /* correction mesurée sur le banc (CALIB.spanFix), appliquée seulement au côté lu sur la silhouette */
+  const fix = side => (side.from === "silhouette" ? CALIB.spanFix : 1);
+  const spanPx = (shMid.x - L.x) * fix(L) + (R.x - shMid.x) * fix(R);
+  const armTilt = Math.max(
+    Math.abs(Math.atan2(p.lWrist.y - p.lShoulder.y, Math.abs(p.lWrist.x - p.lShoulder.x))),
+    Math.abs(Math.atan2(p.rWrist.y - p.rShoulder.y, Math.abs(p.rWrist.x - p.rShoulder.x)))) * 180 / Math.PI;
+  const elbowAngle = Math.min(angle(p.lShoulder, p.lElbow, p.lWrist), angle(p.rShoulder, p.rElbow, p.rWrist));
+  if (L.cut || R.cut) warnings.push("spanHand");
+  if (L.fist || R.fist) warnings.push("spanFist");
+  if (L.touch || R.touch) warnings.push("spanTouch");
+  if (armTilt > 12) warnings.push("spanTilt");
+  if (elbowAngle < 165) warnings.push("spanStraight");
+  if (st.source !== "silhouette") warnings.push("spanTop");
+  const ok = st.source === "silhouette" && L.from !== "missing" && R.from !== "missing";
+  return {
+    kind: "T", ok, source: viaWrist ? "wrists" : "silhouette",
+    /* bras trop loin de l'horizontale ou pliés : mesure faussée */
+    broken: armTilt > 15 || elbowAngle < 155,
+    spanPx, staturePx, spanH: spanPx / staturePx, spanCm: spanPx / staturePx * heightCm,
+    left: L.x, right: R.x, rowY: (r0 + r1) / 2 / sy, topY: st.topY, bottomY: st.bottomY,
+    points: p, armTilt, elbowAngle, warnings
+  };
+}
+
+/* longueur de main / taille, ANSUR II (stylion → bout du majeur) : 11,0 % chez l'homme, 11,1 % chez la femme */
+const HAND_RATIO = { male: 0.1101, female: 0.1112 };
+
+/* Plus à gauche et plus à droite de la région de silhouette reliée au point de départ (le buste),
+   dans la bande de lignes r0 → r1. Renvoie null si le point de départ n'est pas dans la silhouette. */
+function connectedBounds(mask, r0, r1, seedX, seedY) {
+  const { data, width: mw } = mask;
+  const rows = r1 - r0 + 1;
+  if (rows <= 0) return null;
+  /* point de départ : le premier pixel de silhouette près du buste */
+  let start = -1;
+  const x0 = Math.round(seedX);
+  for (let y = seedY; y >= r0 && start < 0; y--) {
+    for (const dx of [0, -2, 2, -4, 4]) {
+      const x = x0 + dx;
+      if (x >= 0 && x < mw && data[y * mw + x] > 0.5) { start = (y - r0) * mw + x; break; }
+    }
+  }
+  if (start < 0) return null;
+  const seen = new Uint8Array(rows * mw);
+  const stack = new Int32Array(rows * mw);
+  const offset = r0 * mw;
+  let top = 0, left = mw, right = -1;
+  const visit = j => { if (!seen[j] && data[offset + j] > 0.5) { seen[j] = 1; stack[top++] = j; } };
+  stack[top++] = start; seen[start] = 1;
+  while (top) {
+    const i = stack[--top];
+    const y = (i / mw) | 0, x = i - y * mw;
+    if (x < left) left = x;
+    if (x > right) right = x;
+    if (x > 0) visit(i - 1);
+    if (x < mw - 1) visit(i + 1);
+    if (y > 0) visit(i - mw);
+    if (y < rows - 1) visit(i + mw);
+  }
+  return { left, right };
+}
+
+/* ancienne méthode, si le buste n'est pas trouvé : pixels de silhouette les plus éloignés de la bande */
+function extremeBounds(mask, r0, r1) {
+  const { data, width: mw } = mask;
   let left = mw, right = -1;
   for (let y = r0; y <= r1; y++) {
     for (let x = 0; x < mw; x++) if (data[y * mw + x] > 0.5) { if (x < left) left = x; break; }
     for (let x = mw - 1; x >= 0; x--) if (data[y * mw + x] > 0.5) { if (x > right) right = x; break; }
   }
-  /* correction mesurée sur le banc (CALIB.spanFix) */
-  const spanPx = (right + 1 - left) / sx * CALIB.spanFix;
-  const staturePx = st.bottomY - st.topY;
-  const armTilt = Math.max(
-    Math.abs(Math.atan2(p.lWrist.y - p.lShoulder.y, Math.abs(p.lWrist.x - p.lShoulder.x))),
-    Math.abs(Math.atan2(p.rWrist.y - p.rShoulder.y, Math.abs(p.rWrist.x - p.rShoulder.x)))) * 180 / Math.PI;
-  const elbowAngle = Math.min(angle(p.lShoulder, p.lElbow, p.lWrist), angle(p.rShoulder, p.rElbow, p.rWrist));
-  if (left <= 1 || right >= mw - 2) warnings.push("spanHand");
-  if (armTilt > 12) warnings.push("spanTilt");
-  if (elbowAngle < 165) warnings.push("spanStraight");
-  if (st.source !== "silhouette") warnings.push("spanTop");
-  return {
-    kind: "T", ok: st.source === "silhouette" && left > 1 && right < mw - 2,
-    spanPx, staturePx, spanH: spanPx / staturePx, spanCm: spanPx / staturePx * heightCm,
-    left: left / sx, right: (right + 1) / sx, rowY: (r0 + r1) / 2 / sy, topY: st.topY, bottomY: st.bottomY,
-    points: p, armTilt, elbowAngle, warnings
-  };
+  return { left, right };
 }
 
 /* Points MediaPipe → repères anatomiques ANSUR (cm).
@@ -356,19 +503,21 @@ export function measureSpan(landmarks, mask, w, h, heightCm, sex = "male") {
    La hauteur du trochanter combine deux estimations : le point de hanche MediaPipe
    (placé en moyenne ~3 cm au-dessus du trochanter) et l'entrejambe lu sur la
    silhouette (le trochanter est 5,5 cm au-dessus chez l'homme, 6,3 cm chez la femme). */
-export function toAnatomical(raw, heightCm, heights, legCos = 1, sex = "male") {
+export function toAnatomical(raw, heightCm, heights, legCos = 1, sex = "male", anatomical = false) {
   const k = heightCm / 175;
   const A = CALIB.anat;
-  const knee = heights.knee - A.kneeAboveLFE * k;            // épicondyle fémoral
-  const ankle = heights.ankle - A.ankleAboveMalleolus * k;   // malléole
-  const acromion = heights.shoulder + A.acromionAboveShoulder * k;
-  const crotch = heights.crotch != null ? heights.crotch + A.crotchMaskBelow * k : null;
+  /* anatomical : points placés à la main sur les repères visibles (pas de décalage à ajouter) */
+  const off = anatomical ? 0 : 1;
+  const knee = heights.knee - A.kneeAboveLFE * k;                  // épicondyle fémoral
+  const ankle = heights.ankle - off * A.ankleAboveMalleolus * k;   // malléole
+  const acromion = heights.shoulder + off * A.acromionAboveShoulder * k;
+  const crotch = heights.crotch != null ? heights.crotch + off * A.crotchMaskBelow * k : null;
   /* trochanter : par l'entrejambe si elle est visible, sinon par le point de hanche MediaPipe */
   const troch = crotch != null
     ? crotch + (A.trochAboveCrotch[sex] ?? A.trochAboveCrotch.male) * k
     : heights.hip - A.hipAboveTroch * k;
   const out = {
-    humerus: raw.humerus + A.humerus * k,
+    humerus: raw.humerus + off * A.humerus * k,
     forearm: raw.forearm + A.forearm * k,
     femur: (troch - knee) / legCos,
     tibia: (knee - ankle) / legCos,
@@ -387,8 +536,14 @@ export function toAnatomical(raw, heightCm, heights, legCos = 1, sex = "male") {
 
 /* moyenne de plusieurs photos (pose A) */
 export function combine(measures) {
-  const list = measures.filter(Boolean);
-  if (list.length === 1) return { ...list[0], n: 1 };
+  const all = measures.filter(Boolean);
+  /* photo de profil : inutilisable. Bras levés : tronc faussé. On garde les meilleures photos,
+     mais les avertissements de toutes les photos restent affichés. */
+  const front = all.filter(m => !m.flags?.side);
+  const clean = front.filter(m => !m.flags?.armsUp);
+  const list = clean.length ? clean : front.length ? front : all.slice(0, 1);
+  const allWarnings = [...new Set(all.flatMap(m => m.warnings))];
+  if (list.length === 1) return { ...list[0], n: 1, warnings: allWarnings.filter(code => code !== "armsDown" || list[0].shoulderHip == null) };
   const avg = key => {
     const out = {};
     for (const s of Object.keys(list[0][key])) {
@@ -404,10 +559,73 @@ export function combine(measures) {
     cm.proxy = {};
     for (const key of Object.keys(list[0].cm.proxy)) cm.proxy[key] = list.reduce((t, m) => t + m.cm.proxy[key], 0) / list.length;
   }
+  /* bras collés sur une seule photo : la carrure vient des autres, inutile d'avertir */
+  const warnings = allWarnings.filter(code => code !== "armsDown" || !sh.length);
   return {
     ...list[0], raw: avg("raw"), cm, n: list.length, flags,
     shoulderHip: sh.length ? sh.reduce((a, b) => a + b, 0) / sh.length : null,
-    warnings: [...new Set(list.flatMap(m => m.warnings))]
+    warnings
+  };
+}
+
+/* ---------- plusieurs analyses de la même photo ----------
+   L'outil de détection donne des résultats un peu différents dès que l'image bouge d'un pixel,
+   et rate parfois un point (cheville perdue). On analyse donc la photo plusieurs fois (taille
+   et marge légèrement différentes) et on garde, pour chaque mesure, la valeur du milieu. */
+const median = list => {
+  const s = list.filter(Number.isFinite).sort((a, b) => a - b);
+  if (!s.length) return null;
+  const k = s.length >> 1;
+  return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2;
+};
+const majority = (list, test) => list.filter(test).length * 2 > list.length;
+
+/** mesure faite sur une version réduite (scale) entourée d'une marge (pad, en px) → coordonnées de la photo */
+export function toPhotoCoords(m, pad, scale) {
+  if (!m || (!pad && scale === 1)) return m;
+  const P = v => (v - pad) / scale;
+  const out = { ...m };
+  if (m.points) out.points = Object.fromEntries(Object.entries(m.points).map(([k, q]) => [k, { ...q, x: P(q.x), y: P(q.y) }]));
+  for (const k of ["topY", "bottomY", "crotchY", "left", "right", "rowY"]) if (m[k] != null) out[k] = P(m[k]);
+  for (const k of ["staturePx", "spanPx"]) if (m[k] != null) out[k] = m[k] / scale;
+  if (m.cmPerPx != null) out.cmPerPx = m.cmPerPx * scale;
+  return out;
+}
+
+/** une seule mesure à partir de plusieurs analyses : valeur du milieu, avertissements de la majorité */
+export function mergeRuns(runs) {
+  const list = runs.filter(Boolean);
+  if (list.length <= 1) return list[0] || null;
+  const num = get => median(list.map(get));
+  /* l'analyse la plus proche des valeurs du milieu fournit les points dessinés sur la photo */
+  const keys = list[0].kind === "T" ? [m => m.spanH] : [m => m.cm.femur, m => m.cm.tibia, m => m.cm.trunk, m => m.cm.humerus + m.cm.forearm];
+  const mids = keys.map(num);
+  const gap = m => keys.reduce((t, k, i) => t + (Number.isFinite(k(m)) && mids[i] ? Math.abs(k(m) - mids[i]) / Math.abs(mids[i]) : 1), 0);
+  const rep = list.reduce((best, m) => (gap(m) < gap(best) ? m : best), list[0]);
+  const warnings = [...new Set(list.flatMap(m => m.warnings || []))].filter(code => majority(list, m => (m.warnings || []).includes(code)));
+  if (rep.kind === "T") {
+    if (!majority(list, m => m.ok)) return { ...rep, ok: false, warnings, runs: list.length };
+    const ok = list.filter(m => m.ok);
+    return {
+      ...rep, ok: true, warnings, runs: list.length,
+      source: majority(ok, m => m.source === "wrists") ? "wrists" : "silhouette",
+      broken: majority(list, m => m.broken),
+      spanH: median(ok.map(m => m.spanH)), spanCm: median(ok.map(m => m.spanCm)),
+      armTilt: num(m => m.armTilt), elbowAngle: num(m => m.elbowAngle)
+    };
+  }
+  const numbers = key => Object.fromEntries(Object.keys(rep[key]).filter(k => typeof rep[key][k] === "number").map(k => [k, num(m => m[key][k])]));
+  const flags = Object.fromEntries([...new Set(list.flatMap(m => Object.keys(m.flags)))].filter(f => majority(list, m => m.flags[f])).map(f => [f, true]));
+  const viaCrotch = majority(list, m => m.cm.viaCrotch);
+  const withCrotch = list.filter(m => m.cm.viaCrotch && m.cm.proxy);
+  const cm = { ...numbers("cm"), viaCrotch };
+  if (viaCrotch) cm.proxy = Object.fromEntries(Object.keys(withCrotch[0].cm.proxy).map(k => [k, median(withCrotch.map(m => m.cm.proxy[k]))]));
+  const heights = { ...numbers("heights"), crotch: viaCrotch ? median(withCrotch.map(m => m.heights.crotch)) : null };
+  const shoulders = list.filter(m => m.shoulderHip != null);
+  return {
+    ...rep, raw: numbers("raw"), cm, heights, flags, warnings, runs: list.length,
+    shoulderHip: shoulders.length * 2 > list.length ? median(shoulders.map(m => m.shoulderHip)) : null,
+    quality: { ...rep.quality, ...numbers("quality") }
   };
 }
 
@@ -434,13 +652,14 @@ export function percentileOf(value, pop) {
 }
 
 /* bruit relatif total d'un rapport (fraction), selon la qualité et le nombre de photos */
-export function noiseFor(key, n, flags) {
+export function noiseFor(key, n, flags, byHand = false) {
   const N = CALIB.noise;
-  const p = N.persistent[key] ?? 3, q = N.perPhoto[key] ?? 3, sys = N.systematic[key] ?? 3;
+  const p = N.persistent[key] ?? 3, q = N.perPhoto[key] ?? 3;
+  const sys = (byHand ? N.systematicByHand[key] : null) ?? N.systematic[key] ?? 3;
   const random = N.realWorld * Math.sqrt(p * p + (q * q) / Math.max(1, n));
   let total = Math.sqrt(random * random + sys * sys) / 100;
   if ((flags.arms && ["armH", "forearmHumerus"].includes(key)) ||
-      (flags.legs && key.startsWith("femur")) || (flags.legs && key.startsWith("tibia")) || flags.twist || flags.partial) total *= 1.6;
+      (flags.legs && key.startsWith("femur")) || (flags.legs && key.startsWith("tibia")) || flags.twist || flags.partial || flags.back) total *= 1.6;
   if (flags.scale && ["armH", "trunkH"].includes(key)) total *= 1.4;
   return total;
 }
@@ -490,33 +709,56 @@ export function assessProxy(x, reg, pop, relNoise, atten = 1) {
   return verdict((y - pop.mean) / pop.sd, sdY / pop.sd, pop, { value: y, proxy: x, relNoise: sdY / y });
 }
 
+/* groupes de points dont dépend chaque rapport (correction à la main) */
+const BY_HAND = {
+  femurTrunk: ["crotch", "knees", "shoulders"],
+  tibiaFemur: ["knees", "ankles", "crotch"],
+  trunkH: ["shoulders", "crotch", "top", "floor"],
+  armH: ["shoulders", "elbows", "wrists", "top", "floor"],
+  forearmHumerus: ["shoulders", "elbows", "wrists"]
+};
+
 export function classify(m, sex = "male", span = null) {
   const pop = POP[sex] || POP.male;
   const H = m.heightCm;
   const n = m.n || 1;
   const f = m.flags || {};
   const c = m.cm;
+  /* rapport mesuré entièrement avec des points déplacés à la main : pas de « tassement » vers la
+     moyenne propre à MediaPipe (pente du banc), et la marge des points placés à la main */
+  const moved = new Set(m.manual?.moved || []);
+  const byHand = popKey => (BY_HAND[popKey] || []).length > 0 && BY_HAND[popKey].every(g => moved.has(g));
+  const atten = (popKey, key) => (byHand(popKey) ? 1 : CALIB.atten[key] ?? 1);
   const rate = (value, popKey, key, photos = n, flags = f, broken = false) =>
-    assessRatio(value, pop[popKey], noiseFor(key, photos, flags), CALIB.atten[key] ?? 1, broken);
-  const viaProxy = key => f.legs || f.partial
+    assessRatio(value, pop[popKey], noiseFor(key, photos, flags, byHand(popKey)), atten(popKey, key), broken);
+  /* bras levés : l'épaule monte, tout ce qui passe par l'acromion est faussé (pas tibia / fémur) */
+  const shoulderMoved = !!f.armsUp;
+  const viaProxy = key => f.legs || f.partial || (shoulderMoved && key !== "tibiaFemur")
     ? invalid(pop[key], noiseFor(key, n, f))
-    : assessProxy(c.proxy[key], pop.proxy[key], pop[key], noiseFor(key, n, f), CALIB.atten[key] ?? 1);
+    : assessProxy(c.proxy[key], pop.proxy[key], pop[key], noiseFor(key, n, f, byHand(key)), atten(key, key));
   const legsBroken = !!(f.legs || f.partial);
   const out = c.viaCrotch && c.proxy ? {
     femur: viaProxy("femurTrunk"),
     tibia: viaProxy("tibiaFemur"),
     trunk: viaProxy("trunkH")
   } : {
-    femur: rate(c.femur / c.trunk, "femurTrunk", "femurTrunkNoCrotch", n, f, legsBroken),
+    femur: rate(c.femur / c.trunk, "femurTrunk", "femurTrunkNoCrotch", n, f, legsBroken || shoulderMoved),
     tibia: rate(c.tibia / c.femur, "tibiaFemur", "tibiaFemurNoCrotch", n, f, legsBroken),
-    trunk: rate(c.trunk / H, "trunkH", "trunkHNoCrotch", n, f, !!f.partial)
+    trunk: rate(c.trunk / H, "trunkH", "trunkHNoCrotch", n, f, !!f.partial || shoulderMoved)
   };
   /* bras pliés : les longueurs vues sur la photo sont raccourcies, pas de verdict */
   out.forearm = rate(c.forearm / c.humerus, "forearmHumerus", "forearmHumerus", n, f, !!f.arms);
-  out.arm = span?.ok
-    ? { ...rate(span.spanH, "spanH", "spanH", 1, {}, span.armTilt > 15 || span.elbowAngle < 155), source: "span" }
-    : { ...rate((c.humerus + c.forearm) / H, "armH", "armH", n, f, !!f.arms), source: "segments" };
+  const segArm = { ...rate((c.humerus + c.forearm) / H, "armH", "armH", n, f, !!f.arms), source: "segments" };
+  const spanArm = span?.ok
+    ? { ...rate(span.spanH, "spanH", span.source === "wrists" ? "spanHWrist" : "spanH", 1, {}, span.broken ?? (span.armTilt > 15 || span.elbowAngle < 155)), source: "span" }
+    : null;
+  /* L'envergure passe avant la photo de face dès qu'elle est utilisable, même estimée par les
+     poignets : elle ne dépend pas du point d'épaule, placé 3 à 5 cm trop bas sur des photos réelles
+     (bras de face trop courts). Faussée (bras pas à l'horizontale), on revient à la photo de face. */
+  out.arm = spanArm && !spanArm.invalid ? spanArm : segArm;
   if (m.shoulderHip != null) out.shoulders = rate(m.shoulderHip * CALIB.shoulderHip, "shoulderHip", "shoulderHip");
+  /* photo de profil seule : aucun verdict, sauf l'envergure si la photo bras en croix est bonne */
+  if (f.side) for (const key of Object.keys(out)) if (out[key].source !== "span") out[key] = { ...invalid(pop.armH, 0), source: out[key].source };
   return out;
 }
 

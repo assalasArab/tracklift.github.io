@@ -5,9 +5,11 @@
    gardées, via opts.save (le document de l'utilisateur).
    Module chargé à la demande, depuis le menu du profil.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261031b";
-import { measureBody, measureSpan, combine, classify, ZONES, ZONE_ORDER } from "./morpho-engine.js?v=20261031b";
-import { morphoText, fill } from "./morpho-text.js?v=20261031b";
+import { i18n } from "./i18n.js?v=20261031c";
+import { measureBody, measureSpan, combine, classify, toPhotoCoords, mergeRuns, anatomicalStart, measureManual, ZONES, ZONE_ORDER } from "./morpho-engine.js?v=20261031c";
+import { findVerticals, verticalFromLines, straighten, focalPx, applyH, invert3 } from "./morpho-perspective.js?v=20261031c";
+import { openAdjust } from "./morpho-adjust.js?v=20261031c";
+import { morphoText, fill } from "./morpho-text.js?v=20261031c";
 
 const MP_VERSION = "1.2.0";
 const MP_BUNDLE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}/vision_bundle.mjs`;
@@ -64,16 +66,131 @@ function detect(landmarker, canvas) {
   return { landmarks: r.landmarks[0], mask };
 }
 
+/* Capture d'écran d'une photo : bandes noires autour. On les retire avant l'analyse
+   (plus de pixels pour le corps, et le contrôle « corps au bord de la photo » remarche). */
+function photoArea(img) {
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const s = Math.min(1, 1600 / Math.max(W, H));
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(W * s)); c.height = Math.max(1, Math.round(H * s));
+  const g = c.getContext("2d", { willReadFrequently: true });
+  g.drawImage(img, 0, 0, c.width, c.height);
+  const { data } = g.getImageData(0, 0, c.width, c.height);
+  const cw = c.width, ch = c.height;
+  const black = i => data[i] < 12 && data[i + 1] < 12 && data[i + 2] < 12;
+  const darkLine = (count, at) => { let n = 0; for (let k = 0; k < count; k++) if (black(at(k))) n++; return n >= count * 0.99; };
+  let top = 0, bottom = ch, left = 0, right = cw;
+  while (top < ch * 0.3 && darkLine(cw, x => (top * cw + x) * 4)) top++;
+  while (bottom > ch * 0.7 && darkLine(cw, x => ((bottom - 1) * cw + x) * 4)) bottom--;
+  while (left < cw * 0.3 && darkLine(bottom - top, y => ((top + y) * cw + left) * 4)) left++;
+  while (right > cw * 0.7 && darkLine(bottom - top, y => ((top + y) * cw + right - 1) * 4)) right--;
+  if (!top && !left && bottom === ch && right === cw) return { x: 0, y: 0, w: W, h: H };
+  const x = Math.round(left / s), y = Math.round(top / s);
+  return { x, y, w: Math.min(W, Math.round(right / s)) - x, h: Math.min(H, Math.round(bottom / s)) - y };
+}
+
+/* Chaque photo est analysée 3 fois : telle quelle, puis un peu plus petite au milieu d'une marge
+   noire. La valeur du milieu de chaque mesure écarte un raté isolé de l'outil de détection
+   (sur des photos réelles : cheville perdue, envergure qui varie de 5 % pour un pixel). */
+const VARIANTS = [[1, 0], [0.92, 0.03], [0.85, 0.06]];
+
+function measureSeveral(landmarker, image, measure, frame0 = null, firstDet = null) {
+  const base = frame0 || { x0: 0, y0: 0, x1: image.width, y1: image.height };
+  const runs = [];
+  let baseMask = null;
+  for (const [size, margin] of VARIANTS) {
+    let canvas = image, pad = 0, scale = 1;
+    if (size !== 1 || margin) {
+      const w = Math.round(image.width * size);
+      scale = w / image.width;
+      const h = Math.round(image.height * scale);
+      pad = Math.round(Math.max(w, h) * margin);
+      canvas = document.createElement("canvas");
+      canvas.width = w + 2 * pad; canvas.height = h + 2 * pad;
+      const g = canvas.getContext("2d");
+      g.fillStyle = "#000"; g.fillRect(0, 0, canvas.width, canvas.height);
+      g.drawImage(image, pad, pad, w, h);
+    }
+    const plain = size === 1 && !margin;
+    const det = plain && firstDet ? firstDet : detect(landmarker, canvas);
+    if (!det) continue;
+    if (plain) baseMask = det.mask;
+    /* la vraie photo dans l'image : les contrôles « bord de la photo » ignorent la marge */
+    const frame = { x0: pad + base.x0 * scale, y0: pad + base.y0 * scale, x1: pad + base.x1 * scale, y1: pad + base.y1 * scale };
+    runs.push(toPhotoCoords(measure(det.landmarks, det.mask, canvas.width, canvas.height, frame), pad, scale));
+  }
+  const merged = mergeRuns(runs);
+  /* silhouette de la photo telle quelle : sert à la correction à la main */
+  if (merged) merged.baseMask = baseMask;
+  return merged;
+}
+
+/* Téléphone penché : les lignes verticales du décor se rejoignent. Si au moins deux lignes
+   concordent et montrent une pente nette (2 à 25°), la photo est redressée avant les mesures. */
+function prepare(landmarker, image, focal35) {
+  const full = { x0: 0, y0: 0, x1: image.width, y1: image.height };
+  const f = focalPx(image.width, image.height, focal35 || 26);
+  const det = detect(landmarker, image);
+  const out = { canvas: image, frame: full, det, tilt: null, H: null, original: image, f, lines: [] };
+  if (!det) return out;
+  try {
+    const lines = findVerticals(image, det.mask);
+    const v = verticalFromLines(lines, image.width, image.height, f);
+    if (!v || v.used.length < 2 || v.spread > 0.6) return out;
+    out.lines = v.used;
+    out.tilt = v.pitch;
+    if (Math.abs(v.pitch) < 2 || Math.abs(v.pitch) > 25) return out;
+    const s = straighten(image, v.dir, f);
+    return { ...out, canvas: s.canvas, frame: s.frame, det: null, H: s.H };
+  } catch (err) {
+    console.warn("[Morpho] verticales", err);
+    return out;
+  }
+}
+
+/* focale en équivalent 24×36 lue dans les données de la photo (JPEG, balise EXIF 0xA405) */
+async function readFocal35(file) {
+  try {
+    const buf = new DataView(await file.slice(0, 196608).arrayBuffer());
+    if (buf.getUint16(0) !== 0xffd8) return null;
+    let off = 2;
+    while (off + 4 < buf.byteLength) {
+      const marker = buf.getUint16(off), size = buf.getUint16(off + 2);
+      if (marker === 0xffe1 && buf.getUint32(off + 4) === 0x45786966) {
+        const tiff = off + 10, le = buf.getUint16(tiff) === 0x4949;
+        const u16 = o => buf.getUint16(tiff + o, le), u32 = o => buf.getUint32(tiff + o, le);
+        const find = (ifd, tag) => {
+          const n = u16(ifd);
+          for (let i = 0; i < n; i++) {
+            const e = ifd + 2 + i * 12;
+            if (u16(e) === tag) return { type: u16(e + 2), value: e + 8 };
+          }
+          return null;
+        };
+        const exifPtr = find(u32(4), 0x8769);
+        if (!exifPtr) return null;
+        const focal = find(u32(exifPtr.value), 0xa405);
+        return focal ? u16(focal.value) || null : null;
+      }
+      if ((marker & 0xff00) !== 0xff00) return null;
+      off += 2 + size;
+    }
+  } catch (err) { /* pas de données : focale par défaut */ }
+  return null;
+}
+
 function loadImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+      let area = { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
+      try { area = photoArea(img); } catch (err) { console.warn("[Morpho] bandes", err); }
+      const scale = Math.min(1, MAX_SIDE / Math.max(area.w, area.h));
       const c = document.createElement("canvas");
-      c.width = Math.round(img.naturalWidth * scale);
-      c.height = Math.round(img.naturalHeight * scale);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.width = Math.round(area.w * scale);
+      c.height = Math.round(area.h * scale);
+      c.getContext("2d").drawImage(img, area.x, area.y, area.w, area.h, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
       resolve(c);
     };
@@ -166,6 +283,7 @@ function shell(T) {
           <div class="mz-stage" data-mz-stage-t hidden><canvas data-mz-canvas="t" aria-label="${esc(T.canvasTLabel)}"></canvas></div>
           <div class="mz-legend">${legend}</div>
           <div class="mz-actions">
+            <button type="button" class="btn btn-primary btn-sm" data-mz="adjust" hidden>${esc(T.adjust.button)}</button>
             <button type="button" class="btn btn-ghost btn-sm" data-mz="download">${esc(T.download)}</button>
             <button type="button" class="btn btn-surface btn-sm" data-mz="restart">${esc(T.restart)}</button>
           </div>
@@ -200,6 +318,7 @@ function bind() {
     if (action === "run") return run();
     if (action === "download") return download();
     if (action === "restart") return restart();
+    if (action === "adjust") return startAdjust();
     if (action === "erase") return erase();
     const zone = event.target.closest("[data-zone]");
     if (zone) return showDetail(zone.dataset.zone);
@@ -277,28 +396,35 @@ async function run() {
     const landmarker = await getLandmarker();
     if (ui !== current) return; // fenêtre fermée entre-temps
     const measures = [];
-    let firstImage = null, skipped = 0;
+    let photo1 = null, skipped = 0;
     for (const [i, file] of ui.filesA.entries()) {
       setStatus(ui.filesA.length > 1 ? fill(T.analysingMany, { i: i + 1, n: ui.filesA.length }) : T.analysingOne);
       const image = await loadImage(file);
-      const det = detect(landmarker, image);
-      if (!det) { skipped++; continue; }
-      measures.push(measureBody(det.landmarks, det.mask, image.width, image.height, heightCm, sex));
-      if (!firstImage) firstImage = image;
+      const prep = prepare(landmarker, image, await readFocal35(file));
+      const m = measureSeveral(landmarker, prep.canvas, (lm, mask, w, h, frame) => measureBody(lm, mask, w, h, heightCm, sex, frame), prep.frame, prep.det);
+      if (!m) { skipped++; continue; }
+      if (!photo1) photo1 = { ...prep, det: null, mask: m.baseMask, measure: m };
+      delete m.baseMask;
+      measures.push(m);
     }
     if (!measures.length) { setStatus(T.noBody, true); return; }
-    let span = null, imageT = null;
+    let span = null, imageT = null, tiltT = null;
     if (ui.fileT) {
       setStatus(T.analysingT);
-      imageT = await loadImage(ui.fileT);
-      const det = detect(landmarker, imageT);
-      if (det) span = measureSpan(det.landmarks, det.mask, imageT.width, imageT.height, heightCm, sex);
+      const prepT = prepare(landmarker, await loadImage(ui.fileT), await readFocal35(ui.fileT));
+      imageT = prepT.canvas;
+      tiltT = prepT.H ? prepT.tilt : null;
+      span = measureSeveral(landmarker, imageT, (lm, mask, w, h, frame) => measureSpan(lm, mask, w, h, heightCm, sex, frame), prepT.frame, prepT.det);
+      if (span) delete span.baseMask;
     }
     if (ui !== current) return;
     const measure = combine(measures);
     measure.skipped = skipped;
     const levels = classify(measure, sex, span);
-    Object.assign(ui, { image: firstImage, imageT: span ? imageT : null, measure, span, levels, sex, selected: null, savedDate: new Date() });
+    Object.assign(ui, {
+      image: photo1.canvas, imageT: span ? imageT : null, measure, span, levels, sex, heightCm, selected: null, savedDate: new Date(),
+      photo1, tiltT, manualState: null, manualUsed: false
+    });
     save(heightCm);
     showResult();
     setStatus("");
@@ -323,8 +449,8 @@ function save(heightCm) {
     cm: Object.fromEntries(["humerus", "forearm", "femur", "tibia", "trunk"].map(k => [k, round(m.cm[k])])),
     shoulderHip: round(m.shoulderHip, 3),
     flags: Object.fromEntries(Object.entries(m.flags || {}).filter(([, v]) => v).map(([k]) => [k, true])),
-    span: ui.span?.ok ? { ok: true, spanCm: round(ui.span.spanCm), spanH: round(ui.span.spanH, 3) } : null,
-    levels, quiz: ui.quiz
+    span: ui.span?.ok ? { ok: true, spanCm: round(ui.span.spanCm), spanH: round(ui.span.spanH, 3), source: ui.span.source || "silhouette" } : null,
+    levels, quiz: ui.quiz, manual: Boolean(ui.manualUsed)
   };
   ui.saved = data;
   try { ui.opts.save?.(data); } catch (err) { console.error("[Morpho] save", err); }
@@ -376,10 +502,113 @@ function showResult() {
   const texts = [...new Set(codes)].map(code => T.warnings[code]).filter(Boolean);
   if (ui.measure.skipped) texts.push(fill(T.skipped, { count: ui.measure.skipped }));
   if (ui.fileT && !ui.span?.ok) texts.push(T.spanFailed);
-  q("[data-mz-warnings]").innerHTML = texts.length ? `<div class="mz-warn">${texts.map(t => `<p>${esc(t)}</p>`).join("")}</div>` : "";
+  const infos = [];
+  if (ui.photo1?.H) infos.push(fill(T.straightenedAuto, { deg: num(Math.abs(ui.photo1.tilt), 0) }));
+  if (ui.tiltT != null) infos.push(fill(T.straightenedT, { deg: num(Math.abs(ui.tiltT), 0) }));
+  if (ui.manualUsed) infos.push(T.adjust.recomputed);
+  q("[data-mz-warnings]").innerHTML = (infos.length ? `<div class="mz-info">${infos.map(t => `<p>${esc(t)}</p>`).join("")}</div>` : "")
+    + (texts.length ? `<div class="mz-warn">${texts.map(t => `<p>${esc(t)}</p>`).join("")}</div>` : "");
+  q("[data-mz='adjust']").hidden = !ui.photo1;
   render();
   renderPanel();
   q("[data-mz-result]").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ---------- correction à la main ---------- */
+function startAdjust() {
+  const p1 = ui.photo1;
+  if (!p1 || ui.adjusting) return;
+  ui.adjusting = true;
+  const snapshot = { ...p1 };
+  const result = q("[data-mz-result]");
+  const hide = [...result.querySelectorAll(".mz-stage, .mz-legend, .mz-actions, [data-mz-warnings]")];
+  const wasHidden = hide.map(node => node.hidden);
+  hide.forEach(node => { node.hidden = true; });
+  const host = document.createElement("div");
+  result.prepend(host);
+  const end = () => {
+    host.remove();
+    hide.forEach((node, i) => { node.hidden = wasHidden[i]; });
+    ui.adjusting = false;
+  };
+  openAdjust({
+    container: host, image: p1.canvas, texts: ui.T.adjust,
+    points: ui.manualState?.points || anatomicalStart(p1.measure),
+    lines: decorLines(p1),
+    onStraighten: lines => straightenFromLines(lines),
+    onDone: ({ points, moved }) => {
+      end();
+      const before = new Set(ui.manualState?.moved || []);
+      applyManual(points, [...new Set([...before, ...moved])]);
+    },
+    onCancel: () => {
+      /* on revient à la photo d'avant (si elle a été redressée pendant la correction) */
+      Object.assign(ui.photo1, snapshot);
+      ui.image = snapshot.canvas;
+      end();
+      render();
+    }
+  });
+  host.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* verticales trouvées dans le décor, ramenées sur la photo affichée (redressée ou non) */
+function decorLines(p1) {
+  if (!p1.lines?.length) return null;
+  const h = p1.original.height;
+  const toShown = pt => (p1.H ? applyH(p1.H, pt.x, pt.y) : pt);
+  /* la plus longue, puis la plus longue bien écartée d'elle (point de fuite plus sûr, plus lisible) */
+  const sorted = [...p1.lines].sort((a, b) => b.len - a.len);
+  const first = sorted[0];
+  const second = sorted.find(l => Math.abs(l.x0 - first.x0) > p1.original.width * 0.25) || sorted[1];
+  if (!second) return null;
+  /* poignées un peu en retrait des extrémités, plus faciles à attraper */
+  return [first, second].map(l => {
+    const ya = l.y0 + (l.y1 - l.y0) * 0.1, yb = l.y1 - (l.y1 - l.y0) * 0.1;
+    return {
+      a: toShown({ x: l.x0 + l.t * (ya - h / 2), y: ya }),
+      b: toShown({ x: l.x0 + l.t * (yb - h / 2), y: yb })
+    };
+  });
+}
+
+/* verticales tracées par la personne → redresser la photo d'origine, puis nouvelle analyse */
+async function straightenFromLines(lines) {
+  const p1 = ui.photo1, original = p1.original, W0 = original.width, H0 = original.height;
+  const back = p1.H ? invert3(p1.H) : null;
+  const toOrig = pt => (back ? applyH(back, pt.x, pt.y) : { x: pt.x, y: pt.y });
+  const asLine = l => {
+    const a = toOrig(l.a), b = toOrig(l.b);
+    const t = (b.x - a.x) / ((b.y - a.y) || 1e-6);
+    return { x0: a.x + t * (H0 / 2 - a.y), t, len: Math.abs(b.y - a.y) };
+  };
+  const v = verticalFromLines(lines.map(asLine), W0, H0, p1.f);
+  if (!v || v.used.length < 2) return null;
+  const landmarker = await getLandmarker();
+  let canvas = original, frame = { x0: 0, y0: 0, x1: W0, y1: H0 }, H = null;
+  if (Math.abs(v.pitch) >= 0.5 || Math.abs(v.roll) >= 0.5) {
+    const s = straighten(original, v.dir, p1.f);
+    canvas = s.canvas; frame = s.frame; H = s.H;
+  }
+  const m = measureSeveral(landmarker, canvas, (lm, mask, w, h, fr) => measureBody(lm, mask, w, h, ui.heightCm, ui.sex, fr), frame, null);
+  if (!m) return null;
+  Object.assign(p1, { canvas, frame, H, mask: m.baseMask, measure: m, tilt: v.pitch, lines: [] });
+  delete m.baseMask;
+  ui.image = canvas;
+  const map = pt => { const o = toOrig(pt); return H ? applyH(H, o.x, o.y) : o; };
+  const message = H ? fill(ui.T.adjust.straightened, { deg: num(Math.abs(v.pitch), 1) }) : ui.T.adjust.straightNone;
+  return { image: canvas, points: anatomicalStart(m), map, message };
+}
+
+/* nouvelles mesures avec les points corrigés (photo 1 seule : c'est elle qui a été vérifiée) */
+function applyManual(points, moved) {
+  const p1 = ui.photo1;
+  const m = measureManual(p1.measure, points, moved, p1.mask, p1.canvas.width, p1.canvas.height, ui.heightCm, ui.sex, p1.frame);
+  m.n = 1;
+  Object.assign(ui, { measure: m, manualState: { points, moved }, manualUsed: true, selected: null, savedDate: new Date() });
+  ui.levels = classify(m, ui.sex, ui.span);
+  save(ui.heightCm);
+  showResult();
 }
 
 function restart() {
@@ -485,12 +714,22 @@ function drawSpan(ctx, displayWidth) {
   const u = Math.max(W, H) / 400;
   ctx.drawImage(img, 0, 0);
   ctx.fillStyle = "rgba(20,16,12,0.28)"; ctx.fillRect(0, 0, W, H);
+  const lu = labelUnit(img, displayWidth);
+  /* envergure inutilisable (silhouette absente, main hors photo, bras pas à l'horizontale) */
+  if (!sp.ok || sp.broken) {
+    const x = sp.left != null ? (sp.left + sp.right) / 2 : W / 2;
+    const y = sp.rowY != null ? sp.rowY - lu * 12 : H * 0.08;
+    pill(ctx, ui.T.spanRedo, x, y, COLORS.incertain, lu, "center", false, W);
+    return;
+  }
   const color = zoneColor("arm");
   ctx.strokeStyle = "#fbf3e4"; ctx.lineWidth = u * 1.2; ctx.setLineDash([u * 2, u * 2]);
   ctx.beginPath(); ctx.moveTo(sp.left, sp.rowY); ctx.lineTo(sp.right, sp.rowY); ctx.stroke(); ctx.setLineDash([]);
   for (const x of [sp.left, sp.right]) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, sp.rowY, u * 2.4, 0, Math.PI * 2); ctx.fill(); }
-  const lu = labelUnit(img, displayWidth);
-  pill(ctx, fill(ui.T.spanPill, { cm: num(sp.spanCm, 0), ratio: num(sp.spanH, 2) }), (sp.left + sp.right) / 2, sp.rowY - lu * 12, color, lu, "center", false, W);
+  const label = sp.source === "wrists"
+    ? fill(ui.T.spanPillWrist, { cm: num(sp.spanCm, 0) })
+    : fill(ui.T.spanPill, { cm: num(sp.spanCm, 0), ratio: num(sp.spanH, 2) });
+  pill(ctx, label, (sp.left + sp.right) / 2, sp.rowY - lu * 12, color, lu, "center", false, W);
 }
 
 function line(ctx, a, b) { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
@@ -608,9 +847,11 @@ function percentPhrase(key) {
 function measureText(key) {
   const T = ui.T, m = ui.measure;
   if (key === "arm") {
-    return ui.span?.ok
-      ? fill(T.measure.span, { v: num(ui.span.spanCm, 0) })
-      : fill(T.measure.arm, { total: num(m.cm.humerus + m.cm.forearm, 1), h: num(m.cm.humerus, 1), f: num(m.cm.forearm, 1) });
+    /* la mesure affichée est celle qui a servi au verdict */
+    if (ui.levels.arm?.source === "span" && ui.span?.ok) {
+      return fill(ui.span.source === "wrists" ? T.measure.spanWrist : T.measure.span, { v: num(ui.span.spanCm, 0) });
+    }
+    return fill(T.measure.arm, { total: num(m.cm.humerus + m.cm.forearm, 1), h: num(m.cm.humerus, 1), f: num(m.cm.forearm, 1) });
   }
   if (key === "shoulders") return m.shoulderHip == null ? T.measure.shouldersNone : fill(T.measure.shoulders, { v: num(m.shoulderHip, 2) });
   return fill(T.measure.cm, { v: num(m.cm[key], 1) });
@@ -652,12 +893,14 @@ function showDetail(key, { scroll = false } = {}) {
   const lo = Phi(l.zPost - l.sdPost) * 100, hi = Phi(l.zPost + l.sdPost) * 100;
   const extras = extrasFor(key, l.level).map(([text, ids]) =>
     `<div class="mz-extra"><p>${esc(text)}</p>${ids.map(id => exerciseRow([id, ""])).join("")}</div>`).join("");
-  const armNote = (key === "arm" || key === "forearm") && ui.measure.flags?.arms && !(key === "arm" && ui.span?.ok)
+  const armNote = (key === "arm" || key === "forearm") && ui.measure.flags?.arms && !(key === "arm" && l.source === "span")
     ? `<p class="mz-note">${esc(T.armsBent)}</p>` : "";
   const ends = key === "shoulders" ? [T.shoulderLevels.court, T.shoulderLevels.long] : [T.levels.court, T.levels.long];
   const side = lower(levelName(key, l.zPost > 0 ? "long" : "court"));
-  const unclearNote = fill(T.unclearNote, { side, pct: Math.round((l.relNoise || 0) * 100) })
-    + (key === "arm" && !ui.span?.ok ? ` ${T.unclearArmHint}` : "");
+  /* bras : sans envergure lue sur la silhouette, on propose d'ajouter (ou de refaire) la photo bras en croix */
+  const preciseSpan = l.source === "span" && ui.span?.ok && ui.span.source !== "wrists";
+  const armHint = key === "arm" && !preciseSpan ? ` ${ui.span ? T.unclearArmRedo : T.unclearArmHint}` : "";
+  const unclearNote = fill(T.unclearNote, { side, pct: Math.round((l.relNoise || 0) * 100) }) + armHint;
   q("[data-mz-detail]").innerHTML = `
     <div class="mz-zone-head"><h5>${esc(z.label)}</h5><span class="mz-badge" style="--c:${color}">${esc(badge)}</span></div>
     <p class="mz-measure">${esc(measureText(key))}</p>

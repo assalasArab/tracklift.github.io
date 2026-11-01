@@ -5,7 +5,7 @@
    répétitions déjà validés, on valide une série passée par erreur,
    ou on passe directement à cet exercice.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261031b";
+import { i18n } from "./i18n.js?v=20261031c";
 
 const t = (key, vars) => i18n.t(key, vars);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -13,6 +13,7 @@ const kg = value => String(Number(value) || 0).replace(".", i18n.getLanguage() =
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const CHECK = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg>`;
+const PLAY = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5z"/></svg>`;
 
 let map = null;
 
@@ -20,7 +21,8 @@ export const isWorkoutMapOpen = () => Boolean(map);
 
 /**
  * opts : { container, layout, getWorkout(), exerciseOf(id) → { name, image, fallback, timed },
- *          onEdit(blockIndex, setIndex, patch), onJump(blockIndex), onDetails(exerciseId), onClose() }
+ *          onEdit(blockIndex, setIndex, patch), onJump(blockIndex), onReopen(blockIndex),
+ *          onDetails(exerciseId), onClose() }
  * Le minuteur de repos reste visible en bas de l'écran pendant la vue d'ensemble.
  */
 export function openWorkoutMap(opts) {
@@ -97,6 +99,14 @@ function bind() {
       opts.onJump?.(index);
       return;
     }
+    const reopen = event.target.closest("[data-wm-reopen]");
+    if (reopen) {
+      const index = Number(reopen.dataset.wmReopen);
+      const { opts } = map;
+      closeWorkoutMap();
+      opts.onReopen?.(index);
+      return;
+    }
     const details = event.target.closest("[data-wm-details]");
     if (details) return map.opts.onDetails?.(details.dataset.wmDetails);
     const didIt = event.target.closest("[data-wm-didit]");
@@ -161,6 +171,13 @@ function card(workout, block, index) {
   const doneText = doneSets === 0 ? t("wmSetsDoneNone") : doneSets === 1 ? t("wmSetsDoneOne") : t("wmSetsDone", { count: doneSets });
   const meta = state === "next" || state === "now" ? `${count} · ${doneText}` : count;
   const marker = state === "done" ? CHECK : String(index + 1);
+  /* toujours visible, sans ouvrir la carte : faire cet exercice avant les autres */
+  const skippedSets = block.sets.some(set => set.status === "skipped");
+  const quick = state === "next"
+    ? `<div class="wm-quick"><button type="button" class="wm-now-btn" data-wm-jump="${index}" aria-label="${esc(t("wmGoHere"))} : ${esc(exercise.name)}">${PLAY}${esc(t("wmDoNow"))}</button></div>`
+    : (state === "skipped" || state === "done") && skippedSets
+      ? `<div class="wm-quick"><button type="button" class="wm-now-btn is-soft" data-wm-reopen="${index}">${PLAY}${esc(t(state === "done" ? "wmDoSkipped" : "wmDoAnyway"))}<span class="sr-only"> : ${esc(exercise.name)}</span></button></div>`
+      : "";
   return `<li class="wm-item is-${state}${open ? " is-open" : ""}">
     <div class="wm-card">
       <button type="button" class="wm-card-head" data-wm-toggle="${index}" aria-expanded="${open}" aria-controls="wm-body-${index}">
@@ -171,10 +188,10 @@ function card(workout, block, index) {
           <span class="wm-squares" aria-hidden="true">${squares}</span>
         </span>
       </button>
+      ${quick}
       <div class="wm-body" id="wm-body-${index}"${open ? "" : " hidden"}>
         ${block.sets.map((set, s) => setRow(workout, state, index, set, s, exercise.timed)).join("")}
         <div class="wm-actions">
-          ${state === "next" ? `<button type="button" class="btn btn-primary btn-sm" data-wm-jump="${index}">${esc(t("wmGoHere"))}</button>` : ""}
           ${state === "now" ? `<button type="button" class="btn btn-primary btn-sm" data-wm-close>${esc(t("wmContinue"))}</button>` : ""}
           <button type="button" class="btn btn-surface btn-sm" data-wm-details="${esc(block.exerciseId)}">${esc(t("wmDetails"))}</button>
         </div>
