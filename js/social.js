@@ -9,13 +9,13 @@
    users/<uid> (données de l'appli) n'est jamais lu ni modifié ici.
    La sécurité est assurée par firestore.rules, pas par ce fichier.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261101a";
-import { normalizeAvatar } from "./avatar.js?v=20261101a";
-import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261101a";
+import { firestore } from "./firebase-config.js?v=20261102a";
+import { normalizeAvatar } from "./avatar.js?v=20261102a";
+import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261102a";
 
 const RESERVED = ["admin", "administrateur", "tracklift", "support", "moderation", "moderateur", "staff", "officiel", "equipe"];
 const ITEM_KEYS = [...SHARE_KEYS, "board", "programs"];
-export const NOTIF_TYPES = ["record", "streak", "weekGoal", "request", "accepted", "cheer", "invite"];
+export const NOTIF_TYPES = ["record", "streak", "weekGoal", "request", "accepted", "cheer", "invite", "perf", "challenge"];
 const DAY = 86400000;
 const EVENT_SHARE = { record: "records", streak: "streak", weekGoal: "sessions" };
 
@@ -67,6 +67,12 @@ export const Social = {
   cheersOut: [],
   invitesIn: [],     // invitations reçues à rejoindre un programme partagé
   invitesOut: [],    // invitations que j'ai envoyées
+  perfReqIn: [],     // demandes reçues pour voir mes perfs
+  perfReqOut: [],    // mes demandes pour voir les perfs d'un pote
+  perfViewers: [],   // potes autorisés à voir mes perfs
+  perfVisible: [],   // potes dont je peux voir les perfs
+  challengeInvitesIn: [],
+  challengeInvitesOut: [],
   liveReady: false,
   summaryProvider: null, // () => éléments partagés (calculés par l'appli)
   _listeners: new Set(),
@@ -228,7 +234,35 @@ export const Social = {
       col("programInvites").where("from", "==", me).onSnapshot(snap => {
         this.invitesOut = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         this._emit();
-      }, onErr("invitations envoyées"))
+      }, onErr("invitations envoyées")),
+      // perfs sur demande
+      col("perfRequests").where("to", "==", me).onSnapshot(snap => {
+        this.perfReqIn = snap.docs.map(d => d.data()).sort((a, b) => b.createdAt - a.createdAt);
+        this._fetchProfiles(this.perfReqIn.map(r => r.from));
+        this._emit();
+      }, onErr("demandes de perfs reçues")),
+      col("perfRequests").where("from", "==", me).onSnapshot(snap => {
+        this.perfReqOut = snap.docs.map(d => d.data());
+        this._emit();
+      }, onErr("demandes de perfs envoyées")),
+      col("perfAccess").where("owner", "==", me).onSnapshot(snap => {
+        this.perfViewers = snap.docs.map(d => d.data().viewer);
+        this._emit();
+      }, onErr("accès à mes perfs")),
+      col("perfAccess").where("viewer", "==", me).onSnapshot(snap => {
+        this.perfVisible = snap.docs.map(d => d.data().owner);
+        this._emit();
+      }, onErr("perfs visibles")),
+      // défis
+      col("challengeInvites").where("to", "==", me).onSnapshot(snap => {
+        this.challengeInvitesIn = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt);
+        this._fetchProfiles(this.challengeInvitesIn.map(i => i.from));
+        this._emit();
+      }, onErr("invitations aux défis reçues")),
+      col("challengeInvites").where("from", "==", me).onSnapshot(snap => {
+        this.challengeInvitesOut = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        this._emit();
+      }, onErr("invitations aux défis envoyées"))
     );
   },
 
@@ -236,7 +270,8 @@ export const Social = {
     this._unsubs.forEach(fn => fn());
     this._unsubs = [];
     for (const uid of [...this.friends.keys()]) this._dropFriend(uid);
-    Object.assign(this, { requestsIn: [], requestsOut: [], blocks: [], myEvents: [], cheersIn: [], cheersOut: [], invitesIn: [], invitesOut: [], liveReady: false });
+    Object.assign(this, { requestsIn: [], requestsOut: [], blocks: [], myEvents: [], cheersIn: [], cheersOut: [], invitesIn: [], invitesOut: [],
+      perfReqIn: [], perfReqOut: [], perfViewers: [], perfVisible: [], challengeInvitesIn: [], challengeInvitesOut: [], liveReady: false });
   },
 
   _addFriend(uid, info) {

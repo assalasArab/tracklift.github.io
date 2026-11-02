@@ -4,7 +4,7 @@
    une note manuscrite avec une flèche dessinée qui pointe vers un aperçu,
    un emplacement de dessin, puis la création du programme.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261101a";
+import { illu } from "./illustrations.js?v=20261102a";
 
 /* flèches au feutre ; chaque tracé finit par une pointe */
 const ARROWS = {
@@ -20,7 +20,7 @@ const ARROWS = {
   d: `<svg viewBox="0 0 70 90" aria-hidden="true"><path d="M10 6 C 50 2, 62 30, 40 40 C 22 48, 26 70, 38 82" /><path d="M26 74 L 38 84 L 46 70" /></svg>`
 };
 
-const FLAME = `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg>`;
+const FLAME = `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 
 const SLIDES = [
   {
@@ -29,7 +29,7 @@ const SLIDES = [
     title: `Bienvenue sur <span class="ob-key">TrackLift</span>`,
     hand: "ton carnet de muscu, en mieux",
     text: "Tes séances, tes progrès et ta nutrition au même endroit. Petit tour en une minute ?",
-    mock: `<div class="ob-mock ob-mock-pills"><span>Séances</span><span>Progrès</span><span>Flamme</span><span>Nutrition</span></div>`,
+    mock: `<div class="ob-mock ob-mock-pills"><span>Séances</span><span>Progrès</span><span>Points spé</span><span>Nutrition</span></div>`,
     note: { text: "tout est là", arrow: "dl", pos: "left" }
   },
   {
@@ -59,9 +59,9 @@ const SLIDES = [
   {
     img: "intro-04-flamme.webp",
     layout: "small",
-    title: `Garde ta <span class="ob-key">flamme</span> allumée`,
+    title: `Gagne des <span class="ob-key">points spé</span>`,
     hand: "une pesée par jour suffit",
-    text: "Pèse-toi chaque matin : ta série de jours grandit et ta courbe de poids devient fiable. Un oubli, et la flamme s'éteint.",
+    text: "Pèse-toi chaque matin et entraîne-toi : tu gagnes des points spé, ta série grandit et ton personnage monte de niveau. Un oubli, et la série repart à zéro.",
     mock: `<div class="ob-mock ob-mock-flames">
       ${["L", "M", "M", "J", "V", "S", "D"].map((d, i) => `<span class="${i < 5 ? "on" : ""}">${FLAME}<small>${d}</small></span>`).join("")}
     </div>`,

@@ -1,13 +1,19 @@
 /* ═══════════════════════════════════════════════════════════
-   Réserve de flammes (la monnaie de la boutique).
-   - Chaque jour où tu te pèses rapporte 10 flammes,
-     multipliées par le bonus de ta série (plus tu enchaînes, plus il monte).
+   Points spé (la monnaie de la boutique et l'expérience du personnage).
+   - Chaque jour où tu te pèses rapporte 10 points spé,
+     multipliés par le bonus de ta série (plus tu enchaînes, plus il monte).
+   - Chaque jour avec une séance (au moins 3 séries faites) : +15.
+   - Pesée et séance le même jour : +5 en plus.
    - La réserve ne se perd jamais : une série cassée remet seulement
-     le bonus à ×1 ; les nouvelles flammes s'ajoutent aux anciennes.
-   - Tout est recalculé depuis l'historique des pesées (un jour = une fois),
+     le bonus à ×1 ; les nouveaux points s'ajoutent aux anciens.
+   - Tout est recalculé depuis l'historique (un jour = une fois),
      moins ce qui a été dépensé : aucun compteur ne peut dériver.
+   - Le total gagné (sans retirer les dépenses) donne le niveau (js/rpg.js).
    ═══════════════════════════════════════════════════════════ */
 export const FLAME_BASE = 10;
+export const SESSION_GAIN = 15;
+export const PERFECT_BONUS = 5;
+const MIN_SETS = 3;
 
 /** Bonus selon le nombre de jours d'affilée (mêmes paliers que la flamme) */
 export const BONUS_TIERS = [
@@ -43,13 +49,29 @@ export function flameDays(weightLog) {
   });
 }
 
+/** Jours (heure locale) avec une séance qui compte : au moins 3 séries faites */
+export function sessionDays(sessionLogs) {
+  const keys = new Set();
+  for (const log of sessionLogs || []) {
+    if (!Number.isFinite(Number(log?.date))) continue;
+    const done = (log.exercises || []).reduce((n, ex) => n + (ex.sets || []).filter(set => set?.status === "done").length, 0);
+    if (done >= MIN_SETS) keys.add(localKey(Number(log.date)));
+  }
+  return keys;
+}
+
 /**
  * Le portefeuille : gagné, dépensé, réserve, et où en est le bonus.
- * purchases : [{ id, price }] (ce qui a été débloqué)
+ * purchases : [{ id, price }] (ce qui a été débloqué) ; sessionLogs : séances enregistrées
  */
-export function flameWallet(weightLog, purchases = [], now = new Date()) {
+export function flameWallet(weightLog, purchases = [], now = new Date(), sessionLogs = []) {
   const days = flameDays(weightLog);
-  const earned = days.reduce((sum, day) => sum + day.gain, 0);
+  const weighEarned = days.reduce((sum, day) => sum + day.gain, 0);
+  const trained = sessionDays(sessionLogs);
+  const weighed = new Set(days.map(day => day.key));
+  const perfect = [...trained].filter(key => weighed.has(key)).length;
+  const sessionEarned = trained.size * SESSION_GAIN + perfect * PERFECT_BONUS;
+  const earned = weighEarned + sessionEarned;
   const spent = (purchases || []).reduce((sum, item) => sum + (Number(item?.price) || 0), 0);
   const today = localKey(now);
   const yesterdayDate = new Date(now);
@@ -63,6 +85,9 @@ export function flameWallet(weightLog, purchases = [], now = new Date()) {
   const nextRun = alive ? run + 1 : 1;
   return {
     earned,
+    weighEarned,
+    sessionEarned,
+    trainedToday: trained.has(today),
     spent,
     balance: Math.max(0, earned - spent),
     run,

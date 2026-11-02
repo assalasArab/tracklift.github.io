@@ -3,23 +3,23 @@
    La réserve vient des pesées (js/flames.js) ; les prix sont dans
    js/avatar-parts.js (SHOP_PRICES). D'autres objets viendront ensuite.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261101a";
-import { i18n } from "./i18n.js?v=20261101a";
-import { DB } from "./db.js?v=20261101a";
-import { flameWallet, BONUS_TIERS, FLAME_BASE } from "./flames.js?v=20261101a";
-import { SHOP_PRICES, priceOf, AVATAR_CATEGORIES } from "./avatar-parts.js?v=20261101a";
-import { avatarSvg, AvatarLocks, normalizeAvatar } from "./avatar.js?v=20261101a";
-import { Social } from "./social.js?v=20261101a";
-import { t, esc, cap, openSheet, sheetHead } from "./potes-ui.js?v=20261101a";
+import { showToast } from "./utils.js?v=20261102a";
+import { i18n } from "./i18n.js?v=20261102a";
+import { DB } from "./db.js?v=20261102a";
+import { flameWallet, BONUS_TIERS, FLAME_BASE } from "./flames.js?v=20261102a";
+import { SHOP_PRICES, priceOf, AVATAR_CATEGORIES } from "./avatar-parts.js?v=20261102a";
+import { avatarSvg, AvatarLocks, normalizeAvatar } from "./avatar.js?v=20261102a";
+import { Social } from "./social.js?v=20261102a";
+import { t, esc, cap, openSheet, sheetHead } from "./potes-ui.js?v=20261102a";
 
 const tagOf = (key, id) => `${key}:${id}`;
 const listeners = new Set();
-const FLAME = `<svg class="sh-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg>`;
+const FLAME = `<svg class="sh-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 export const formatMult = mult => mult.toLocaleString(i18n.getLocale(), { maximumFractionDigits: 1 });
 
 export const Shop = {
   /** Réserve, bonus en cours, prochain gain */
-  wallet() { return flameWallet(DB.getWeightLog(), DB.getPurchases()); },
+  wallet() { return flameWallet(DB.getWeightLog(), DB.getPurchases(), new Date(), DB.getSessionLogs()); },
 
   owned(key, id) { return !priceOf(key, id) || DB.getPurchases().some(item => item.id === tagOf(key, id)); },
 

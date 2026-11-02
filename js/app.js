@@ -1,36 +1,38 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261101a";
-import { DB } from "./db.js?v=20261101a";
-import { Auth } from "./auth.js?v=20261101a";
-import { i18n } from "./i18n.js?v=20261101a";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261101a";
-import { muscleName } from "./muscles.js?v=20261101a";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261101a";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261101a";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261101a";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet } from "./workout.js?v=20261101a";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261101a";
-import { renderWeightChart } from "./charts.js?v=20261101a";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261101a";
-import { openProgramWizard } from "./program-wizard.js?v=20261101a";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261101a";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261101a";
-import { openIntro } from "./onboarding.js?v=20261101a";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261101a";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261101a";
-import { Social } from "./social.js?v=20261101a";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261101a";
-import { avatarSvg } from "./avatar.js?v=20261101a";
-import { Bridge } from "./potes-ui.js?v=20261101a";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261101a";
-import { renderBilanLine, openBilan } from "./bilan.js?v=20261101a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261101a";
-import { openSettings } from "./potes-settings.js?v=20261101a";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261101a";
-import { SharedPrograms } from "./community.js?v=20261101a";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261101a";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261101a";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261101a";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261101a";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261102a";
+import { DB } from "./db.js?v=20261102a";
+import { Auth } from "./auth.js?v=20261102a";
+import { i18n } from "./i18n.js?v=20261102a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261102a";
+import { muscleName } from "./muscles.js?v=20261102a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261102a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261102a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261102a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet } from "./workout.js?v=20261102a";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261102a";
+import { renderWeightChart } from "./charts.js?v=20261102a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261102a";
+import { openProgramWizard } from "./program-wizard.js?v=20261102a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261102a";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261102a";
+import { openIntro } from "./onboarding.js?v=20261102a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261102a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261102a";
+import { Social } from "./social.js?v=20261102a";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261102a";
+import { avatarSvg } from "./avatar.js?v=20261102a";
+import { Bridge } from "./potes-ui.js?v=20261102a";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261102a";
+import { renderBilanLine, openBilan } from "./bilan.js?v=20261102a";
+import { renderPersoLine, openPerso, announceLevel, currentLevel } from "./rpg-ui.js?v=20261102a";
+import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261102a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261102a";
+import { openSettings } from "./potes-settings.js?v=20261102a";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261102a";
+import { SharedPrograms } from "./community.js?v=20261102a";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261102a";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261102a";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261102a";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261102a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -232,6 +234,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#drawer-shop-btn").addEventListener("click", () => { closeProfileDrawer(); openShop(); });
   $("#drawer-morpho-btn").addEventListener("click", () => { closeProfileDrawer(); openMorphoScan(); });
   $("#drawer-bilan-btn").addEventListener("click", () => { closeProfileDrawer(); openWeeklyBilan(); });
+  $("#drawer-perso-btn").addEventListener("click", () => { closeProfileDrawer(); openMyCharacter(); });
   // une pièce débloquée : la réserve affichée sur la carte flamme suit
   Shop.onChange(() => renderStreak());
   ["#drawer-avatar", "#drawer-avatar-link"].forEach(sel => $(sel).addEventListener("click", () => { closeProfileDrawer(); editMyAvatar(); }));
@@ -287,7 +290,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#open-weight-btn").addEventListener("click", openWeightModal);
   $("#hero-start-btn").addEventListener("click", startHeroSession);
   $("#recent-more-btn").addEventListener("click", () => { state.showAllSessions = !state.showAllSessions; renderHome(); });
-  $("#streak-pill").addEventListener("click", focusStreakCard);
+  $("#streak-pill").addEventListener("click", () => openMyCharacter());
   $("#streak-card").addEventListener("click", event => {
     if (event.target.closest("[data-streak-save]")) saveStreakWeight();
     if (event.target.closest("[data-streak-edit]")) { state.streakEditing = true; renderStreak(); focusField("#streak-input"); }
@@ -297,6 +300,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     if (event.target.closest("[data-kcal-cancel]")) { state.kcalEditing = false; renderStreak(); }
     if (event.target.closest("[data-streak-history]")) openWeightModal();
     if (event.target.closest("[data-open-shop]")) openShop();
+    if (event.target.closest("[data-open-perso]")) openMyCharacter();
   });
   $("#streak-card").addEventListener("keydown", event => {
     if (event.key === "Enter" && event.target.id === "streak-input") saveStreakWeight();
@@ -969,7 +973,9 @@ function setupPotesBridge() {
     joinProgram: joinSharedProgram,
     updateProgramCopy,
     addCommunityExercise: ex => { DB.saveCustomExercise(foreignExercise(ex, { communityId: ex.id })); refreshExercises(); },
-    refresh: () => { renderPrograms(); renderHome(); }
+    refresh: () => { renderPrograms(); renderHome(); },
+    getLogs: () => state.sessionLogs,
+    allExercises: () => state.exercises.map(e => ({ id: e.id, name: getExerciseName(e), bodyweight: !!e.bodyweight }))
   });
   // le résumé partagé : SEULEMENT ce que l'utilisateur a choisi de montrer
   Social.summaryProvider = () => buildSharedItems({
@@ -991,6 +997,8 @@ function onSocialChange() {
   if (Social.loaded && !Social.error && Social.avatar && !DB.getProfile()?.shopGranted) Shop.grantWorn(Social.avatar);
   $("#community-btn").classList.toggle("hidden", !Social.joined);
   if (state.activeView === "home") renderHomeLine($("#potes-line"));
+  // perfs : si un pote a le droit de les voir, elles sont tenues à jour (rien n'est écrit sinon)
+  if (Social.joined && Social.perfViewers.length) publishMyPerfs().catch(() => {});
   // programmes : étiquettes de partage seulement si elles ont changé
   const signature = JSON.stringify([Social.loaded, Social.joined, SharedPrograms.shares, SharedPrograms.joined, SharedPrograms.competing, Social.invitesIn.length]);
   if (signature !== socialSignature) {
@@ -1031,6 +1039,14 @@ function shareSessionWithPotes(recap) {
   if (count === Social.weeklyGoal) Social.postEvent("weekGoal", { count, goal: Social.weeklyGoal });
   Social.queuePublish();
   pushCompetitionStats();
+  pushAllPerfs(sharedProgramExercises);
+}
+
+/** Exercices de mon exemplaire d'un programme en commun (pour les perfs du groupe) */
+function sharedProgramExercises(shareId) {
+  const localId = SharedPrograms.localIdOf(shareId);
+  const program = state.programs.find(p => p.id === localId);
+  return program ? (program.sessions || []).flatMap(s => s.exerciseIds || []) : null;
 }
 
 /** Compétitions de programmes partagés : mes chiffres (nombres seulement) à jour */
@@ -1324,6 +1340,11 @@ function openIntroFlow({ replay = false } = {}) {
   });
 }
 
+/* Mon perso : niveau, classe, points à répartir, équipement (points spé) */
+function openMyCharacter() {
+  openPerso({ onChange: () => { if (state.activeView === "home") renderHome(); } });
+}
+
 /* Bilan de la semaine : comparaison avec la semaine d'avant, conseils, choix appli / e-mail */
 function openWeeklyBilan() {
   // nom actuel de l'exercice, dans la langue de l'appli
@@ -1343,7 +1364,7 @@ function openWeeklyBilan() {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261101a");
+    const { openMorpho } = await import("./morpho.js?v=20261102a");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),
@@ -1482,6 +1503,7 @@ function renderHome() {
   renderHero();
   renderStreak();
   renderHomeLine($("#potes-line"));
+  renderPersoLine($("#perso-line"), { onOpen: openMyCharacter });
   renderBilanLine($("#bilan-line"), { logs: state.sessionLogs, profile: state.profile, onOpen: openWeeklyBilan });
   renderPerfCard();
 
@@ -1603,6 +1625,7 @@ function saveWeight() {
 /** Enregistre la pesée du jour, met à jour la flamme et félicite aux paliers */
 function logWeight(weight, { silent = false } = {}) {
   const before = computeStreak(state.weightLog);
+  const levelBefore = currentLevel();
   DB.setDayWeight(weight);
   state.weightLog = DB.getWeightLog();
   state.streakEditing = false;
@@ -1612,6 +1635,7 @@ function logWeight(weight, { silent = false } = {}) {
   // partie Potes : palier de flamme (si partagée) et résumé à jour
   if (!before.doneToday && STREAK_MILESTONES.includes(after.current)) Social.postEvent("streak", { days: after.current });
   Social.queuePublish();
+  setTimeout(() => announceLevel(levelBefore), 2600);
   if (silent) return;
 
   if (before.doneToday) {
@@ -1663,7 +1687,7 @@ function focusStreakCard() {
   setTimeout(() => $("#streak-input")?.focus({ preventScroll: true }), 350);
 }
 
-const FLAME_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg>`;
+const FLAME_SVG = `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 
 function renderStreak() {
   const card = $("#streak-card");
@@ -1674,7 +1698,7 @@ function renderStreak() {
   const pill = $("#streak-pill");
   pill.classList.toggle("off", !lit);
   pill.classList.toggle("risk", s.atRisk);
-  $("#streak-pill-count").textContent = s.current;
+  $("#streak-pill-count").textContent = Shop.wallet().balance;
 
   const week = s.week.map(day => `
     <div class="streak-day${day.done ? " done" : ""}${day.isToday ? " today" : ""}">
@@ -1741,7 +1765,10 @@ function renderStreak() {
   const walletHtml = `
     <div class="streak-wallet">
       <p class="streak-wallet-text">${FLAME_SVG}<span><b>${wallet.balance}</b> ${t("shopFlamesShort")}${wallet.run ? ` · ${t("shopBonus", { mult: formatMult(wallet.mult) })}` : ""}</span></p>
-      <button type="button" class="btn btn-ghost btn-sm" data-open-shop>${t("shopOpen")}</button>
+      <span class="streak-wallet-btns">
+        <button type="button" class="btn btn-ghost btn-sm" data-open-perso>${t("persoMenu")}</button>
+        <button type="button" class="btn btn-surface btn-sm" data-open-shop>${t("shopOpen")}</button>
+      </span>
     </div>`;
 
   card.classList.toggle("lit", lit);
@@ -3348,6 +3375,7 @@ function finishWorkout({ endedAt } = {}) {
   // la copie de secours part avec le même enregistrement que la séance
   clearSavedWorkout({ save: false });
   const recap = buildRecap(log, previousLogs);
+  const levelBefore = currentLevel();
   DB.saveSessionLog(log);
   state.sessionLogs = DB.getSessionLogs();
   shareSessionWithPotes(recap);
@@ -3356,6 +3384,7 @@ function finishWorkout({ endedAt } = {}) {
   renderHome();
   setView("home");
   openRecap(recap);
+  setTimeout(() => announceLevel(levelBefore), 1200);
 }
 
 /* ─── Séance en cours : jamais perdue ───

@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261101a";
-import { EXERCISE_SEED } from "./exercises.js?v=20261101a";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261101a";
-import { firestore } from "./firebase-config.js?v=20261101a";
+import { uid } from "./utils.js?v=20261102a";
+import { EXERCISE_SEED } from "./exercises.js?v=20261102a";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261102a";
+import { firestore } from "./firebase-config.js?v=20261102a";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.
@@ -49,6 +49,7 @@ function fromRaw(raw) {
     notion: raw.notion || null,
     purchases: raw.purchases || [],
     morpho: raw.morpho || null,
+    rpg: raw.rpg || null,
     activeWorkout: raw.activeWorkout || null,
     deletedIds: raw.deletedIds || [],
     createdAt: raw.createdAt || Date.now()
@@ -295,6 +296,8 @@ export const DB = {
   getNutrition()  { return this._cache?.nutrition || null; },
   /** Dernier scan morpho : mesures et verdicts seulement, jamais la photo */
   getMorpho()     { return this._cache?.morpho || null; },
+  /** Personnage : classes choisies, points répartis, équipement porté */
+  getRpg()        { return this._cache?.rpg || null; },
   /** Séance commencée et pas encore finie (copie de secours sur le compte) */
   getActiveWorkout() { return this._cache?.activeWorkout || null; },
   getNotion()     { return this._cache?.notion || null; },
@@ -415,6 +418,13 @@ export const DB = {
     if (save) this.saveData(data);
   },
 
+  saveRpg(rpg) {
+    const data = this.getData();
+    if (!data) return;
+    data.rpg = rpg || null;
+    this.saveData(data);
+  },
+
   saveMorpho(result) {
     const data = this.getData();
     if (!data) return;
@@ -516,6 +526,7 @@ export const DB = {
       days: [...this._days.values()].sort((a, b) => String(a.date).localeCompare(String(b.date))),
       nutrition: data.nutrition || null,
       morpho: data.morpho || null,
+      rpg: data.rpg || null,
       customExercises: data.customExercises || [],
       exportDate: new Date().toISOString()
     };

@@ -4,8 +4,8 @@
    matériel, durée, charges de référence) puis construit un
    programme complet avec séries, répétitions et charges de départ.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261101a";
-import { showToast } from "./utils.js?v=20261101a";
+import { illu } from "./illustrations.js?v=20261102a";
+import { showToast } from "./utils.js?v=20261102a";
 
 /* ---------- bibliothèque de mouvements ----------
    gym / db / bw : exercice pour salle complète, haltères seuls, poids du corps (null = pas d'équivalent)
@@ -604,7 +604,7 @@ function bodyBody() {
       <button type="button" class="wz-seg-b${a.sex !== "female" ? " on" : ""}" data-sex="male">Homme</button>
       <button type="button" class="wz-seg-b${a.sex === "female" ? " on" : ""}" data-sex="female">Femme</button>
     </div>
-    <p class="wz-help wz-help-sm">Ton poids sera aussi enregistré comme premier jour de ta flamme 🔥.</p>`;
+    <p class="wz-help wz-help-sm">Ton poids sera aussi enregistré comme premier jour de ta série.</p>`;
 }
 
 function levelHtml(level) {

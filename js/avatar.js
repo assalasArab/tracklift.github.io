@@ -5,13 +5,13 @@
    Les pièces sont des calques PNG ; les zones de peau, de cheveux et d'iris
    sont recoloriées à l'affichage (masque SVG rempli de la couleur choisie).
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261101a";
-import { escapeHtml, showToast } from "./utils.js?v=20261101a";
+import { i18n } from "./i18n.js?v=20261102a";
+import { escapeHtml, showToast } from "./utils.js?v=20261102a";
 import {
   SKINS, HAIR_COLORS, EYE_COLORS, BACKGROUNDS,
   FACES, BODIES, HAIRS, EYES, NOSES, MOUTHS, BEARDS, ACCESSORIES,
   AVATAR_CATEGORIES, LAYER_ORDER, TINTS
-} from "./avatar-parts.js?v=20261101a";
+} from "./avatar-parts.js?v=20261102a";
 
 const LISTS = {
   skin: SKINS, face: FACES, body: BODIES, hair: HAIRS, hairColor: HAIR_COLORS, eyes: EYES, eyeColor: EYE_COLORS,
@@ -89,7 +89,7 @@ export function randomAvatar(rand = Math.random, allow = () => true) {
 export const randomOwnedAvatar = () => randomAvatar(Math.random, (key, id) => !isLocked(key, id));
 
 let seq = 0;
-const FLAME_MINI = `<svg class="ave-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg>`;
+const FLAME_MINI = `<svg class="ave-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 
 /**
  * Dessin SVG d'un avatar.

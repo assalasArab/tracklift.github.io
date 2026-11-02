@@ -4,8 +4,8 @@
    Les correspondances programme local ↔ programme partagé sont gardées
    dans social/<uid> (privé) : users/<uid> garde sa structure.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261101a";
-import { Social } from "./social.js?v=20261101a";
+import { firestore } from "./firebase-config.js?v=20261102a";
+import { Social } from "./social.js?v=20261102a";
 
 export const COMMUNITY_LIMIT = 10;
 const ref = path => firestore.doc(path);
@@ -76,15 +76,19 @@ export const SharedPrograms = {
     const id = this.shares[localId];
     if (!id) return;
     const members = await col(`sharedPrograms/${id}/members`).get().catch(() => ({ docs: [] }));
+    const perfs = await col(`sharedPrograms/${id}/perfs`).get().catch(() => ({ docs: [] }));
     const batch = firestore.batch();
     members.docs.forEach(d => batch.delete(d.ref));
+    perfs.docs.forEach(d => batch.delete(d.ref));
     batch.delete(ref(`sharedPrograms/${id}`));
     await batch.commit();
     const shares = { ...this.shares };
     delete shares[localId];
     const competing = { ...this.competing };
     delete competing[id];
-    await this._saveLinks({ progShares: shares, progCompete: competing });
+    const progPerfs = { ...(Social.social?.progPerfs || {}) };
+    delete progPerfs[id];
+    await this._saveLinks({ progShares: shares, progCompete: competing, progPerfs });
   },
 
   async get(id) {
@@ -162,11 +166,14 @@ export const SharedPrograms = {
 
   async unfollow(id) {
     try { await ref(`sharedPrograms/${id}/members/${Social.uid}`).delete(); } catch { /* programme déjà retiré */ }
+    try { await ref(`sharedPrograms/${id}/perfs/${Social.uid}`).delete(); } catch { /* jamais montrées */ }
     const joined = { ...this.joined };
     delete joined[id];
     const competing = { ...this.competing };
     delete competing[id];
-    await this._saveLinks({ progJoined: joined, progCompete: competing });
+    const progPerfs = { ...(Social.social?.progPerfs || {}) };
+    delete progPerfs[id];
+    await this._saveLinks({ progJoined: joined, progCompete: competing, progPerfs });
   },
 
   /* ─── Compétition entre les membres d'un programme ─── */

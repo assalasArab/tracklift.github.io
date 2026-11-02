@@ -2,12 +2,13 @@
    Page d'un pote : uniquement ce qu'il partage.
    Sert aussi à « voir mon profil comme un pote » (relu depuis Firestore).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261101a";
-import { Social } from "./social.js?v=20261101a";
-import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261101a";
-import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261101a";
+import { showToast } from "./utils.js?v=20261102a";
+import { Social } from "./social.js?v=20261102a";
+import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261102a";
+import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261102a";
+import { friendPerfsHtml, friendPerfsSignature, handleFriendPerfsClick, handleFriendPerfsChange } from "./potes-perfs.js?v=20261102a";
 
-const FLAME = `<svg class="pf-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#flame-icon"/></svg>`;
+const FLAME = `<svg class="pf-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const ORDER = ["streak", "sessions", "records", "curves", "program", "weight", "nutrition", "programs"];
 
 function section(key, title, body, extra = "") {
@@ -80,7 +81,7 @@ export function openFriendPage(uid) {
   function draw() {
     const friend = Social.friends.get(uid);
     // on ne redessine que si ce pote a changé (garde le focus clavier en place)
-    const next = JSON.stringify(friend ? [friend.profile, friend.items, friend.itemsLoaded, friend.since] : null);
+    const next = JSON.stringify(friend ? [friend.profile, friend.items, friend.itemsLoaded, friend.since, friendPerfsSignature(uid)] : null);
     if (next === signature) return;
     signature = next;
     if (!friend) {
@@ -99,6 +100,7 @@ export function openFriendPage(uid) {
           ${friend.since ? `<p class="pf-since">${esc(t("pfSince", { date: shortDate(friend.since) }))}</p>` : ""}
         </div>
         <div class="pf-sections">${body}</div>
+        ${friendPerfsHtml(uid)}
         <div class="pf-actions">
           <button type="button" class="hero-other" data-pf-remove>${esc(t("pfRemove"))}</button>
           <button type="button" class="text-danger-btn" data-pf-block>${esc(t("pfBlock"))}</button>
@@ -107,7 +109,9 @@ export function openFriendPage(uid) {
     if (!focusInside) sheet.querySelector("#tl-sheet-title")?.focus();
   }
 
+  sheet.addEventListener("change", event => { handleFriendPerfsChange(event); });
   sheet.addEventListener("click", async event => {
+    if (handleFriendPerfsClick(event)) return;
     const friend = Social.friends.get(uid);
     const name = nameOf(friend?.profile);
     if (event.target.closest("[data-pf-remove]")) {

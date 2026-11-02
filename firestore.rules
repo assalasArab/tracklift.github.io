@@ -73,6 +73,33 @@ rules_version = '2';
 //   ✔ l'auteur ou un membre invite un de ses potes ; l'invité et l'expéditeur la voient et la suppriment
 //   ✘ inviter un inconnu ; au nom d'un autre ; dans un programme dont on ne fait pas partie ; voir celles des autres
 //
+// perfRequests/<de>_<vers> : demande pour voir les perfs (charges, répétitions) d'un pote
+//   ✔ envoyée à un pote ; l'expéditeur et le destinataire la voient et la suppriment
+//   ✘ demander à un inconnu ; au nom d'un autre ; à soi-même ; voir celles des autres
+//
+// perfAccess/<propriétaire>_<qui regarde> : accord donné par le propriétaire des perfs
+//   ✔ le propriétaire l'accorde à un pote (en acceptant sa demande ou de lui-même) ;
+//     les deux la voient ; chacun des deux peut la retirer
+//   ✘ s'accorder l'accès aux perfs d'un autre ; l'accorder à un inconnu
+//
+// perfs/<uid> : les perfs (meilleure série et dernière série par exercice)
+//   ✔ écrites par le propriétaire ; lues par un pote qui a son accord (vérifié à chaque lecture)
+//   ✘ un inconnu ; un pote sans accord ; un ancien pote ; écrire celles d'un autre
+//
+// sharedPrograms/<id>/perfs/<uid> : perfs sur les exercices d'un programme en commun
+//   ✔ chacun écrit les siennes s'il fait partie du programme ;
+//     lues par l'auteur et les membres QUI MONTRENT AUSSI LES LEURS
+//   ✘ lire sans montrer les siennes ; écrire celles d'un autre ; quelqu'un d'extérieur au programme
+//
+// challenges/<id> (+ members/<uid>) : défi sur un exercice entre potes
+//   ✔ créé par son auteur ; lu par un utilisateur connecté qui connaît son identifiant (pas de liste)
+//   ✔ on y entre seulement invité (ou auteur) ; chacun écrit SON résultat ; l'auteur et les membres voient le classement
+//   ✘ modifier le défi ; entrer sans invitation ; écrire le résultat d'un autre ; voir le classement de l'extérieur
+//
+// challengeInvites/<idDéfi>_<invité> : invitation à un défi
+//   ✔ l'auteur ou un membre invite un de ses potes ; l'invité et l'expéditeur la voient et la suppriment
+//   ✘ inviter un inconnu ; au nom d'un autre ; dans un défi dont on ne fait pas partie
+//
 // communityExercises/<clé d'auteur>_<1 à 10> : exercices de la communauté (anonymes)
 //   ✔ lus par tout utilisateur connecté ; 10 exercices maximum par personne
 //   ✔ modifiés et supprimés par leur auteur seulement
@@ -437,6 +464,134 @@ service cloud.firestore {
         && request.resource.data.key == resource.data.key
         && validCommunity(exId, request.resource.data);
       allow delete: if signedIn() && myAuthorKey() == resource.data.key;
+    }
+
+    // ─── Perfs d'un pote, sur demande ─────────────────────
+    function perfAccessDoc(owner, viewer) { return /databases/$(database)/documents/perfAccess/$(owner + '_' + viewer); }
+    // liste d'exercices → { nom, charges, répétitions, dates } ; 80 exercices maximum
+    function validPerfDoc(d) {
+      return d.keys().hasOnly(['list', 'updatedAt'])
+        && d.list is map && d.list.size() <= 80
+        && (!('updatedAt' in d) || d.updatedAt is int);
+    }
+    match /perfRequests/{requestId} {
+      allow get, list: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['from', 'to', 'createdAt'])
+        && request.resource.data.from == me()
+        && request.resource.data.to is string
+        && request.resource.data.to != me()
+        && requestId == me() + '_' + request.resource.data.to
+        && request.resource.data.createdAt is int
+        && areFriends(me(), request.resource.data.to);
+      allow update: if false;
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+    }
+    match /perfAccess/{accessId} {
+      allow get, list: if signedIn() && (resource.data.owner == me() || resource.data.viewer == me());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['owner', 'viewer', 'createdAt'])
+        && request.resource.data.owner == me()
+        && request.resource.data.viewer is string
+        && request.resource.data.viewer != me()
+        && accessId == me() + '_' + request.resource.data.viewer
+        && request.resource.data.createdAt is int
+        && areFriends(me(), request.resource.data.viewer);
+      allow update: if false;
+      allow delete: if signedIn() && (resource.data.owner == me() || resource.data.viewer == me());
+    }
+    match /perfs/{userId} {
+      allow get: if signedIn()
+        && (me() == userId || (areFriends(me(), userId) && exists(perfAccessDoc(userId, me()))));
+      allow list: if false;
+      allow create, update: if isMe(userId) && validPerfDoc(request.resource.data);
+      allow delete: if isMe(userId);
+    }
+
+    // ─── Perfs dans un programme en commun ────────────────
+    function programMember(programId, userId) {
+      return get(/databases/$(database)/documents/sharedPrograms/$(programId)).data.owner == userId
+        || exists(/databases/$(database)/documents/sharedPrograms/$(programId)/members/$(userId));
+    }
+    match /sharedPrograms/{programId}/perfs/{memberId} {
+      // on voit les perfs des autres seulement si on montre aussi les siennes
+      allow get, list: if signedIn()
+        && programMember(programId, me())
+        && exists(/databases/$(database)/documents/sharedPrograms/$(programId)/perfs/$(me()));
+      allow create, update: if isMe(memberId)
+        && programMember(programId, me())
+        && validPerfDoc(request.resource.data);
+      allow delete: if isMe(memberId)
+        || (signedIn() && get(/databases/$(database)/documents/sharedPrograms/$(programId)).data.owner == me());
+    }
+
+    // ─── Défis sur un exercice ────────────────────────────
+    function challengeDoc(challengeId) { return /databases/$(database)/documents/challenges/$(challengeId); }
+    function inChallenge(challengeId, userId) {
+      return get(challengeDoc(challengeId)).data.owner == userId
+        || exists(/databases/$(database)/documents/challenges/$(challengeId)/members/$(userId));
+    }
+    function validChallenge(d) {
+      return d.keys().hasOnly(['owner', 'exerciseId', 'name', 'metric', 'days', 'startsAt', 'endsAt', 'createdAt'])
+        && d.owner == me()
+        && d.exerciseId is string && d.exerciseId.size() >= 1 && d.exerciseId.size() <= 80
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+        && d.metric in ['weight', 'reps']
+        && d.days in [0, 7, 14, 30]
+        && d.startsAt is int
+        && d.createdAt is int
+        && (d.endsAt == null || d.endsAt is int);
+    }
+    function validChallengeMember(d) {
+      return d.keys().hasOnly(['joinedAt', 'value', 'kg', 'r', 't', 'updatedAt'])
+        && d.joinedAt is int
+        && (!('value' in d) || (d.value is number && d.value >= 0 && d.value <= 10000))
+        && (!('kg' in d) || (d.kg is number && d.kg >= 0 && d.kg <= 1000))
+        && (!('r' in d) || (d.r is int && d.r >= 0 && d.r <= 1000))
+        && (!('t' in d) || d.t is int)
+        && (!('updatedAt' in d) || d.updatedAt is int);
+    }
+    match /challenges/{challengeId} {
+      allow get: if signedIn() && !hasBlocked(resource.data.owner, me());
+      allow list: if signedIn() && resource.data.owner == me();
+      allow create: if signedIn() && exists(profileDoc(me())) && validChallenge(request.resource.data);
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.owner == me();
+
+      match /members/{memberId} {
+        allow get, list: if signedIn() && inChallenge(challengeId, me());
+        allow create: if isMe(memberId)
+          && exists(profileDoc(memberId))
+          && exists(challengeDoc(challengeId))
+          && (get(challengeDoc(challengeId)).data.owner == me()
+              || exists(/databases/$(database)/documents/challengeInvites/$(challengeId + '_' + me())))
+          && !hasBlocked(get(challengeDoc(challengeId)).data.owner, me())
+          && validChallengeMember(request.resource.data);
+        allow update: if isMe(memberId)
+          && validChallengeMember(request.resource.data)
+          && request.resource.data.joinedAt == resource.data.joinedAt;
+        allow delete: if isMe(memberId)
+          || (signedIn() && get(challengeDoc(challengeId)).data.owner == me());
+      }
+    }
+    match /challengeInvites/{inviteId} {
+      allow get, list: if signedIn() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['challengeId', 'name', 'from', 'to', 'createdAt'])
+        && request.resource.data.from == me()
+        && request.resource.data.to is string
+        && request.resource.data.to != me()
+        && request.resource.data.challengeId is string
+        && inviteId == request.resource.data.challengeId + '_' + request.resource.data.to
+        && request.resource.data.name is string && request.resource.data.name.size() <= 60
+        && request.resource.data.createdAt is int
+        && exists(challengeDoc(request.resource.data.challengeId))
+        && inChallenge(request.resource.data.challengeId, me())
+        && areFriends(me(), request.resource.data.to)
+        && !hasBlocked(request.resource.data.to, me())
+        && !hasBlocked(me(), request.resource.data.to);
+      allow update: if false;
+      allow delete: if signedIn() && (resource.data.from == me() || resource.data.to == me());
     }
   }
 }

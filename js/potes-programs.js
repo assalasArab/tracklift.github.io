@@ -5,13 +5,14 @@
    avec CE programme, jamais les charges).
    Plus bas : exercices de la communauté (10 maximum par personne).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261101a";
-import { i18n } from "./i18n.js?v=20261101a";
-import { Social } from "./social.js?v=20261101a";
-import { rankEntries, competitionValue } from "./social-stats.js?v=20261101a";
-import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261101a";
-import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261101a";
-import { ordinal } from "./potes-board.js?v=20261101a";
+import { showToast } from "./utils.js?v=20261102a";
+import { i18n } from "./i18n.js?v=20261102a";
+import { Social } from "./social.js?v=20261102a";
+import { rankEntries, competitionValue } from "./social-stats.js?v=20261102a";
+import { SharedPrograms, Community, COMMUNITY_LIMIT } from "./community.js?v=20261102a";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261102a";
+import { ordinal } from "./potes-board.js?v=20261102a";
+import { challengesPanelHtml, handleChallengesClick, openProgramPerfs } from "./potes-perfs.js?v=20261102a";
 
 const errorText = err => t(err?.code === "offline" ? "potesNeedOnline" : err?.code === "limit" ? "cmLimit" : err?.code === "gone" ? "spGone" : "potesJoinError", { limit: COMMUNITY_LIMIT });
 const CHEVRON = `<svg class="gr-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
@@ -103,6 +104,7 @@ export function groupsPanelHtml() {
       ${rows ? `<ul class="gr-list">${rows}</ul>` : emptyCard(t("grEmpty"))}
       <button type="button" class="btn btn-primary btn-block gr-create" data-gr-create data-k="gr-create">${esc(t("grCreate"))}</button>
       ${others ? `<h2 class="section-title pt-section">${esc(t("grFriendsTitle"))}</h2><ul class="gr-list">${others}</ul>` : ""}
+      ${challengesPanelHtml()}
     </div>`;
 }
 
@@ -118,7 +120,7 @@ export function handleGroupsClick(event) {
   const preview = el("[data-gr-preview]");
   if (preview) { openProgramPreview(preview.dataset.grPreview); return true; }
   if (el("[data-gr-create]")) { openShareChooser(); return true; }
-  return false;
+  return handleChallengesClick(event);
 }
 
 /* ─── Accepter / refuser une invitation (onglet ou notifications) ─── */
@@ -374,6 +376,7 @@ export async function openProgramGroup(id) {
         ${competing ? "" : `<div class="card pt-card cp-join"><p class="pt-text"><b>${esc(t("cpNotIn"))}</b> ${esc(t("cpWhat"))}</p>
           <button type="button" class="btn btn-ghost btn-sm" data-cp-join${localId ? "" : " disabled"}>${esc(t("cpJoin"))}</button></div>`}
         <div class="gr-tools">
+          <button type="button" class="btn btn-surface btn-block" data-gr-perfs>${esc(groupPerfsLabel())}</button>
           ${localId ? `<button type="button" class="btn btn-surface btn-block" data-gr-sessions>${esc(t("grSeeSessions"))}</button>` : ""}
           ${mine ? `<button type="button" class="btn btn-surface btn-block" data-gr-update>${esc(t("spUpdate"))}</button>` : ""}
         </div>
@@ -407,6 +410,7 @@ export async function openProgramGroup(id) {
     if (tab) { crit = tab.dataset.cpCrit; draw(); sheet.querySelector(`[data-cp-crit="${crit}"]`)?.focus(); return; }
     if (event.target.closest("[data-gr-invite]")) { openInvitePicker(id); return; }
     if (event.target.closest("[data-gr-sessions]")) { close(); Bridge.openProgramDetail?.(localId); return; }
+    if (event.target.closest("[data-gr-perfs]")) { openProgramPerfs(id, entry.program.name, (entry.program.sessions || []).flatMap(s => s.exerciseIds || [])); return; }
     const btn = event.target.closest("[data-cp-join], [data-cp-leave], [data-gr-update], [data-gr-refresh], [data-gr-stop], [data-gr-unfollow]");
     if (!btn || busy) return;
     busy = true;
@@ -448,6 +452,8 @@ export async function openProgramGroup(id) {
     if (sheet.isConnected) draw();
   });
 }
+
+const groupPerfsLabel = () => (i18n.getLanguage() === "en" ? "Group performance" : "Perfs du groupe");
 
 /** Ancien nom (page d'un programme, liens existants) */
 export const openProgramCompetition = openProgramGroup;
