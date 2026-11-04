@@ -104,6 +104,10 @@ rules_version = '2';
 //   ✔ lus par tout utilisateur connecté ; 10 exercices maximum par personne
 //   ✔ modifiés et supprimés par leur auteur seulement
 //   ✘ un 11e exercice ; un exercice au nom d'un autre ; un exercice mal formé
+//
+// giftCodes/<CODE> : codes cadeaux (Roue des cadeaux), créés à la main dans la console
+//   ✔ un utilisateur connecté vérifie UN code qu'il connaît (pas de liste)
+//   ✘ lister les codes ; créer, changer ou supprimer un code depuis l'appli
 // ═══════════════════════════════════════════════════════════
 
 service cloud.firestore {
@@ -214,6 +218,12 @@ service cloud.firestore {
         && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && validDay(day, request.resource.data);
       allow delete: if isMe(userId);
+    }
+
+    // ─── Codes cadeaux : seulement vérifier un code connu ─
+    match /giftCodes/{code} {
+      allow get: if signedIn();
+      allow list, create, update, delete: if false;
     }
 
     // ─── Réglages privés de la partie Potes ───────────────

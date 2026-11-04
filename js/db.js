@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261104d";
-import { EXERCISE_SEED } from "./exercises.js?v=20261104d";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261104d";
-import { firestore } from "./firebase-config.js?v=20261104d";
+import { uid } from "./utils.js?v=20261104e";
+import { EXERCISE_SEED } from "./exercises.js?v=20261104e";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261104e";
+import { firestore } from "./firebase-config.js?v=20261104e";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.
@@ -395,9 +395,17 @@ export const DB = {
 
   /** Débloque une pièce (une seule fois par pièce) */
   addPurchase(item) {
+    return this.addPurchases([item]);
+  },
+
+  /** Plusieurs entrées d'un coup (un seul enregistrement) ; celles déjà présentes sont ignorées */
+  addPurchases(items) {
     const data = this.getData();
-    if (!data || (data.purchases || []).some(p => p.id === item.id)) return false;
-    data.purchases = [...(data.purchases || []), item];
+    if (!data) return false;
+    const have = new Set((data.purchases || []).map(p => p.id));
+    const fresh = items.filter(item => item && !have.has(item.id));
+    if (!fresh.length) return false;
+    data.purchases = [...(data.purchases || []), ...fresh];
     this.saveData(data);
     return true;
   },

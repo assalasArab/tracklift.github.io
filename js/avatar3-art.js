@@ -302,6 +302,46 @@ export const ART3 = {
         541
       ]
     },
+    "mail": {
+      "box": [
+        348,
+        473,
+        289,
+        532
+      ]
+    },
+    "ornate": {
+      "box": [
+        331,
+        467,
+        322,
+        538
+      ]
+    },
+    "gojo": {
+      "box": [
+        336,
+        473,
+        314,
+        550
+      ]
+    },
+    "dbz": {
+      "box": [
+        341,
+        464,
+        305,
+        560
+      ]
+    },
+    "akatsuki": {
+      "box": [
+        316,
+        416,
+        353,
+        608
+      ]
+    },
     "underwear": {
       "box": [
         416,
@@ -318,7 +358,8 @@ export const ART3 = {
         424,
         322,
         397
-      ]
+      ],
+      "thumb": true
     },
     "sword": {
       "box": [
@@ -326,7 +367,8 @@ export const ART3 = {
         385,
         350,
         380
-      ]
+      ],
+      "thumb": true
     },
     "scepter": {
       "box": [
@@ -334,7 +376,8 @@ export const ART3 = {
         402,
         355,
         444
-      ]
+      ],
+      "thumb": true
     },
     "wrench": {
       "box": [
@@ -342,7 +385,8 @@ export const ART3 = {
         424,
         334,
         362
-      ]
+      ],
+      "thumb": true
     },
     "grimoire": {
       "box": [
@@ -351,6 +395,16 @@ export const ART3 = {
         156,
         112
       ],
+      "front": true
+    },
+    "dagger": {
+      "box": [
+        427,
+        654,
+        162,
+        121
+      ],
+      "thumb": true,
       "front": true
     }
   }

@@ -3,13 +3,13 @@
    (users/<uid> → rpg.look), publiée dans le profil des Potes.
    La fenêtre (équipement, apparence, boutique) est dans js/hero.js.
    ═══════════════════════════════════════════════════════════ */
-import { figureSvg, normalizeLook, visibleOutfit } from "./avatar3.js?v=20261104d";
-import { Social } from "./social.js?v=20261104d";
-import { normalizeAvatar } from "./avatar.js?v=20261104d";
-import { COSMETIC_BACKGROUNDS, lookTag } from "./cosmetics.js?v=20261104d";
-import { rpgState } from "./rpg-ui.js?v=20261104d";
-import { DB } from "./db.js?v=20261104d";
-import { openHero } from "./hero.js?v=20261104d";
+import { figureSvg, normalizeLook, visibleOutfit } from "./avatar3.js?v=20261104e";
+import { Social } from "./social.js?v=20261104e";
+import { normalizeAvatar } from "./avatar.js?v=20261104e";
+import { COSMETIC_BACKGROUNDS, lookTag, cosmeticById } from "./cosmetics.js?v=20261104e";
+import { rpgState } from "./rpg-ui.js?v=20261104e";
+import { DB } from "./db.js?v=20261104e";
+import { openHero } from "./hero.js?v=20261104e";
 
 /* ─── Données : apparence enregistrée avec le personnage (users/<uid> → rpg.look) ─── */
 export function currentLook() { return normalizeLook((DB.getRpg() || {}).look); }
@@ -17,7 +17,8 @@ export function saveLook(patch) {
   const rpg = DB.getRpg() || {};
   DB.saveRpg({ ...rpg, look: { ...normalizeLook(rpg.look), ...patch } });
 }
-export const ownsLook = (id, price) => !price || DB.getPurchases().some(p => p.id === lookTag(id));
+/** Apparence à toi : gratuite, ou débloquée (un costume de la Roue des cadeaux se gagne toujours) */
+export const ownsLook = (id, price) => (!price && !cosmeticById(id)?.wheel) || DB.getPurchases().some(p => p.id === lookTag(id));
 
 /** L'avatar publié dans le profil (vu par les potes) : visage, couleurs, fond et tenue visible */
 export function profileAvatar() {

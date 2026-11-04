@@ -4059,3 +4059,96 @@ body.workout-map-open.in-workout .main { padding-bottom: calc(120px + env(safe-a
   .hx-motes, .hx-burst, .hx-shine { display: none; }
   .hx-cell, .hx-step, .hx-face, .hx-dice .hx-ico, .hx-tab { transition: none; }
 }
+/* ═══ Raretés données à la main : Épique (violet) et Mythique (rose vif) ═══ */
+.hx { --r-epic: #8a5cd6; --r-mythic: #e0457b; --rt-epic: #6a3fb5; --rt-mythic: #b0245a; }
+.hx .r-epic { --r: var(--r-epic); --rt: var(--rt-epic); }
+.hx .r-mythic { --r: var(--r-mythic); --rt: var(--rt-mythic); }
+:root[data-theme="dark"] .hx { --rt-epic: #c3a6f5; --rt-mythic: #f59ab9; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hx { --rt-epic: #c3a6f5; --rt-mythic: #f59ab9; }
+}
+.hx-cell.r-epic, .hx-cell.r-mythic { box-shadow: inset 0 0 0 2.5px var(--r), 0 3px 0 color-mix(in srgb, var(--r) 38%, transparent), 0 0 18px color-mix(in srgb, var(--r) 40%, transparent); }
+.hx-tag.is-wheel { padding: 2px 9px; background: linear-gradient(90deg, #6a3fb5, #b0245a); color: #fff; }
+.hx-wheel-btn { margin-top: 8px; }
+/* bons de réduction dans la fiche d'objet */
+.hx-coupons { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; }
+.hx-coupons > span { margin-right: 2px; font-size: 13px; font-weight: 700; color: var(--text2); }
+.hx-coupon { min-height: 38px; padding: 6px 12px; border: 2px dashed color-mix(in srgb, var(--text2) 50%, transparent); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.hx-coupon[aria-pressed="true"] { border-style: solid; border-color: #2b2620; background: #fbe39a; color: #2b2620; }
+.hx-coupon:focus-visible { outline: 3px solid var(--p-orange); outline-offset: 2px; }
+.hx-buy s { margin-right: 4px; font-weight: 600; opacity: 0.7; }
+
+/* ═══ Roue des cadeaux (js/gift-wheel.js) ═══ */
+.gw-code { margin-top: 12px; }
+.gw-code-label { display: block; margin: 0 0 8px; font-family: var(--font-title); font-weight: 400; font-size: 18px; color: var(--text); }
+.gw-code-row { display: flex; gap: 8px; }
+.gw-code-row .input { flex: 1; min-width: 0; background: var(--surface2); font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.gw-code-row .input::placeholder { font-weight: 500; letter-spacing: 0; text-transform: none; }
+.gw-code-row .btn { flex: none; }
+.gw-msg { margin: 8px 0 0; font-size: 14px; font-weight: 600; color: var(--text2); }
+.gw-msg:empty { display: none; }
+.gw-msg.is-ok { color: var(--hx-up); }
+.gw-msg.is-error { color: var(--danger); }
+.gw-stage { margin: 22px auto 0; }
+.gw-wheel-wrap { position: relative; width: min(100%, 330px); margin: 0 auto; aspect-ratio: 1; }
+.gw-wheel { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 10px 18px rgba(43,38,32,0.22)); }
+.gw-back { fill: #2b2620; }
+.gw-rot { transition: transform 4.8s cubic-bezier(0.12, 0.8, 0.1, 1); }
+.gw-seg { stroke: #2b2620; stroke-width: 1.4; stroke-linejoin: round; }
+.gw-rim { fill: none; stroke: #2b2620; stroke-width: 2.4; }
+.gw-num { font-family: var(--font-title); fill: #2b2620; text-anchor: middle; dominant-baseline: central; }
+.gw-small { font-family: var(--font-body); font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; fill: #2b2620; text-anchor: middle; dominant-baseline: central; }
+.gw-star path { fill: #ff8a3d; stroke: #2b2620; stroke-width: 1; }
+.gw-potion path { fill: #f2a3b6; stroke: #2b2620; stroke-width: 1.4; }
+.gw-bulb { fill: #ffe08a; }
+.gw-bulb:nth-child(odd) { fill: #fff6d6; }
+.gw-wheel-wrap.is-spinning .gw-bulb { animation: gwBlink 0.5s steps(1) infinite; }
+.gw-wheel-wrap.is-spinning .gw-bulb:nth-child(odd) { animation-delay: 0.25s; }
+@keyframes gwBlink { 50% { fill: #ff8a3d; } }
+.gw-hub { fill: #fbf3e4; stroke: #2b2620; stroke-width: 2.4; }
+.gw-hub-star path { fill: #ff8a3d; stroke: #2b2620; stroke-width: 0.9; }
+.gw-pointer { position: absolute; top: -10px; left: 50%; z-index: 2; width: 34px; height: 42px; transform: translateX(-50%); transform-origin: 50% 30%; filter: drop-shadow(0 3px 2px rgba(0,0,0,0.25)); }
+.gw-pointer path { fill: var(--p-orange); stroke: #2b2620; stroke-width: 2.5; stroke-linejoin: round; }
+.gw-pointer circle { fill: #fff6d6; stroke: #2b2620; stroke-width: 2; }
+.gw-wheel-wrap.is-spinning .gw-pointer { animation: gwTick 0.16s ease-in-out infinite alternate; }
+@keyframes gwTick { from { transform: translateX(-50%) rotate(-9deg); } to { transform: translateX(-50%) rotate(6deg); } }
+.gw-spins { margin: 16px 0 0; text-align: center; font-size: 15px; font-weight: 600; color: var(--text2); }
+.gw-spins.is-lit { color: var(--text); }
+.gw-actions { display: grid; gap: 8px; margin-top: 12px; }
+.gw-actions:empty, .gw-result:empty { display: none; }
+.gw-prize { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; margin-top: 14px; padding: 14px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 2.5px var(--r, var(--border)); animation: hxPop 560ms cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.gw-prize-art { position: relative; display: grid; place-items: center; width: 96px; min-height: 96px; padding: 6px; border-radius: 20px; background: linear-gradient(180deg, var(--surface2) 30%, color-mix(in srgb, var(--r, #8a8f86) 30%, var(--surface2))); }
+.gw-prize.is-rare .gw-prize-art { box-shadow: 0 0 26px color-mix(in srgb, var(--r) 55%, transparent); }
+.gw-prize-fig svg { display: block; width: 82px; height: auto; border-radius: 12px; }
+.gw-prize-icon { width: 58px; height: 58px; }
+.gw-prize-potion path { stroke: #2b2620; stroke-width: 1.4; }
+.gw-ticket { display: inline-grid; place-items: center; padding: 10px 12px; border: 2px dashed rgba(43,38,32,0.45); border-radius: 10px; background: #fbe39a; color: #2b2620; font-family: var(--font-title); font-size: 22px; transform: rotate(-6deg); box-shadow: 0 3px 0 rgba(43,38,32,0.18); }
+.gw-prize-kicker { margin: 0; font-family: var(--font-hand); font-size: 20px; line-height: 1.1; color: var(--accent-ink); }
+.gw-prize-name { margin: 2px 0 6px; font-family: var(--font-title); font-weight: 400; font-synthesis: none; font-size: 22px; line-height: 1.1; color: var(--rt, var(--text)); outline: none; overflow-wrap: anywhere; }
+.gw-prize .hx-burst i { animation-duration: 900ms; }
+.gw-odds { margin-top: 18px; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--surface); }
+.gw-odds summary { min-height: 32px; display: flex; align-items: center; cursor: pointer; font-size: 15px; font-weight: 700; color: var(--text); }
+.gw-odds summary:focus-visible { outline: 3px solid var(--p-orange); outline-offset: 2px; border-radius: 8px; }
+.gw-odds ul { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.gw-odds li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 14px; color: var(--text); }
+.gw-odds li i { width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1.5px rgba(0,0,0,0.25); }
+.gw-odds li b { font-variant-numeric: tabular-nums; }
+.gw-odds .gw-odds-sum { grid-template-columns: minmax(0, 1fr) auto; padding-top: 6px; border-top: 1px solid var(--separator); font-weight: 700; }
+/* bannière de la roue dans la boutique */
+.gw-banner { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 14px; padding: 10px 14px; border: 0; border-radius: var(--radius-lg); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.gw-banner.is-lit { background: color-mix(in srgb, #e0a92e 22%, var(--surface)); box-shadow: inset 0 0 0 2px #e0a92e; }
+.gw-banner span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.gw-banner b { font-family: var(--font-title); font-weight: 400; font-size: 18px; }
+.gw-banner small { font-size: 13px; color: var(--text2); }
+.gw-banner-wheel { flex: none; width: 40px; height: 40px; }
+.gw-banner-wheel circle:first-child { fill: #fbe39a; stroke: #2b2620; stroke-width: 1.6; }
+.gw-banner-wheel path { fill: none; stroke: #2b2620; stroke-width: 1.2; }
+.gw-banner-hub { fill: #ff8a3d; stroke: #2b2620; stroke-width: 1.2; }
+.gw-banner.is-lit .gw-banner-wheel { animation: gwSpinSlow 6s linear infinite; }
+@keyframes gwSpinSlow { to { transform: rotate(360deg); } }
+.gw-banner-count { flex: none; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 999px; display: grid; place-items: center; background: var(--p-orange); color: #2b2620; font-style: normal; font-size: 14px; font-weight: 700; }
+.gw-banner:focus-visible { outline: 3px solid var(--p-orange); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .gw-rot { transition: none; }
+  .gw-wheel-wrap.is-spinning .gw-bulb, .gw-wheel-wrap.is-spinning .gw-pointer, .gw-banner.is-lit .gw-banner-wheel, .gw-prize { animation: none; }
+}

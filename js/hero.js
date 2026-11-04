@@ -8,20 +8,21 @@
    Un objet choisi s'essaie sur le personnage avant de l'acheter.
    Règles du jeu : js/rpg.js ; légendes : js/lore.js.
    ═══════════════════════════════════════════════════════════ */
-import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261104d";
-import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice } from "./rpg-art.js?v=20261104d";
-import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261104d";
-import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261104d";
-import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104d";
-import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261104d";
-import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261104d";
-import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261104d";
-import { i18n } from "./i18n.js?v=20261104d";
-import { showToast } from "./utils.js?v=20261104d";
-import { DB } from "./db.js?v=20261104d";
-import { Shop } from "./shop.js?v=20261104d";
-import { Social } from "./social.js?v=20261104d";
-import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261104d";
+import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261104e";
+import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261104e";
+import { openWheel, wheelState, discounted } from "./gift-wheel.js?v=20261104e";
+import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261104e";
+import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261104e";
+import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104e";
+import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261104e";
+import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261104e";
+import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261104e";
+import { i18n } from "./i18n.js?v=20261104e";
+import { showToast } from "./utils.js?v=20261104e";
+import { DB } from "./db.js?v=20261104e";
+import { Shop } from "./shop.js?v=20261104e";
+import { Social } from "./social.js?v=20261104e";
+import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261104e";
 
 const PS = `<svg class="hx-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const ICON = {
@@ -88,6 +89,9 @@ const TEXT = {
     shopName: "Comptoir de la Fonte", merchant: "Le marchand",
     cats: { weapon: "Armes", outfit: "Tenues", accessory: "Accessoires", skins: "Skins", bg: "Fonds", dyes: "Teintures" },
     owned: "Possédé", worn: "Équipé",
+    wheelTag: "Roue", wheelOnly: "Ne s'achète pas : à gagner à la Roue des cadeaux.", openWheel: "Ouvrir la roue",
+    wheelTitle: "Roue des cadeaux", wheelSpins: "{n} tours à jouer", wheelSpinsOne: "1 tour à jouer", wheelNoSpin: "Un code cadeau ? Tente ta chance",
+    coupons: "Tes bons", couponsList: "Tes bons de réduction : {list}", couponNone: "Sans bon",
     pathNow: "Ta voie", rank: "Rang {n}", strengthens: "Renforce : {list}", style: "Style : {ref}",
     evolutions: "Évolutions", atLevel: "Niv. {n}", choiceAt: "Choix au niv. {n}",
     change: "Changer de voie ({price} points spé)", changeTitle: "Changer de voie ?",
@@ -129,6 +133,9 @@ const TEXT = {
     shopName: "The Iron Counter", merchant: "The merchant",
     cats: { weapon: "Weapons", outfit: "Outfits", accessory: "Accessories", skins: "Skins", bg: "Backgrounds", dyes: "Dyes" },
     owned: "Owned", worn: "Equipped",
+    wheelTag: "Wheel", wheelOnly: "Not for sale: win it on the Gift wheel.", openWheel: "Open the wheel",
+    wheelTitle: "Gift wheel", wheelSpins: "{n} spins to play", wheelSpinsOne: "1 spin to play", wheelNoSpin: "Got a gift code? Try your luck",
+    coupons: "Your vouchers", couponsList: "Your vouchers: {list}", couponNone: "No voucher",
     pathNow: "Your path", rank: "Rank {n}", strengthens: "Strengthens: {list}", style: "Style: {ref}",
     evolutions: "Evolutions", atLevel: "Lv. {n}", choiceAt: "Choice at lv. {n}",
     change: "Change path ({price} spec points)", changeTitle: "Change path?",
@@ -199,7 +206,7 @@ function itemInfo(kind, id) {
     const item = cosmeticById(id);
     const art = item.art || {};
     return {
-      kind, id, slot: item.slot, name: item[L], type: t.type[item.slot], rarity: rarityOfPrice(item.price),
+      kind, id, slot: item.slot, name: item[L], type: t.type[item.slot], rarity: item.rarity ? rarityByKey(item.rarity) : rarityOfPrice(item.price), wheel: !!item.wheel,
       thumb: { img: thumbUrl(art.outfit ? "outfit" : "weapon", art.outfit || art.weapon) },
       lore: loreText(LOOK_LORE[id], L), note: t.skinNote, price: item.price, owned: ownsLook(id, item.price),
       worn: look[item.slot] === id, usable: true, afford: wallet.balance >= item.price, reason: ""
@@ -253,7 +260,7 @@ function thumbHtml(info) {
 }
 
 /** Reflet qui passe sur les objets légendaires */
-const shine = info => (info.rarity.key === "legendary" ? `<span class="hx-shine" aria-hidden="true"></span>` : "");
+const shine = info => (["legendary", "mythic"].includes(info.rarity.key) ? `<span class="hx-shine" aria-hidden="true"></span>` : "");
 /** Éclats autour d'un objet qui vient d'être obtenu */
 const burst = () => `<span class="hx-burst" aria-hidden="true">${Array.from({ length: 10 }, (_, k) => `<i style="--a:${k * 36}deg"></i>`).join("")}</span>`;
 
@@ -262,9 +269,10 @@ function cellHtml(info, { selected = false, tag = false } = {}) {
   const t = T();
   const locked = !info.owned && !info.usable;
   const off = info.owned && !info.usable;
-  const state = info.worn ? t.worn : info.owned ? t.owned : locked ? info.reason : `${num(info.price)} ${t.purse}`;
+  const state = info.worn ? t.worn : info.owned ? t.owned : locked ? info.reason : info.wheel ? t.wheelOnly : `${num(info.price)} ${t.purse}`;
   const tagHtml = !tag ? ""
     : info.owned ? `<span class="hx-tag is-owned" aria-hidden="true">${esc(info.worn ? t.worn : t.owned)}</span>`
+    : info.wheel ? `<span class="hx-tag is-wheel" aria-hidden="true">${esc(t.wheelTag)}</span>`
     : info.price ? `<span class="hx-tag${info.afford && info.usable ? "" : " is-short"}" aria-hidden="true">${PS}${num(info.price)}</span>` : "";
   return `<button type="button" class="hx-cell r-${info.rarity.key}${info.worn ? " is-worn" : ""}${locked ? " is-locked" : ""}${off ? " is-off" : ""}${selected ? " is-selected" : ""}"
       data-hx-pick="${info.kind}|${esc(info.id)}" aria-label="${esc(`${info.name}, ${rarityName(info.rarity)}, ${state}`)}" aria-pressed="${selected}">
@@ -343,7 +351,8 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
   const merchantReacts = info => {
     const L = lang();
     if (info.owned) return;
-    if (!info.usable) st.greet = pickLine(MERCHANT.locked, L);
+    if (info.wheel) st.greet = pickLine(MERCHANT.wheel, L);
+    else if (!info.usable) st.greet = pickLine(MERCHANT.locked, L);
     else if (!info.afford) st.greet = pickLine(MERCHANT.poor, L);
     else if (info.rarity.key === "legendary") st.greet = pickLine(MERCHANT.legendary, L);
   };
@@ -539,6 +548,19 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     if (cat === "bg") return COSMETIC_BACKGROUNDS.map(b => itemInfo("bg", b.id));
     return [...HAIR_COLORS.map(c => itemInfo("dye", `hair:${c.id}`)), ...EYE_COLORS.map(c => itemInfo("dye", `eyes:${c.id}`))].filter(i => i.price);
   };
+  /** Bannière de la Roue des cadeaux (et bons de réduction en cours) */
+  const wheelBanner = () => {
+    const t = T();
+    const { spins, coupons } = wheelState();
+    const list = [...new Set(coupons.map(c => c.pct))].map(p => `−${p} %`).join(", ");
+    return `
+      <button type="button" class="gw-banner${spins ? " is-lit" : ""}" data-hx-wheel>
+        <svg class="gw-banner-wheel" viewBox="-12 -12 24 24" aria-hidden="true" focusable="false"><circle r="10.5"/><path d="M0-10.5V10.5M-10.5 0H10.5M-7.4-7.4L7.4 7.4M7.4-7.4L-7.4 7.4"/><circle r="2.6" class="gw-banner-hub"/></svg>
+        <span><b>${esc(t.wheelTitle)}</b><small>${esc(spins === 1 ? t.wheelSpinsOne : spins ? fill(t.wheelSpins, { n: spins }) : t.wheelNoSpin)}</small></span>
+        ${spins ? `<i class="gw-banner-count" aria-hidden="true">${spins}</i>` : ""}
+      </button>
+      ${list ? `<p class="hx-hint">${esc(fill(t.couponsList, { list }))}</p>` : ""}`;
+  };
   const shopTab = () => {
     const t = T();
     const cats = ["weapon", "outfit", "accessory", "skins", "bg", "dyes"];
@@ -547,6 +569,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
         <img class="hx-npc" src="${MASCOT}" alt="" width="62" height="162" decoding="async">
         <div class="hx-bubble"><p class="hx-npc-name">${esc(t.merchant)} · ${esc(t.shopName)}</p><p class="hx-say">${esc(st.greet)}</p></div>
       </section>
+      ${wheelBanner()}
       <div class="hx-chips hx-cats" role="radiogroup" aria-label="${esc(t.shopName)}">${cats.map(c => `<button type="button" role="radio" class="hx-chip" aria-checked="${st.shopCat === c}" data-hx-cat="${c}">${esc(t.cats[c])}</button>`).join("")}</div>
       <ul class="hx-grid">${shopItems(st.shopCat).map(info => itemHtml(info, st.sel)).join("")}</ul>`;
   };
@@ -609,12 +632,23 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
       if (info.kind === "dye" || info.kind === "bg") actions = info.worn ? `<p class="hx-state">${svg(ICON.check)}${esc(t.inUse)}</p>` : `<button type="button" class="btn btn-primary btn-block" data-hx-act="use">${esc(t.apply)}</button>`;
       else if (info.worn) actions = `<button type="button" class="btn btn-surface btn-block" data-hx-act="unequip">${esc(t.unequip)}</button>`;
       else actions = info.usable ? `<button type="button" class="btn btn-primary btn-block" data-hx-act="equip">${esc(t.equip)}</button>` : `<p class="hx-state is-missing">${esc(info.reason)}</p>`;
+    } else if (info.wheel) {
+      actions = `<p class="hx-state">${esc(t.wheelOnly)}</p><button type="button" class="btn btn-surface btn-block hx-wheel-btn" data-hx-wheel>${esc(t.openWheel)}</button>`;
     } else if (!info.usable) {
       actions = `<p class="hx-state is-missing">${svg(ICON.lock)}${esc(info.reason)}</p>`;
-    } else if (!info.afford) {
-      actions = `<p class="hx-state is-missing">${esc(fill(t.missing, { n: num(info.price - wallet.balance) }))}</p>`;
     } else {
-      actions = `<button type="button" class="btn btn-primary btn-block hx-buy" data-hx-act="buy">${esc(t.buy)}<span>${PS}${num(info.price)}</span></button>`;
+      // bons de réduction gagnés à la roue : on choisit d'en utiliser un (ou non)
+      const coupons = [...new Map(wheelState().coupons.map(c => [c.pct, c])).values()];
+      const coupon = coupons.find(c => c.id === st.coupon) || null;
+      const pay = discounted(info.price, coupon);
+      const chips = info.price && coupons.length ? `
+        <div class="hx-coupons" role="group" aria-label="${esc(t.coupons)}"><span>${esc(t.coupons)}</span>
+          <button type="button" class="hx-coupon" data-hx-coupon="" aria-pressed="${!coupon}">${esc(t.couponNone)}</button>
+          ${coupons.map(c => `<button type="button" class="hx-coupon" data-hx-coupon="${esc(c.id)}" aria-pressed="${coupon?.id === c.id}">−${c.pct} %</button>`).join("")}
+        </div>` : "";
+      actions = wallet.balance < pay
+        ? `${chips}<p class="hx-state is-missing">${esc(fill(t.missing, { n: num(pay - wallet.balance) }))}</p>`
+        : `${chips}<button type="button" class="btn btn-primary btn-block hx-buy" data-hx-act="buy">${esc(t.buy)}<span>${coupon ? `<s>${num(info.price)}</s>` : ""}${PS}${num(pay)}</span></button>`;
     }
     // dans la boutique, pas de scène : l'essayage se fait dans la fiche
     const trial = st.tab === "shop" ? tryOn(info) : null;
@@ -730,13 +764,15 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     const info = st.sel ? itemInfo(st.sel.kind, st.sel.id) : null;
     if (!info) return;
     if (what === "buy") {
-      if (info.owned || !info.usable || !info.afford) return;
-      if (info.kind === "dye") {
-        const [part, color] = info.id.split(":");
-        if (!Shop.buy(dyeKey(part), color)) return;
-      } else {
-        DB.addPurchase({ id: info.kind === "gear" ? gearTag(info.id) : lookTag(info.id), price: info.price, at: Date.now() });
-      }
+      if (info.owned || !info.usable || info.wheel) return;
+      const coupon = wheelState().coupons.find(c => c.id === st.coupon) || null;
+      const pay = discounted(info.price, coupon);
+      if (rpgState().wallet.balance < pay) return;
+      const [part, color] = info.id.split(":");
+      const tag = info.kind === "gear" ? gearTag(info.id) : info.kind === "dye" ? `${dyeKey(part)}:${color}` : lookTag(info.id);
+      // un achat payé avec un bon garde l'identifiant du bon : il ne sert qu'une fois
+      if (!DB.addPurchase({ id: tag, price: pay, at: Date.now(), ...(coupon ? { coupon: coupon.id } : {}) })) return;
+      st.coupon = null;
       // emplacement vide (ou teinture, fond) : l'objet est porté tout de suite
       const { rpg } = rpgState();
       const look = currentLook();
@@ -791,6 +827,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
       const id = rest.join("|");
       const wasOpen = !!(st.drawer || st.sel);
       st.sel = { kind, id };
+      st.coupon = null;
       st.fx.drawer = !wasOpen;
       if (!st.drawer) st.back = `[data-hx-pick="${kind}|${id}"]`;
       if (st.tab === "shop") merchantReacts(itemInfo(kind, id));
@@ -799,6 +836,13 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     }
     const actBtn = el("[data-hx-act]");
     if (actBtn) { act(actBtn.dataset.hxAct); return; }
+    const couponBtn = el("[data-hx-coupon]");
+    if (couponBtn) { st.coupon = couponBtn.dataset.hxCoupon || null; draw({ focus: `[data-hx-coupon="${couponBtn.dataset.hxCoupon}"]` }); return; }
+    if (el("[data-hx-wheel]")) {
+      const back = st.tab;
+      openWheel({ onChange, onClose: () => openHero({ tab: back, onChange }) });
+      return;
+    }
     const cat = el("[data-hx-cat]");
     if (cat) {
       st.shopCat = cat.dataset.hxCat;

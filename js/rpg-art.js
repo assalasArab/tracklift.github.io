@@ -5,7 +5,7 @@
      ailes, couronne dorée) ;
    - les icônes des caractéristiques et de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { CLASSES } from "./rpg.js?v=20261104d";
+import { CLASSES } from "./rpg.js?v=20261104e";
 
 export const BRANCH_COLORS = {
   novice: "#8d8e95",
@@ -130,8 +130,12 @@ export const RARITIES = [
   { from: 1, key: "common", color: "#8a8f86", fr: "Commun", en: "Common" },
   { from: 10, key: "uncommon", color: "#4f9a52", fr: "Peu commun", en: "Uncommon" },
   { from: 30, key: "rare", color: "#3f87c0", fr: "Rare", en: "Rare" },
-  { from: 50, key: "legendary", color: "#e0a92e", fr: "Légendaire", en: "Legendary" }
+  { from: 50, key: "legendary", color: "#e0a92e", fr: "Légendaire", en: "Legendary" },
+  // raretés données à la main (costumes de la Roue des cadeaux), jamais par le niveau
+  { from: Infinity, key: "epic", color: "#8a5cd6", fr: "Épique", en: "Epic" },
+  { from: Infinity, key: "mythic", color: "#e0457b", fr: "Mythique", en: "Mythic" }
 ];
 export const rarityOf = level => RARITIES.filter(r => (Number(level) || 1) >= r.from).pop();
+export const rarityByKey = key => RARITIES.find(r => r.key === key) || RARITIES[0];
 /** Apparences (skins, fonds, teintures) : gratuites = commun, puis selon le prix */
 export const rarityOfPrice = price => RARITIES[!price ? 0 : price < 200 ? 1 : price < 300 ? 2 : 3];

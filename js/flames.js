@@ -62,7 +62,8 @@ export function sessionDays(sessionLogs) {
 
 /**
  * Le portefeuille : gagné, dépensé, réserve, et où en est le bonus.
- * purchases : [{ id, price }] (ce qui a été débloqué) ; sessionLogs : séances enregistrées
+ * purchases : [{ id, price }] (ce qui a été débloqué ; un gain de la Roue des cadeaux porte gift.ps,
+ *   compté comme gagné : réserve et niveau) ; sessionLogs : séances enregistrées
  */
 export function flameWallet(weightLog, purchases = [], now = new Date(), sessionLogs = []) {
   const days = flameDays(weightLog);
@@ -71,7 +72,8 @@ export function flameWallet(weightLog, purchases = [], now = new Date(), session
   const weighed = new Set(days.map(day => day.key));
   const perfect = [...trained].filter(key => weighed.has(key)).length;
   const sessionEarned = trained.size * SESSION_GAIN + perfect * PERFECT_BONUS;
-  const earned = weighEarned + sessionEarned;
+  const giftEarned = (purchases || []).reduce((sum, item) => sum + Math.max(0, Number(item?.gift?.ps) || 0), 0);
+  const earned = weighEarned + sessionEarned + giftEarned;
   const spent = (purchases || []).reduce((sum, item) => sum + (Number(item?.price) || 0), 0);
   const today = localKey(now);
   const yesterdayDate = new Date(now);
@@ -87,6 +89,7 @@ export function flameWallet(weightLog, purchases = [], now = new Date(), session
     earned,
     weighEarned,
     sessionEarned,
+    giftEarned,
     trainedToday: trained.has(today),
     spent,
     balance: Math.max(0, earned - spent),

@@ -5,7 +5,7 @@
    Schémas : wger.de, licence CC-BY-SA 3.0 (copiés dans assets/muscles).
    Vignettes et données musculaires : RepDB (repdb.co).
    ═══════════════════════════════════════════════════════════ */
-import { muscleName, muscleThumb, muscleWgerIds } from "./muscles.js?v=20261104d";
+import { muscleName, muscleThumb, muscleWgerIds } from "./muscles.js?v=20261104e";
 
 const BASE = "./assets/muscles";
 // à changer quand les schémas sont recolorés, pour vider les caches

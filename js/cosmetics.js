@@ -30,7 +30,8 @@ export const COSMETIC_BACKGROUNDS = [
   { id: "arene", stops: ["#fbe39a", "#ff8a3d", "#c43c1e"], color: "#ff8a3d", price: 260, fr: "Arène", en: "Arena" }
 ];
 
-/** Skins dessinées (apparence seule) */
+/** Skins dessinées (apparence seule).
+    wheel : costume qu'on ne trouve qu'à la Roue des cadeaux (js/gift-wheel.js) ; rarity : sa rareté */
 export const COSMETICS = [
   { id: "tenue-tracklift", slot: "costume", fr: "Tenue TrackLift", en: "TrackLift outfit", price: 0, art: { outfit: "casual" } },
   { id: "tenue-armure", slot: "costume", fr: "Armure", en: "Armour", price: 300, art: { outfit: "armor" } },
@@ -39,16 +40,22 @@ export const COSMETICS = [
   { id: "skin-epee", slot: "weaponSkin", fr: "Épée", en: "Sword", price: 200, art: { weapon: "sword" } },
   { id: "skin-grimoire", slot: "weaponSkin", fr: "Grimoire", en: "Spellbook", price: 200, art: { weapon: "grimoire" } },
   { id: "skin-sceptre", slot: "weaponSkin", fr: "Sceptre", en: "Sceptre", price: 200, art: { weapon: "scepter" } },
-  { id: "skin-cle", slot: "weaponSkin", fr: "Clé à molette", en: "Wrench", price: 200, art: { weapon: "wrench" } }
+  { id: "skin-cle", slot: "weaponSkin", fr: "Clé à molette", en: "Wrench", price: 200, art: { weapon: "wrench" } },
+  { id: "skin-dague", slot: "weaponSkin", fr: "Dague", en: "Dagger", price: 200, art: { weapon: "dagger" } },
+  // costumes de la Roue des cadeaux (du moins rare au plus rare)
+  { id: "costume-infini", slot: "costume", fr: "Tenue de l'Infini", en: "Infinity outfit", price: 0, wheel: true, rarity: "epic", art: { outfit: "gojo" } },
+  { id: "costume-nuages", slot: "costume", fr: "Manteau des Nuages rouges", en: "Red Cloud cloak", price: 0, wheel: true, rarity: "legendary", art: { outfit: "akatsuki" } },
+  { id: "costume-aura", slot: "costume", fr: "Kimono de l'Aura dorée", en: "Golden Aura gi", price: 0, wheel: true, rarity: "mythic", art: { outfit: "dbz" } }
 ];
 
 /** Dessin de chaque équipement (en attendant un dessin par objet, plusieurs partagent le même) */
 export const GEAR_ART = {
   survet: { outfit: "casual" },
-  cuir: { outfit: "armor" }, mailles: { outfit: "armor" }, armureCeleste: { outfit: "armor" },
+  cuir: { outfit: "armor" }, mailles: { outfit: "mail" }, armureCeleste: { outfit: "ornate" },
   robe: { outfit: "robe" }, habit: { outfit: "robe" }, tenueArchimage: { outfit: "robe" },
   baton: { weapon: "staff" }, batonAstral: { weapon: "staff" }, batonSauvage: { weapon: "staff" }, batonComete: { weapon: "staff" }, batonChene: { weapon: "staff" },
   epee: { weapon: "sword" },
+  dague: { weapon: "dagger" }, lames: { weapon: "dagger" }, lameOmbre: { weapon: "dagger" },
   grimoire: { weapon: "grimoire" },
   sceptre: { weapon: "scepter" }, masse: { weapon: "scepter" }, relique: { weapon: "scepter" },
   cle: { weapon: "wrench" }, tourelle: { weapon: "wrench" }, canon: { weapon: "wrench" }

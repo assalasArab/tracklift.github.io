@@ -4,7 +4,7 @@
    une note manuscrite avec une flèche dessinée qui pointe vers un aperçu,
    un emplacement de dessin, puis la création du programme.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261104d";
+import { illu } from "./illustrations.js?v=20261104e";
 
 /* flèches au feutre ; chaque tracé finit par une pointe */
 const ARROWS = {

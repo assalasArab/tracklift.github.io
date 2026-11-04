@@ -201,6 +201,22 @@ export const LOOK_LORE = {
     fr: "Dorée à l'or fin par un Mécanicien qui avait trop de temps entre deux séries.",
     en: "Gilded by a Mechanic who had too much time between sets."
   },
+  "skin-dague": {
+    fr: "Une dague de parade, glissée dans la ceinture. Elle ne coupe rien, mais elle impressionne au vestiaire.",
+    en: "A parade dagger tucked into the belt. It cuts nothing, but it impresses in the locker room."
+  },
+  "costume-infini": {
+    fr: "Une tenue sombre entourée d'une aura bleue. Ceux qui l'ont croisé jurent qu'aucune Flemme n'a jamais pu l'approcher : comme si un espace infini le protégeait.",
+    en: "A dark outfit wrapped in a blue aura. Those who met its wearer swear no Sloth could ever get close, as if an infinite space protected them."
+  },
+  "costume-nuages": {
+    fr: "Un long manteau noir brodé de nuages rouges. Il appartenait à une guilde secrète qui s'entraînait la nuit, quand la Cité de Fonte dormait.",
+    en: "A long black cloak embroidered with red clouds. It belonged to a secret guild that trained at night, while the Iron City slept."
+  },
+  "costume-aura": {
+    fr: "Le kimono d'un guerrier venu d'ailleurs, qui criait à chaque répétition. Quand il dépassait ses limites, ses cheveux s'embrasaient d'or.",
+    en: "The gi of a warrior from afar who shouted on every rep. When he broke his limits, his hair blazed gold."
+  },
   menthe: { fr: "La salle de la Guilde, au petit matin, avant que la musique ne démarre.", en: "The Guild hall at dawn, before the music starts." },
   sauge: { fr: "Les jardins du Temple de la Récupération, où l'on vient étirer ses mollets.", en: "The gardens of the Temple of Recovery, where people come to stretch their calves." },
   creme: { fr: "Une page blanche de ton carnet. Tout reste à écrire.", en: "A blank page of your log. Everything is still to be written." },
@@ -267,6 +283,10 @@ export const MERCHANT = {
   locked: [
     { fr: "Cet objet attend un héros plus aguerri. Continue tes séances et reviens me voir.", en: "This item awaits a more seasoned hero. Keep training and come back to see me." },
     { fr: "Pas encore pour toi, aventurier. Chaque niveau te rapproche de lui.", en: "Not for you yet, adventurer. Every level brings you closer." }
+  ],
+  wheel: [
+    { fr: "Celui-là ne se vend pas… il se gagne à la Roue des cadeaux. Tu as un code ?", en: "That one isn't for sale… it's won on the Gift wheel. Got a code?" },
+    { fr: "Même avec tout l'or de la Cité, je ne te le vendrais pas. Tente plutôt la roue !", en: "Not even for all the gold in the City. Try the wheel instead!" }
   ],
   legendary: [
     { fr: "Ah… tu as l'œil. Celui-là, je ne le sors pas pour n'importe qui.", en: "Ah… you have an eye for it. I don't bring that one out for just anyone." },
