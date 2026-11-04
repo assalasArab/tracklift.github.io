@@ -1,40 +1,39 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261104a";
-import { DB } from "./db.js?v=20261104a";
-import { Auth } from "./auth.js?v=20261104a";
-import { i18n } from "./i18n.js?v=20261104a";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261104a";
-import { muscleName } from "./muscles.js?v=20261104a";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261104a";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261104a";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261104a";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet } from "./workout.js?v=20261104a";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261104a";
-import { renderWeightChart } from "./charts.js?v=20261104a";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261104a";
-import { openProgramWizard } from "./program-wizard.js?v=20261104a";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261104a";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261104a";
-import { openIntro } from "./onboarding.js?v=20261104a";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261104a";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261104a";
-import { Social } from "./social.js?v=20261104a";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261104a";
-import { avatarSvg } from "./avatar.js?v=20261104a";
-import { Bridge } from "./potes-ui.js?v=20261104a";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261104a";
-import { renderBilanLine, openBilan } from "./bilan.js?v=20261104a";
-import { renderPersoLine, openPerso, announceLevel, currentLevel } from "./rpg-ui.js?v=20261104a";
-import { PREPROD } from "./preprod.js?v=20261104a";
-import { headHtml, openCharacterWindow } from "./avatar3-ui.js?v=20261104a";
-import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261104a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104a";
-import { openSettings } from "./potes-settings.js?v=20261104a";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261104a";
-import { SharedPrograms } from "./community.js?v=20261104a";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261104a";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261104a";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261104a";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261104a";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261104b";
+import { DB } from "./db.js?v=20261104b";
+import { Auth } from "./auth.js?v=20261104b";
+import { i18n } from "./i18n.js?v=20261104b";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261104b";
+import { muscleName } from "./muscles.js?v=20261104b";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261104b";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261104b";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261104b";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet } from "./workout.js?v=20261104b";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261104b";
+import { renderWeightChart } from "./charts.js?v=20261104b";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261104b";
+import { openProgramWizard } from "./program-wizard.js?v=20261104b";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261104b";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261104b";
+import { openIntro } from "./onboarding.js?v=20261104b";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261104b";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261104b";
+import { Social } from "./social.js?v=20261104b";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261104b";
+import { avatarSvg } from "./avatar.js?v=20261104b";
+import { Bridge } from "./potes-ui.js?v=20261104b";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261104b";
+import { renderBilanLine, openBilan } from "./bilan.js?v=20261104b";
+import { renderPersoLine, openPerso, announceLevel, currentLevel } from "./rpg-ui.js?v=20261104b";
+import { headHtml, openCharacterWindow, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261104b";
+import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261104b";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104b";
+import { openSettings } from "./potes-settings.js?v=20261104b";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261104b";
+import { SharedPrograms } from "./community.js?v=20261104b";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261104b";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261104b";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261104b";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261104b";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -233,17 +232,16 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#drawer-progress-btn").addEventListener("click", () => { closeProfileDrawer(); setView("progress"); });
   // partie Potes et avatar
   $("#drawer-potes-btn").addEventListener("click", () => { closeProfileDrawer(); setView("potes"); });
-  $("#drawer-shop-btn").addEventListener("click", () => { closeProfileDrawer(); openShop(); });
+  $("#drawer-shop-btn").addEventListener("click", () => { closeProfileDrawer(); openMyCharacterWindow("look"); });
   $("#drawer-morpho-btn").addEventListener("click", () => { closeProfileDrawer(); openMorphoScan(); });
   $("#drawer-bilan-btn").addEventListener("click", () => { closeProfileDrawer(); openWeeklyBilan(); });
   $("#drawer-perso-btn").addEventListener("click", () => { closeProfileDrawer(); openMyCharacter(); });
   // une pièce débloquée : la réserve affichée sur la carte flamme suit
   Shop.onChange(() => renderStreak());
-  // préprod : le nouveau personnage (corps entier) remplace l'éditeur d'avatar
+  // le personnage (corps entier) : visage, couleurs, équipement, apparence
   ["#drawer-avatar", "#drawer-avatar-link"].forEach(sel => $(sel).addEventListener("click", () => {
     closeProfileDrawer();
-    if (PREPROD) openCharacterWindow({ onChange: () => { renderMyAvatar(); if (state.activeView === "home") renderHome(); } });
-    else editMyAvatar();
+    openMyCharacterWindow();
   }));
   bindPotes($("#view-potes"));
   setupPotesBridge();
@@ -306,7 +304,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     if (event.target.closest("[data-kcal-edit]")) { state.kcalEditing = true; renderStreak(); focusField("#kcal-input"); }
     if (event.target.closest("[data-kcal-cancel]")) { state.kcalEditing = false; renderStreak(); }
     if (event.target.closest("[data-streak-history]")) openWeightModal();
-    if (event.target.closest("[data-open-shop]")) openShop();
+    if (event.target.closest("[data-open-shop]")) openMyCharacterWindow("look");
     if (event.target.closest("[data-open-perso]")) openMyCharacter();
   });
   $("#streak-card").addEventListener("keydown", event => {
@@ -1008,6 +1006,11 @@ function onSocialChange() {
   if (state.activeView === "home") renderHomeLine($("#potes-line"));
   // perfs : si un pote a le droit de les voir, elles sont tenues à jour (rien n'est écrit sinon)
   if (Social.joined && Social.perfViewers.length) publishMyPerfs().catch(() => {});
+  // nouveau personnage : reprend les couleurs de l'ancien avatar, puis le profil public suit
+  if (Social.loaded && !Social.error) {
+    if (migrateLook(Social.avatar)) renderMyAvatar();
+    if (Social.joined && Social.avatar?.v !== 3) syncProfileAvatar();
+  }
   // programmes : étiquettes de partage seulement si elles ont changé
   const signature = JSON.stringify([Social.loaded, Social.joined, SharedPrograms.shares, SharedPrograms.joined, SharedPrograms.competing, Social.invitesIn.length]);
   if (signature !== socialSignature) {
@@ -1069,8 +1072,8 @@ function pushCompetitionStats() {
 
 /** Avatar dans le bouton profil et le tiroir ; la lettre du nom tant qu'il n'y a pas d'avatar */
 function renderMyAvatar() {
-  if (PREPROD) {
-    // préprod : gros plan sur la tête du nouveau personnage
+  {
+    // gros plan sur la tête du personnage
     $("#profile-btn").classList.add("has-avatar");
     $("#drawer-avatar").classList.add("has-avatar");
     $("#profile-btn").innerHTML = headHtml(38);
@@ -1358,6 +1361,11 @@ function openIntroFlow({ replay = false } = {}) {
   });
 }
 
+/* Fenêtre du personnage ; tab : "gear" (équipement) ou "look" (apparence, boutique) */
+function openMyCharacterWindow(tab = "gear") {
+  openCharacterWindow({ tab, onChange: () => { renderMyAvatar(); if (state.activeView === "home") renderHome(); } });
+}
+
 /* Mon perso : niveau, classe, points à répartir, équipement (points spé) */
 function openMyCharacter() {
   openPerso({ onChange: () => { if (state.activeView === "home") renderHome(); } });
@@ -1382,7 +1390,7 @@ function openWeeklyBilan() {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261104a");
+    const { openMorpho } = await import("./morpho.js?v=20261104b");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),

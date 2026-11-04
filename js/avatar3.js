@@ -10,9 +10,9 @@
    Une « skin » se pose sur l'emplacement de son équipement : elle remplace
    le dessin, les bonus restent ceux de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { ART3 } from "./avatar3-art.js?v=20261104a";
-import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261104a";
-import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261104a";
+import { ART3 } from "./avatar3-art.js?v=20261104b";
+import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261104b";
+import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261104b";
 
 const VERSION = "3";
 const a3 = file => `./assets/avatar3/${file}.png?a=${VERSION}`;
@@ -39,7 +39,9 @@ export function normalizeLook(look) {
     eyes: option("eyes"), mouth: option("mouth"), hair: option("hair"),
     costume: l.costume || null,
     weaponSkin: l.weaponSkin || null,
-    companion: l.companion || null
+    companion: l.companion || null,
+    // tenue visible publiée dans le profil (avatar vu par les potes)
+    outfitArt: ART3.outfit?.[l.outfitArt || l.outfit] ? (l.outfitArt || l.outfit) : null
   };
 }
 
@@ -57,10 +59,13 @@ function tinted(id, file, box, color) {
 
 /** Dessin de la tenue et de l'arme : la skin d'abord, puis l'équipement porté, puis la tenue de base */
 function wornPieces(l, gear = {}) {
-  const outfit = cosmeticById(l.costume)?.art?.outfit || GEAR_ART[gear.outfit]?.outfit || DEFAULT_OUTFIT;
+  const outfit = cosmeticById(l.costume)?.art?.outfit || GEAR_ART[gear.outfit]?.outfit || l.outfitArt || DEFAULT_OUTFIT;
   const weapon = cosmeticById(l.weaponSkin)?.art?.weapon || GEAR_ART[gear.weapon]?.weapon || null;
   return { outfit, weapon };
 }
+
+/** Nom du dessin de tenue visible (pour le profil public) */
+export const visibleOutfit = (look, gear) => wornPieces(normalizeLook(look), gear).outfit;
 
 function characterSvg(l, colors, id, gear) {
   let defs = "";

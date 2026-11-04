@@ -3,23 +3,25 @@
    La réserve vient des pesées (js/flames.js) ; les prix sont dans
    js/avatar-parts.js (SHOP_PRICES). D'autres objets viendront ensuite.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261104a";
-import { i18n } from "./i18n.js?v=20261104a";
-import { DB } from "./db.js?v=20261104a";
-import { flameWallet, BONUS_TIERS, FLAME_BASE } from "./flames.js?v=20261104a";
-import { SHOP_PRICES, priceOf, AVATAR_CATEGORIES } from "./avatar-parts.js?v=20261104a";
-import { avatarSvg, AvatarLocks, normalizeAvatar } from "./avatar.js?v=20261104a";
-import { Social } from "./social.js?v=20261104a";
-import { t, esc, cap, openSheet, sheetHead } from "./potes-ui.js?v=20261104a";
+import { showToast } from "./utils.js?v=20261104b";
+import { i18n } from "./i18n.js?v=20261104b";
+import { DB } from "./db.js?v=20261104b";
+import { flameWallet, BONUS_TIERS, FLAME_BASE } from "./flames.js?v=20261104b";
+import { SHOP_PRICES, priceOf, AVATAR_CATEGORIES } from "./avatar-parts.js?v=20261104b";
+import { avatarSvg, AvatarLocks, normalizeAvatar } from "./avatar.js?v=20261104b";
+import { Social } from "./social.js?v=20261104b";
+import { t, esc, cap, openSheet, sheetHead } from "./potes-ui.js?v=20261104b";
 
 const tagOf = (key, id) => `${key}:${id}`;
+const OLD_PIECE = /^(hair|eyes|nose|mouth|beard|body|accessory|bg):/;
 const listeners = new Set();
 const FLAME = `<svg class="sh-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 export const formatMult = mult => mult.toLocaleString(i18n.getLocale(), { maximumFractionDigits: 1 });
 
 export const Shop = {
   /** Réserve, bonus en cours, prochain gain */
-  wallet() { return flameWallet(DB.getWeightLog(), DB.getPurchases(), new Date(), DB.getSessionLogs()); },
+  // les pièces de l'ancien avatar ne servent plus : leur prix est rendu (les couleurs de cheveux et d'yeux restent)
+  wallet() { return flameWallet(DB.getWeightLog(), DB.getPurchases().filter(p => !OLD_PIECE.test(p.id || "")), new Date(), DB.getSessionLogs()); },
 
   owned(key, id) { return !priceOf(key, id) || DB.getPurchases().some(item => item.id === tagOf(key, id)); },
 

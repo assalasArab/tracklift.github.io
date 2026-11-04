@@ -5,13 +5,14 @@
    Les pièces sont des calques PNG ; les zones de peau, de cheveux et d'iris
    sont recoloriées à l'affichage (masque SVG rempli de la couleur choisie).
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261104a";
-import { escapeHtml, showToast } from "./utils.js?v=20261104a";
+import { i18n } from "./i18n.js?v=20261104b";
+import { escapeHtml, showToast } from "./utils.js?v=20261104b";
 import {
   SKINS, HAIR_COLORS, EYE_COLORS, BACKGROUNDS,
   FACES, BODIES, HAIRS, EYES, NOSES, MOUTHS, BEARDS, ACCESSORIES,
   AVATAR_CATEGORIES, LAYER_ORDER, TINTS
-} from "./avatar-parts.js?v=20261104a";
+} from "./avatar-parts.js?v=20261104b";
+import { figureSvg, normalizeLook } from "./avatar3.js?v=20261104b";
 
 const LISTS = {
   skin: SKINS, face: FACES, body: BODIES, hair: HAIRS, hairColor: HAIR_COLORS, eyes: EYES, eyeColor: EYE_COLORS,
@@ -32,8 +33,15 @@ const LEGACY = {
   accessory: { lunettes: "l1" }
 };
 
+/** Nouveau personnage (v3) : seulement des clés déjà prévues par les règles du profil public */
+function normalizeAvatar3(config) {
+  const l = normalizeLook(config);
+  return { v: 3, skin: l.skin, hairColor: l.hairColor, eyeColor: l.eyeColor, bg: l.bg, eyes: l.eyes, mouth: l.mouth, hair: l.hair, outfit: l.outfitArt || "casual" };
+}
+
 /** Toujours une config complète et valide (valeurs inconnues → première pièce) */
 export function normalizeAvatar(config) {
+  if (config?.v === 3) return normalizeAvatar3(config);
   const out = { v: 2 };
   for (const key of AVATAR_KEYS) {
     const value = config?.[key];
@@ -99,6 +107,8 @@ const FLAME_MINI = `<svg class="ave-flame" viewBox="0 0 24 24" aria-hidden="true
  * - frame : disque de couleur + bord blanc découpé (sticker)
  */
 export function avatarSvg(config, { size = 40, label = "", view = "0 0 100 100", frame = true, className = "" } = {}) {
+  // nouveau personnage : gros plan sur la tête
+  if (config?.v === 3) return figureSvg(config, { view: "head", size, label, frame, className });
   const a = normalizeAvatar(config);
   const id = `av${++seq}`;
   const colors = {

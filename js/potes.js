@@ -4,17 +4,18 @@
    - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages),
      « Classement » et « Programmes » (programmes en commun, invitations), réglages, quitter.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261104a";
-import { Perfs } from "./perfs.js?v=20261104a";
-import { Social, checkUsername } from "./social.js?v=20261104a";
-import { SharedPrograms, Community } from "./community.js?v=20261104a";
-import { streakAlive, weekKey } from "./social-stats.js?v=20261104a";
-import { avatarSvg, mountAvatarEditor, openAvatarEditor, randomOwnedAvatar, lockedParts } from "./avatar.js?v=20261104a";
-import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261104a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104a";
-import { openSettings } from "./potes-settings.js?v=20261104a";
-import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261104a";
-import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261104a";
+import { showToast } from "./utils.js?v=20261104b";
+import { Perfs } from "./perfs.js?v=20261104b";
+import { Social, checkUsername } from "./social.js?v=20261104b";
+import { SharedPrograms, Community } from "./community.js?v=20261104b";
+import { streakAlive, weekKey } from "./social-stats.js?v=20261104b";
+import { avatarSvg } from "./avatar.js?v=20261104b";
+import { openCharacterWindow, profileAvatar } from "./avatar3-ui.js?v=20261104b";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261104b";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104b";
+import { openSettings } from "./potes-settings.js?v=20261104b";
+import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261104b";
+import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261104b";
 
 const TABS = ["friends", "board", "programs"];
 
@@ -327,21 +328,9 @@ export function bindPotes(container) {
 }
 
 /* ─── Avatar ───────────────────────────────────────────── */
+/** Le personnage se change dans sa fenêtre (onglet Apparence) ; le profil public suit tout seul */
 export function editMyAvatar() {
-  openAvatarEditor({
-    initial: Social.avatar,
-    title: t(Social.avatar ? "avatarEdit" : "avatarCreate"),
-    onSave: async avatar => {
-      try {
-        await Social.saveAvatar(avatar);
-        showToast(t(navigator.onLine === false ? "avatarSavedOffline" : "avatarSaved"));
-      } catch (err) {
-        console.error("[TrackLift] avatar :", err);
-        showToast(t("avatarSaveError"));
-        throw err;
-      }
-    }
-  });
+  openCharacterWindow({ tab: "look", onChange: () => Bridge.refresh?.() });
 }
 
 /* ─── Choix du pseudo (rejoindre ou changer) ───────────── */
@@ -422,8 +411,9 @@ function claimErrorMessage(err) {
 /* ─── Rejoindre : pseudo → avatar → ce que tes potes voient ── */
 function openJoinFlow() {
   const { sheet, close } = openSheet();
-  const flow = { step: 0, name: null, typed: "", avatar: Social.avatar || randomOwnedAvatar(), busy: false };
-  const steps = ["name", "avatar", "see"];
+  // l'avatar, c'est le personnage (visage, couleurs, tenue) : il se change dans « Mon personnage »
+  const flow = { step: 0, name: null, typed: "", avatar: profileAvatar(), busy: false };
+  const steps = ["name", "see"];
   const stepLabel = () => t("potesStepOf", { n: flow.step + 1, total: steps.length });
 
   function draw() {
@@ -441,19 +431,6 @@ function openJoinFlow() {
       input.addEventListener("input", () => { flow.typed = input.value; });
       input.addEventListener("keydown", event => { if (event.key === "Enter" && !next.disabled) next.click(); });
       setTimeout(() => input.focus(), 50);
-    } else if (step === "avatar") {
-      sheet.innerHTML = `
-        <div class="tl-sheet-inner">
-          ${sheetHead(t("potesAvatarTitle"), stepLabel())}
-          <p class="tl-sheet-hand">${esc(t("potesAvatarHand"))}</p>
-          <div data-pj-editor></div>
-        </div>
-        <div class="tl-dock tl-dock-2">
-          <button type="button" class="btn btn-surface" data-pj-back>${esc(t("potesBack"))}</button>
-          <button type="button" class="btn btn-primary btn-grow" data-pj-next>${esc(t("potesNext"))}</button>
-        </div>`;
-      mountAvatarEditor(sheet.querySelector("[data-pj-editor]"), { initial: flow.avatar, onChange: value => { flow.avatar = value; } });
-      sheet.querySelector("#tl-sheet-title").focus();
     } else {
       sheet.innerHTML = `
         <div class="tl-sheet-inner">
@@ -480,9 +457,6 @@ function openJoinFlow() {
     if (event.target.closest("[data-pj-back]")) { flow.step = Math.max(0, flow.step - 1); draw(); return; }
     if (event.target.closest("[data-pj-next]")) {
       if (flow.step === 0 && !flow.name) return;
-      // avatar : une pièce essayée mais pas débloquée ne passe pas
-      const locked = flow.step === 1 ? lockedParts(flow.avatar) : [];
-      if (locked.length) { showToast(t("shopUnlockFirst", { name: cap(t(`avatarParts.${locked[0].key}.${locked[0].id}`)), price: locked[0].price })); return; }
       flow.step += 1;
       draw();
       return;

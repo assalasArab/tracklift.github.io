@@ -7,17 +7,19 @@
    - onglet Apparence : tenue entière, skin d'arme, compagnon, fond, style
      (une skin recouvre l'équipement mais garde ses bonus)
    ═══════════════════════════════════════════════════════════ */
-import { GEAR, SLOTS, STAT_INFO, ATTR_INFO, equip, gearTag, canWear, className, gearName } from "./rpg.js?v=20261104a";
-import { emblemSvg, gearIcon } from "./rpg-art.js?v=20261104a";
-import { figureSvg, normalizeLook, FACE_OPTIONS } from "./avatar3.js?v=20261104a";
-import { COSMETIC_BACKGROUNDS, cosmeticsFor, cosmeticById, lookTag } from "./cosmetics.js?v=20261104a";
-import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104a";
-import { rpgState } from "./rpg-ui.js?v=20261104a";
-import { i18n } from "./i18n.js?v=20261104a";
-import { showToast } from "./utils.js?v=20261104a";
-import { DB } from "./db.js?v=20261104a";
-import { Shop } from "./shop.js?v=20261104a";
-import { openSheet, sheetHead, esc } from "./potes-ui.js?v=20261104a";
+import { GEAR, SLOTS, STAT_INFO, ATTR_INFO, equip, gearTag, canWear, className, gearName } from "./rpg.js?v=20261104b";
+import { emblemSvg, gearIcon } from "./rpg-art.js?v=20261104b";
+import { figureSvg, normalizeLook, FACE_OPTIONS, visibleOutfit } from "./avatar3.js?v=20261104b";
+import { Social } from "./social.js?v=20261104b";
+import { normalizeAvatar } from "./avatar.js?v=20261104b";
+import { COSMETIC_BACKGROUNDS, cosmeticsFor, cosmeticById, lookTag } from "./cosmetics.js?v=20261104b";
+import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104b";
+import { rpgState } from "./rpg-ui.js?v=20261104b";
+import { i18n } from "./i18n.js?v=20261104b";
+import { showToast } from "./utils.js?v=20261104b";
+import { DB } from "./db.js?v=20261104b";
+import { Shop } from "./shop.js?v=20261104b";
+import { openSheet, sheetHead, esc } from "./potes-ui.js?v=20261104b";
 
 const PS = `<svg class="rp-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const TEXT = {
@@ -107,6 +109,33 @@ function saveLook(patch) {
 const ownsLook = (id, price) => !price || DB.getPurchases().some(p => p.id === lookTag(id));
 const ownsGear = id => DB.getPurchases().some(p => p.id === gearTag(id));
 
+/** L'avatar publié dans le profil (vu par les potes) : visage, couleurs, fond et tenue visible */
+export function profileAvatar() {
+  const look = currentLook();
+  return normalizeAvatar({ v: 3, ...look, outfit: visibleOutfit(look, wornGear()) });
+}
+
+/** Met à jour le profil public si le personnage a changé (seulement dans la partie Potes) */
+export async function syncProfileAvatar() {
+  if (!Social.joined) return;
+  const next = profileAvatar();
+  if (JSON.stringify(next) === JSON.stringify(normalizeAvatar(Social.avatar))) return;
+  try { await Social.saveAvatar(next); } catch (err) { console.warn("[TrackLift] personnage :", err?.code || err); }
+}
+
+/** Première fois : le nouveau personnage reprend les couleurs de l'ancien avatar */
+const OLD_BG = new Set(COSMETIC_BACKGROUNDS.filter(b => !b.price).map(b => b.id));
+export function migrateLook(oldAvatar) {
+  const rpg = DB.getRpg() || {};
+  if (rpg.look || !oldAvatar || oldAvatar.v === 3 || DB.loadFailed) return false;
+  const look = normalizeLook({
+    skin: oldAvatar.skin, hairColor: oldAvatar.hairColor, eyeColor: oldAvatar.eyeColor,
+    bg: OLD_BG.has(oldAvatar.bg) ? oldAvatar.bg : undefined
+  });
+  DB.saveRpg({ ...rpg, look });
+  return true;
+}
+
 /** Vignette de la tête (profil) ; size en px */
 export function headHtml(size = 76, label = "") { return figureSvg(currentLook(), { view: "head", size, label }); }
 
@@ -120,9 +149,9 @@ const GEAR_SIDES = { left: ["weapon"], right: ["outfit", "accessory"] };
 const LOOK_SIDES = { left: ["weaponSkin", "companion", "style"], right: ["costume", "bg"] };
 
 /* ─── La fenêtre ───────────────────────────────────────── */
-export function openCharacterWindow({ onChange } = {}) {
+export function openCharacterWindow({ onChange, tab: startTab = "gear" } = {}) {
   const { sheet } = openSheet({ labelledBy: "tl-sheet-title" });
-  let tab = "gear";
+  let tab = startTab;
   let slot = null;      // emplacement ouvert dans le menu
   let drawerOpen = false;
   let first = true;
@@ -283,7 +312,7 @@ export function openCharacterWindow({ onChange } = {}) {
     handle.addEventListener("pointercancel", end);
   };
 
-  const changed = () => { onChange?.(); draw(); };
+  const changed = () => { onChange?.(); draw(); syncProfileAvatar(); };
 
   sheet.addEventListener("click", event => {
     const t = T();
