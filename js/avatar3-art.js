@@ -109,6 +109,14 @@ export const ART3 = {
         119,
         79
       ]
+    },
+    "m13": {
+      "box": [
+        462,
+        420,
+        60,
+        17
+      ]
     }
   },
   "eyes": {
@@ -342,6 +350,14 @@ export const ART3 = {
         608
       ]
     },
+    "seraph": {
+      "box": [
+        207,
+        338,
+        573,
+        686
+      ]
+    },
     "underwear": {
       "box": [
         416,
@@ -406,6 +422,22 @@ export const ART3 = {
       ],
       "thumb": true,
       "front": true
+    },
+    "shield": {
+      "box": [
+        335,
+        422,
+        279,
+        367
+      ]
+    },
+    "scythe": {
+      "box": [
+        212,
+        227,
+        649,
+        686
+      ]
     }
   }
 };

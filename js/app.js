@@ -1,41 +1,41 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261104f";
-import { DB } from "./db.js?v=20261104f";
-import { Auth } from "./auth.js?v=20261104f";
-import { i18n } from "./i18n.js?v=20261104f";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261104f";
-import { muscleName } from "./muscles.js?v=20261104f";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261104f";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261104f";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261104f";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet } from "./workout.js?v=20261104f";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261104f";
-import { renderWeightChart } from "./charts.js?v=20261104f";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261104f";
-import { openProgramWizard } from "./program-wizard.js?v=20261104f";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261104f";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261104f";
-import { openIntro } from "./onboarding.js?v=20261104f";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261104f";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261104f";
-import { Social } from "./social.js?v=20261104f";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261104f";
-import { avatarSvg } from "./avatar.js?v=20261104f";
-import { Bridge } from "./potes-ui.js?v=20261104f";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261104f";
-import { renderBilanLine, openBilan } from "./bilan.js?v=20261104f";
-import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261104f";
-import { headHtml, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261104f";
-import { openHero } from "./hero.js?v=20261104f";
-import { openWheel } from "./gift-wheel.js?v=20261104f";
-import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261104f";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104f";
-import { openSettings } from "./potes-settings.js?v=20261104f";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261104f";
-import { SharedPrograms } from "./community.js?v=20261104f";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261104f";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261104f";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261104f";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261104f";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261104g";
+import { DB } from "./db.js?v=20261104g";
+import { Auth } from "./auth.js?v=20261104g";
+import { i18n } from "./i18n.js?v=20261104g";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261104g";
+import { muscleName } from "./muscles.js?v=20261104g";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261104g";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261104g";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261104g";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet } from "./workout.js?v=20261104g";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261104g";
+import { renderWeightChart } from "./charts.js?v=20261104g";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261104g";
+import { openProgramWizard } from "./program-wizard.js?v=20261104g";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261104g";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261104g";
+import { openIntro } from "./onboarding.js?v=20261104g";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261104g";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261104g";
+import { Social } from "./social.js?v=20261104g";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261104g";
+import { avatarSvg } from "./avatar.js?v=20261104g";
+import { Bridge } from "./potes-ui.js?v=20261104g";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261104g";
+import { renderBilanLine, openBilan } from "./bilan.js?v=20261104g";
+import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261104g";
+import { headHtml, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261104g";
+import { openHero } from "./hero.js?v=20261104g";
+import { openWheel } from "./gift-wheel.js?v=20261104g";
+import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261104g";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104g";
+import { openSettings } from "./potes-settings.js?v=20261104g";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261104g";
+import { SharedPrograms } from "./community.js?v=20261104g";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261104g";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261104g";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261104g";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261104g";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -1392,7 +1392,7 @@ function openWeeklyBilan() {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261104f");
+    const { openMorpho } = await import("./morpho.js?v=20261104g");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),

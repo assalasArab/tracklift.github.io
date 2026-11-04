@@ -42,6 +42,8 @@ export const COSMETICS = [
   { id: "skin-sceptre", slot: "weaponSkin", fr: "Sceptre", en: "Sceptre", price: 200, art: { weapon: "scepter" } },
   { id: "skin-cle", slot: "weaponSkin", fr: "Clé à molette", en: "Wrench", price: 200, art: { weapon: "wrench" } },
   { id: "skin-dague", slot: "weaponSkin", fr: "Dague", en: "Dagger", price: 200, art: { weapon: "dagger" } },
+  { id: "skin-bouclier", slot: "weaponSkin", fr: "Bouclier", en: "Shield", price: 250, art: { weapon: "shield" } },
+  { id: "skin-faux", slot: "weaponSkin", fr: "Faux", en: "Scythe", price: 300, art: { weapon: "scythe" } },
   // costumes de la Roue des cadeaux (du moins rare au plus rare)
   { id: "costume-infini", slot: "costume", fr: "Tenue de l'Infini", en: "Infinity outfit", price: 0, wheel: true, rarity: "epic", art: { outfit: "gojo" } },
   { id: "costume-nuages", slot: "costume", fr: "Manteau des Nuages rouges", en: "Red Cloud cloak", price: 0, wheel: true, rarity: "legendary", art: { outfit: "akatsuki" } },
@@ -51,11 +53,13 @@ export const COSMETICS = [
 /** Dessin de chaque équipement (en attendant un dessin par objet, plusieurs partagent le même) */
 export const GEAR_ART = {
   survet: { outfit: "casual" },
-  cuir: { outfit: "armor" }, mailles: { outfit: "mail" }, armureCeleste: { outfit: "ornate" },
+  cuir: { outfit: "armor" }, mailles: { outfit: "mail" }, cape: { outfit: "ornate" }, armureCeleste: { outfit: "seraph" },
   robe: { outfit: "robe" }, habit: { outfit: "robe" }, tenueArchimage: { outfit: "robe" },
   baton: { weapon: "staff" }, batonAstral: { weapon: "staff" }, batonSauvage: { weapon: "staff" }, batonComete: { weapon: "staff" }, batonChene: { weapon: "staff" },
   epee: { weapon: "sword" },
   dague: { weapon: "dagger" }, lames: { weapon: "dagger" }, lameOmbre: { weapon: "dagger" },
+  bouclier: { weapon: "shield" }, egide: { weapon: "shield" },
+  faux: { weapon: "scythe" }, fauxAmes: { weapon: "scythe" },
   grimoire: { weapon: "grimoire" },
   sceptre: { weapon: "scepter" }, masse: { weapon: "scepter" }, relique: { weapon: "scepter" },
   cle: { weapon: "wrench" }, tourelle: { weapon: "wrench" }, canon: { weapon: "wrench" }

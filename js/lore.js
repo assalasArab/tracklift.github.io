@@ -205,6 +205,14 @@ export const LOOK_LORE = {
     fr: "Une dague de parade, glissée dans la ceinture. Elle ne coupe rien, mais elle impressionne au vestiaire.",
     en: "A parade dagger tucked into the belt. It cuts nothing, but it impresses in the locker room."
   },
+  "skin-bouclier": {
+    fr: "Un bouclier violet porté dans le dos, comme ceux des gardes du Temple. Il ne protège de rien, mais personne n'ose te doubler à la machine.",
+    en: "A purple shield worn on the back, like those of the Temple guards. It protects from nothing, but nobody dares to cut in line at the machine."
+  },
+  "skin-faux": {
+    fr: "Une faux entourée d'une fumée violette. Purement décorative… du moins, c'est ce que dit le marchand.",
+    en: "A scythe wrapped in purple smoke. Purely decorative… or so the merchant says."
+  },
   "costume-infini": {
     fr: "Une tenue sombre entourée d'une aura bleue. Ceux qui l'ont croisé jurent qu'aucune Flemme n'a jamais pu l'approcher : comme si un espace infini le protégeait.",
     en: "A dark outfit wrapped in a blue aura. Those who met its wearer swear no Sloth could ever get close, as if an infinite space protected them."
