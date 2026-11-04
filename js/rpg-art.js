@@ -5,9 +5,7 @@
      ailes, couronne dorée) ;
    - les icônes des caractéristiques et de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { CLASSES } from "./rpg.js?v=20261104c";
-import { GEAR_ART } from "./cosmetics.js?v=20261104c";
-import { pieceUrl } from "./avatar3.js?v=20261104c";
+import { CLASSES } from "./rpg.js?v=20261104d";
 
 export const BRANCH_COLORS = {
   novice: "#8d8e95",
@@ -126,22 +124,14 @@ export function gearIcon(art, rarity = 1, size = 36) {
   return `<svg class="rpg-gear-icon" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" focusable="false" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${GEAR_ICONS[art] || ""}</svg>`;
 }
 
-/* ─── Icône d'un objet d'équipement : miniature de son dessin (s'il est dessiné), sinon le pictogramme,
-   dans un cadre de la couleur du niveau requis : gris (avant 10), vert (10), bleu (30), or (65 et plus) ─── */
-export const LEVEL_COLORS = [
-  { from: 1, color: "#8a8f86" },
-  { from: 10, color: "#4f9a52" },
-  { from: 30, color: "#3f87c0" },
-  { from: 50, color: "#e0a92e" }
+/* ─── Raretés : la couleur suit le niveau requis de l'objet (ou son prix pour une apparence) :
+   gris (avant 10), vert (10), bleu (30), or (50 et plus) ─── */
+export const RARITIES = [
+  { from: 1, key: "common", color: "#8a8f86", fr: "Commun", en: "Common" },
+  { from: 10, key: "uncommon", color: "#4f9a52", fr: "Peu commun", en: "Uncommon" },
+  { from: 30, key: "rare", color: "#3f87c0", fr: "Rare", en: "Rare" },
+  { from: 50, key: "legendary", color: "#e0a92e", fr: "Légendaire", en: "Legendary" }
 ];
-export const levelColor = level => LEVEL_COLORS.filter(t => level >= t.from).pop().color;
-
-export function gearVisual(id, item, size = 40) {
-  const color = levelColor(item?.req?.level || 1);
-  const art = GEAR_ART[id];
-  const url = art ? pieceUrl(art.outfit ? "outfit" : "weapon", art.outfit || art.weapon) : null;
-  const inner = url
-    ? `<img class="gear-thumb" src="${url}" alt="" loading="lazy" decoding="async">`
-    : gearIcon(item.art, 1, Math.round(size * 0.7)).replace(/stroke="#[0-9a-f]{6}"/, `stroke="${color}"`);
-  return `<span class="gear-pic" style="--lv:${color};width:${size}px;height:${size}px">${inner}</span>`;
-}
+export const rarityOf = level => RARITIES.filter(r => (Number(level) || 1) >= r.from).pop();
+/** Apparences (skins, fonds, teintures) : gratuites = commun, puis selon le prix */
+export const rarityOfPrice = price => RARITIES[!price ? 0 : price < 200 ? 1 : price < 300 ? 2 : 3];

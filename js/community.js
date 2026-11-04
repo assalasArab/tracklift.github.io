@@ -4,8 +4,8 @@
    Les correspondances programme local ↔ programme partagé sont gardées
    dans social/<uid> (privé) : users/<uid> garde sa structure.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261104c";
-import { Social } from "./social.js?v=20261104c";
+import { firestore } from "./firebase-config.js?v=20261104d";
+import { Social } from "./social.js?v=20261104d";
 
 export const COMMUNITY_LIMIT = 10;
 const ref = path => firestore.doc(path);

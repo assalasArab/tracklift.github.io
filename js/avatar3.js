@@ -11,9 +11,9 @@
    Une « skin » se pose sur l'emplacement de son équipement : elle remplace
    le dessin, les bonus restent ceux de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { ART3 } from "./avatar3-art.js?v=20261104c";
-import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261104c";
-import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261104c";
+import { ART3 } from "./avatar3-art.js?v=20261104d";
+import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261104d";
+import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261104d";
 
 const VERSION = "4";
 const a3 = file => `./assets/avatar3/${file}.png?a=${VERSION}`;
@@ -65,8 +65,10 @@ function wornPieces(l, gear = {}) {
   return { outfit, weapon };
 }
 
-/** Adresse du dessin d'une pièce (miniatures des icônes d'équipement) */
+/** Adresse du dessin d'une pièce */
 export const pieceUrl = (cat, name) => (ART3[cat]?.[name] ? a3(`${cat}-${name}`) : null);
+/** Miniature d'une pièce pour les icônes : une arme portée dans le dos a ses deux morceaux rapprochés */
+export const thumbUrl = (cat, name) => (cat === "weapon" && ART3.weapon?.[name] && !ART3.weapon[name].front ? a3(`thumb-weapon-${name}`) : pieceUrl(cat, name));
 
 /** Nom du dessin de tenue visible (pour le profil public) */
 export const visibleOutfit = (look, gear) => wornPieces(normalizeLook(look), gear).outfit;
