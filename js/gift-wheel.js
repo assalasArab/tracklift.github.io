@@ -12,17 +12,17 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261104e";
-import { DB } from "./db.js?v=20261104e";
-import { Shop } from "./shop.js?v=20261104e";
-import { i18n } from "./i18n.js?v=20261104e";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261104e";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104e";
-import { figureSvg, pieceUrl } from "./avatar3.js?v=20261104e";
-import { rarityByKey } from "./rpg-art.js?v=20261104e";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261104e";
-import { openHero } from "./hero.js?v=20261104e";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261104e";
+import { firestore } from "./firebase-config.js?v=20261104f";
+import { DB } from "./db.js?v=20261104f";
+import { Shop } from "./shop.js?v=20261104f";
+import { i18n } from "./i18n.js?v=20261104f";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261104f";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104f";
+import { figureSvg, pieceUrl } from "./avatar3.js?v=20261104f";
+import { rarityByKey } from "./rpg-art.js?v=20261104f";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261104f";
+import { openHero } from "./hero.js?v=20261104f";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261104f";
 
 /* ─── La roue : 100 parts en tout (la taille d'une case = sa chance) ─── */
 // dup : points spé donnés à la place d'un costume (ou d'une teinture) qu'on a déjà
@@ -126,6 +126,8 @@ export const discounted = (price, coupon) => (coupon ? Math.max(0, Math.round((p
 /* ─── Codes ──────────────────────────────────────────── */
 export const normalizeCode = raw => String(raw || "").toUpperCase().replace(/\s+/g, "");
 const CODE_RE = /^[A-Z0-9-]{3,32}$/;
+/** Codes intégrés à l'appli : ils marchent même sans document dans la console */
+const BUILT_IN = { TRACKLIFT10: { active: true, spins: 1 } };
 let fails = [];
 /** Vérifie un code et donne ses tours ; renvoie { ok, spins } ou { ok: false, reason } */
 export async function redeemCode(raw) {
@@ -135,14 +137,19 @@ export async function redeemCode(raw) {
   const now = Date.now();
   fails = fails.filter(t => now - t < 60000);
   if (fails.length >= 5) return { ok: false, reason: "wait" };
-  let snap;
+  // le code est cherché en majuscules, puis tel qu'il a pu être créé en minuscules dans la console ;
+  // un code intégré à l'appli marche sans la console (un document du même nom le remplace)
+  let data = null;
   try {
-    snap = await firestore.doc(`giftCodes/${code}`).get();
+    for (const id of new Set([code, code.toLowerCase()])) {
+      const snap = await firestore.doc(`giftCodes/${id}`).get();
+      if (snap.exists) { data = snap.data() || {}; break; }
+    }
   } catch (err) {
-    return { ok: false, reason: err?.code === "permission-denied" ? "closed" : "network" };
+    if (!BUILT_IN[code]) return { ok: false, reason: err?.code === "permission-denied" ? "closed" : "network" };
   }
-  if (!snap.exists) { fails.push(now); return { ok: false, reason: "unknown" }; }
-  const data = snap.data() || {};
+  if (!data) data = BUILT_IN[code] || null;
+  if (!data) { fails.push(now); return { ok: false, reason: "unknown" }; }
   if (data.active === false) return { ok: false, reason: "expired" };
   const spins = Math.max(1, Math.min(MAX_SPINS, Math.floor(Number(data.spins) || 1)));
   if (!DB.addPurchase({ id: codeTag(code), price: 0, at: now, spins })) return { ok: false, reason: DB.getData() ? "used" : "save" };

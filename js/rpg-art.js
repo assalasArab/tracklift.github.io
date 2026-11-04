@@ -5,7 +5,7 @@
      ailes, couronne dorée) ;
    - les icônes des caractéristiques et de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { CLASSES } from "./rpg.js?v=20261104e";
+import { CLASSES } from "./rpg.js?v=20261104f";
 
 export const BRANCH_COLORS = {
   novice: "#8d8e95",
