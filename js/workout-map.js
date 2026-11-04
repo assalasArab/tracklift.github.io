@@ -5,7 +5,7 @@
    répétitions déjà validés, on valide une série passée par erreur,
    ou on passe directement à cet exercice.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261102a";
+import { i18n } from "./i18n.js?v=20261104a";
 
 const t = (key, vars) => i18n.t(key, vars);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -202,7 +202,7 @@ function card(workout, block, index) {
 
 function setRow(workout, state, b, set, s, timed) {
   const n = s + 1;
-  const label = `<span class="wm-set-n">${esc(t("wmSetShort", { n }))}</span>`;
+  const label = `<span class="wm-set-n">${esc(set.kind === "drop" ? t("dropShort") : t("wmSetShort", { n }))}</span>`;
   const target = `${set.targetReps ?? set.reps}${timed ? " s" : ""}${Number(set.weight) ? ` × ${kg(set.weight)} kg` : ""}`;
   if (set.status === "done") {
     return `<div class="wm-set is-done">${label}

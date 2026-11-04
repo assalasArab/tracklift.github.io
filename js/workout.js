@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261102a";
-import { getExerciseById } from "./exercises.js?v=20261102a";
+import { uid } from "./utils.js?v=20261104a";
+import { getExerciseById } from "./exercises.js?v=20261104a";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -30,7 +30,57 @@ function suggestWeight(previousExerciseLog, fallback) {
   if (allSkipped) return roundWeight(Math.max(0, (fallback || 0) - 2.5));
   return roundWeight(fallback || 0);
 }
+/* ─── Série secondaire (baisse de charge) ───
+   Juste après une série : environ 20 % de charge en moins, la moitié des répétitions visées,
+   enchaînée sans repos. */
+export function dropWeightFrom(weight) {
+  const w = Number(weight) || 0;
+  if (w <= 0) return 0;
+  const step = w >= 20 ? 2.5 : 0.5;
+  return Math.max(step, Math.floor((w * 0.8) / step) * step);
+}
+const dropRepsFrom = reps => Math.max(3, Math.round((Number(reps) || 0) / 2));
+
+/** Ajoute une série secondaire juste après la série donnée (faite ou à faire) et y place la séance */
+export function addDropSet(workout, blockIndex, afterIndex, { weight, reps } = {}) {
+  const block = workout?.blocks?.[blockIndex];
+  const from = block?.sets?.[afterIndex];
+  const baseWeight = weight ?? from?.weight;
+  if (!from || !(Number(baseWeight) > 0)) return null;
+  const target = dropRepsFrom(reps ?? from.reps ?? from.targetReps);
+  const set = { targetReps: target, reps: target, weight: dropWeightFrom(baseWeight), status: "pending", kind: "drop" };
+  block.sets.splice(afterIndex + 1, 0, set);
+  // après une série faite, on enchaîne tout de suite ; avant, la série en cours ne change pas
+  if (from.status === "done") { workout.currentExerciseIndex = blockIndex; workout.currentSetIndex = afterIndex + 1; }
+  return set;
+}
+
+/** Séries secondaires prévues dans le programme (plan.drops) : placées après la dernière série de travail */
+function applyPlannedDrops(sets, planned, previousExerciseLog) {
+  const count = Number(planned?.drops);
+  if (!Number.isFinite(count) || planned?.drops == null) return sets;
+  const base = sets.filter(set => set.kind !== "drop");
+  const lastWork = [...base].reverse().find(set => set.kind !== "warmup");
+  if (!lastWork || !(Number(lastWork.weight) > 0)) return base;
+  const previousDrops = (previousExerciseLog?.sets || []).filter(set => set.kind === "drop");
+  const drops = [];
+  let from = lastWork;
+  for (let i = 0; i < Math.min(5, Math.max(0, Math.round(count))); i++) {
+    const before = previousDrops[i];
+    const weight = before && Number(before.weight) > 0 ? Number(before.weight) : dropWeightFrom(from.weight);
+    const reps = before ? Number(before.reps) || dropRepsFrom(lastWork.targetReps) : dropRepsFrom(lastWork.targetReps);
+    const set = { targetReps: reps, reps, weight, status: "pending", kind: "drop" };
+    drops.push(set);
+    from = set;
+  }
+  return [...base, ...drops];
+}
+
 function buildSuggestedSets(exercise, previousExerciseLog, planned) {
+  return applyPlannedDrops(suggestedSets(exercise, previousExerciseLog, planned), planned, previousExerciseLog);
+}
+
+function suggestedSets(exercise, previousExerciseLog, planned) {
   const previousSets = previousExerciseLog?.sets || [];
   if (!previousSets.length && planned?.setList?.length) {
     // séries détaillées (import Notion) : chauffe, travail et baisses de charge

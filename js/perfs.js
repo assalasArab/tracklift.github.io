@@ -7,8 +7,8 @@
    Rien n'est partagé tant que l'utilisateur ne l'a pas choisi.
    La sécurité est assurée par firestore.rules.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261102a";
-import { Social } from "./social.js?v=20261102a";
+import { firestore } from "./firebase-config.js?v=20261104a";
+import { Social } from "./social.js?v=20261104a";
 
 const ref = path => firestore.doc(path);
 const col = path => firestore.collection(path);
@@ -18,7 +18,7 @@ const MAX_EXERCISES = 80;
 function fail(code) { const e = new Error(code); e.code = code; return e; }
 
 /* ─── Calculs (purs) ───────────────────────────────────── */
-const workSets = ex => (ex?.sets || []).filter(s => s && s.status === "done" && s.kind !== "warmup" && Number(s.reps) > 0)
+const workSets = ex => (ex?.sets || []).filter(s => s && s.status === "done" && s.kind !== "warmup" && s.kind !== "drop" && Number(s.reps) > 0)
   .map(s => ({ kg: Math.max(0, Number(s.weight) || 0), r: Math.round(Number(s.reps)) }));
 const better = (a, b) => !b || a.kg > b.kg || (a.kg === b.kg && a.r > b.r);
 

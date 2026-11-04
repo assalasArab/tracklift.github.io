@@ -44,7 +44,7 @@ const exerciseKey = ex => ex.exerciseId || `n:${normName(ex.exerciseName)}`;
 
 function workSets(entry) {
   return (entry?.sets || [])
-    .filter(s => s && s.status === "done" && s.kind !== "warmup" && Number(s.reps) > 0)
+    .filter(s => s && s.status === "done" && s.kind !== "warmup" && s.kind !== "drop" && Number(s.reps) > 0)
     .map(s => ({ kg: Math.max(0, Number(s.weight) || 0), reps: Math.round(Number(s.reps)), target: Number(s.targetReps) || 0 }));
 }
 

@@ -4,8 +4,8 @@
    Les correspondances programme local ↔ programme partagé sont gardées
    dans social/<uid> (privé) : users/<uid> garde sa structure.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261102a";
-import { Social } from "./social.js?v=20261102a";
+import { firestore } from "./firebase-config.js?v=20261104a";
+import { Social } from "./social.js?v=20261104a";
 
 export const COMMUNITY_LIMIT = 10;
 const ref = path => firestore.doc(path);
@@ -58,6 +58,7 @@ export const SharedPrograms = {
         plan: Object.fromEntries(Object.entries(session.plan || {}).map(([exId, p]) => [exId, {
           sets: Number(p?.sets) || 3,
           reps: Number(p?.reps) || 10,
+          ...(Number(p?.drops) > 0 ? { drops: Math.min(5, Math.round(Number(p.drops))) } : {}),
           ...(Array.isArray(p?.setList) ? { setList: p.setList.slice(0, 12).map(item => ({ reps: Number(item.reps) || 0, kind: item.kind || "work" })) } : {})
         }]))
       })),

@@ -3,15 +3,17 @@
    attributs, équipement, et le choix de classe obligatoire aux
    niveaux 10 et 30. Les calculs sont dans js/rpg.js.
    ═══════════════════════════════════════════════════════════ */
-import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, upcoming, allocate, chooseClass, resetClass, equip, gearTag, canWear, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261102a";
-import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS } from "./rpg-art.js?v=20261102a";
-import { i18n } from "./i18n.js?v=20261102a";
-import { showToast } from "./utils.js?v=20261102a";
-import { DB } from "./db.js?v=20261102a";
-import { Shop } from "./shop.js?v=20261102a";
-import { Social } from "./social.js?v=20261102a";
-import { avatarSvg } from "./avatar.js?v=20261102a";
-import { openSheet, sheetHead, esc, confirmSheet } from "./potes-ui.js?v=20261102a";
+import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, upcoming, allocate, chooseClass, resetClass, equip, gearTag, canWear, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261104a";
+import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS } from "./rpg-art.js?v=20261104a";
+import { i18n } from "./i18n.js?v=20261104a";
+import { showToast } from "./utils.js?v=20261104a";
+import { DB } from "./db.js?v=20261104a";
+import { Shop } from "./shop.js?v=20261104a";
+import { Social } from "./social.js?v=20261104a";
+import { avatarSvg } from "./avatar.js?v=20261104a";
+import { openSheet, sheetHead, esc, confirmSheet } from "./potes-ui.js?v=20261104a";
+import { PREPROD } from "./preprod.js?v=20261104a";
+import { headHtml, openCharacterWindow } from "./avatar3-ui.js?v=20261104a";
 
 const PS = `<svg class="rp-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const CHEVRON = `<svg class="pl-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
@@ -233,7 +235,9 @@ export function openPerso({ onChange } = {}) {
     const pendingFree = STATS.reduce((n, s) => n + draft[s], 0);
     const left = ch.points.free - pendingFree;
     const color = BRANCH_COLORS[CLASSES[ch.cls.id].branch || "novice"];
-    const avatar = Social.avatar ? avatarSvg(Social.avatar, { size: 76 }) : "";
+    // préprod : la tête du nouveau personnage ; un toucher ouvre le corps entier
+    const avatar = PREPROD ? `<button type="button" class="rp-avatar-btn" data-rp-figure aria-label="${esc(T.title)}">${headHtml(76)}</button>`
+      : Social.avatar ? avatarSvg(Social.avatar, { size: 76 }) : "";
 
     const pending = ch.cls.pending ? `
       <div class="card rp-choose" style="--rp-color:${color}">
@@ -362,6 +366,7 @@ export function openPerso({ onChange } = {}) {
       return;
     }
     if (event.target.closest("[data-rp-choose]")) { openClassChoice({ onChange }); return; }
+    if (event.target.closest("[data-rp-figure]")) { openCharacterWindow({ onChange: () => { onChange?.(); } }); return; }
     if (event.target.closest("[data-rp-change]")) {
       const { wallet } = rpgState();
       if (wallet.balance < CLASS_CHANGE_PRICE) { showToast(fill(T.changeShort, { price: CLASS_CHANGE_PRICE })); return; }

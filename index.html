@@ -19,7 +19,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261102a">
+  <link rel="stylesheet" href="./styles.css?v=20261104a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -366,6 +366,7 @@
             </div>
             <p id="guided-last" class="guided-last"></p>
             <ol id="guided-sets" class="set-chips" aria-label="séries de cet exercice" data-i18n-aria="setsOfExercise"></ol>
+            <button id="add-drop-btn" type="button" class="hero-other add-drop-btn hidden" data-i18n="dropAddAfter">+ série secondaire après celle-ci</button>
             <p id="guided-exercise-tip" class="guided-exercise-tip"></p>
 
             <div class="guided-meta-row">
@@ -421,6 +422,7 @@
               <button id="rest-add-btn" class="btn btn-surface btn-sm" data-i18n="addThirtySeconds">+30 s</button>
               <button id="rest-skip-btn" class="btn btn-surface btn-sm" data-i18n="skipRest">passer</button>
             </div>
+            <button id="rest-drop-btn" class="btn btn-surface btn-sm rest-drop hidden" data-i18n="dropAdd">+ série secondaire</button>
           </div>
           <div class="guided-actions">
             <button id="skip-open-btn" class="btn btn-surface" data-i18n="skip">passer</button>
@@ -616,7 +618,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261102a"></script>
+  <script type="module" src="./js/app.js?v=20261104a"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

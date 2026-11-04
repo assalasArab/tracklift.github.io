@@ -1,38 +1,40 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261102a";
-import { DB } from "./db.js?v=20261102a";
-import { Auth } from "./auth.js?v=20261102a";
-import { i18n } from "./i18n.js?v=20261102a";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261102a";
-import { muscleName } from "./muscles.js?v=20261102a";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261102a";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261102a";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261102a";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet } from "./workout.js?v=20261102a";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261102a";
-import { renderWeightChart } from "./charts.js?v=20261102a";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261102a";
-import { openProgramWizard } from "./program-wizard.js?v=20261102a";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261102a";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261102a";
-import { openIntro } from "./onboarding.js?v=20261102a";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261102a";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261102a";
-import { Social } from "./social.js?v=20261102a";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261102a";
-import { avatarSvg } from "./avatar.js?v=20261102a";
-import { Bridge } from "./potes-ui.js?v=20261102a";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261102a";
-import { renderBilanLine, openBilan } from "./bilan.js?v=20261102a";
-import { renderPersoLine, openPerso, announceLevel, currentLevel } from "./rpg-ui.js?v=20261102a";
-import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261102a";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261102a";
-import { openSettings } from "./potes-settings.js?v=20261102a";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261102a";
-import { SharedPrograms } from "./community.js?v=20261102a";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261102a";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261102a";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261102a";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261102a";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261104a";
+import { DB } from "./db.js?v=20261104a";
+import { Auth } from "./auth.js?v=20261104a";
+import { i18n } from "./i18n.js?v=20261104a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261104a";
+import { muscleName } from "./muscles.js?v=20261104a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261104a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261104a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261104a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet } from "./workout.js?v=20261104a";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261104a";
+import { renderWeightChart } from "./charts.js?v=20261104a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261104a";
+import { openProgramWizard } from "./program-wizard.js?v=20261104a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261104a";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261104a";
+import { openIntro } from "./onboarding.js?v=20261104a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261104a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261104a";
+import { Social } from "./social.js?v=20261104a";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261104a";
+import { avatarSvg } from "./avatar.js?v=20261104a";
+import { Bridge } from "./potes-ui.js?v=20261104a";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261104a";
+import { renderBilanLine, openBilan } from "./bilan.js?v=20261104a";
+import { renderPersoLine, openPerso, announceLevel, currentLevel } from "./rpg-ui.js?v=20261104a";
+import { PREPROD } from "./preprod.js?v=20261104a";
+import { headHtml, openCharacterWindow } from "./avatar3-ui.js?v=20261104a";
+import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261104a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104a";
+import { openSettings } from "./potes-settings.js?v=20261104a";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261104a";
+import { SharedPrograms } from "./community.js?v=20261104a";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261104a";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261104a";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261104a";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261104a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -237,7 +239,12 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#drawer-perso-btn").addEventListener("click", () => { closeProfileDrawer(); openMyCharacter(); });
   // une pièce débloquée : la réserve affichée sur la carte flamme suit
   Shop.onChange(() => renderStreak());
-  ["#drawer-avatar", "#drawer-avatar-link"].forEach(sel => $(sel).addEventListener("click", () => { closeProfileDrawer(); editMyAvatar(); }));
+  // préprod : le nouveau personnage (corps entier) remplace l'éditeur d'avatar
+  ["#drawer-avatar", "#drawer-avatar-link"].forEach(sel => $(sel).addEventListener("click", () => {
+    closeProfileDrawer();
+    if (PREPROD) openCharacterWindow({ onChange: () => { renderMyAvatar(); if (state.activeView === "home") renderHome(); } });
+    else editMyAvatar();
+  }));
   bindPotes($("#view-potes"));
   setupPotesBridge();
   mountBell($("#bell-btn"));
@@ -444,6 +451,8 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     if (btn) stepInput(btn.dataset.stepFor, Number(btn.dataset.step));
   });
   $("#rest-skip-btn").addEventListener("click", stopRest);
+  $("#rest-drop-btn")?.addEventListener("click", dropAfterDoneSet);
+  $("#add-drop-btn")?.addEventListener("click", dropAfterCurrentSet);
   $("#rest-add-btn").addEventListener("click", () => addRest(30));
 
   $all("[data-view]").forEach(button => {
@@ -1060,6 +1069,15 @@ function pushCompetitionStats() {
 
 /** Avatar dans le bouton profil et le tiroir ; la lettre du nom tant qu'il n'y a pas d'avatar */
 function renderMyAvatar() {
+  if (PREPROD) {
+    // préprod : gros plan sur la tête du nouveau personnage
+    $("#profile-btn").classList.add("has-avatar");
+    $("#drawer-avatar").classList.add("has-avatar");
+    $("#profile-btn").innerHTML = headHtml(38);
+    $("#drawer-avatar").innerHTML = headHtml(84);
+    $("#drawer-avatar-link").textContent = i18n.getLanguage() === "en" ? "My character" : "Mon personnage";
+    return;
+  }
   const avatar = Social.avatar;
   const initial = String(state.user?.name || state.user?.email || "t").slice(0, 1);
   const btn = $("#profile-btn");
@@ -1364,7 +1382,7 @@ function openWeeklyBilan() {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261102a");
+    const { openMorpho } = await import("./morpho.js?v=20261104a");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),
@@ -2267,7 +2285,8 @@ function planLabel(plan) {
   const sets = work?.length || plan.sets;
   const reps = work?.[0]?.reps || plan.reps;
   const weight = Number(plan.weight) || Number(work?.[0]?.weight) || 0;
-  return `${sets || 3} × ${reps || 10}${weight ? ` · ${String(weight).replace(".", ",")} kg` : ""}`;
+  const drops = plan.drops ?? plan.setList?.filter(item => item.kind === "drop").length ?? 0;
+  return `${sets || 3} × ${reps || 10}${weight ? ` · ${String(weight).replace(".", ",")} kg` : ""}${drops ? ` ${t("planDrops", { n: drops })}` : ""}`;
 }
 
 /** Liste des exercices d'une séance, dans l'ordre, sur la page du programme */
@@ -2325,6 +2344,7 @@ function renderManageSession(flashId = null) {
     const sets = work?.length || plan.sets || 3;
     const reps = work?.[0]?.reps || plan.reps || 10;
     const weight = plan.weight ?? work?.[0]?.weight ?? "";
+    const drops = plan.drops ?? plan.setList?.filter(item => item.kind === "drop").length ?? 0;
     return `
       <li class="wz-item${flashId === id ? " is-new" : ""}" data-ms-item="${escapeHtml(id)}">
         <div class="wz-item-h">
@@ -2341,6 +2361,7 @@ function renderManageSession(flashId = null) {
           <label><em>${t("msSets")}</em><input type="number" inputmode="numeric" min="1" max="20" data-ms-field="sets" data-ms-id="${escapeHtml(id)}" value="${escapeHtml(sets)}"></label>
           <label><em>${t("msReps")}</em><input type="number" inputmode="numeric" min="1" max="100" data-ms-field="reps" data-ms-id="${escapeHtml(id)}" value="${escapeHtml(reps)}"></label>
           <label><em>${t("msWeight")}</em><input type="number" inputmode="decimal" min="0" max="500" step="0.5" placeholder="—" data-ms-field="weight" data-ms-id="${escapeHtml(id)}" value="${escapeHtml(weight || "")}"></label>
+          <label title="${escapeHtml(t("msDropsTitle"))}"><em>${t("msDrops")}</em><input type="number" inputmode="numeric" min="0" max="5" data-ms-field="drops" data-ms-id="${escapeHtml(id)}" value="${escapeHtml(drops || 0)}" aria-label="${escapeHtml(t("msDropsTitle"))}"></label>
         </div>
       </li>`;
   }).join("");
@@ -2396,9 +2417,9 @@ function bindManageSession() {
     updateEditSession(session => {
       session.plan = session.plan || {};
       const plan = { sets: 3, reps: 10, weight: 0, ...(session.plan[id] || {}) };
-      plan[field] = field === "weight" ? Math.round(value * 2) / 2 : Math.max(1, Math.round(value));
+      plan[field] = field === "weight" ? Math.round(value * 2) / 2 : field === "drops" ? Math.min(5, Math.max(0, Math.round(value))) : Math.max(1, Math.round(value));
       // les séries détaillées (import) ne collent plus si on change séries ou reps
-      if (field !== "weight") delete plan.setList;
+      if (field === "sets" || field === "reps") delete plan.setList;
       session.plan[id] = plan;
     });
   });
@@ -3002,7 +3023,7 @@ function renderWorkout() {
   const doneShare = allSets.length ? allSets.filter(s => s.status !== "pending").length / allSets.length : 0;
   $("#guided-progressbar-fill").style.width = `${Math.round(doneShare * 100)}%`;
   $(".guided-progressbar").setAttribute("aria-valuenow", String(Math.round(doneShare * 100)));
-  const setKind = currentSet?.kind === "warmup" ? ` · ${t("setWarmup")}` : currentSet?.kind === "drop" ? ` · ${t("setDrop")}` : "";
+  const setKind = currentSet?.kind === "warmup" ? ` · ${t("setWarmup")}` : currentSet?.kind === "drop" ? ` · ${t("dropShort")}` : "";
   $("#guided-set-progress").textContent = t("setProgress", {
     current: state.workout.currentSetIndex + 1,
     total: block.sets.length
@@ -3017,6 +3038,7 @@ function renderWorkout() {
   });
   $("#guided-target-reps").textContent = currentSet?.targetReps ?? currentSet?.reps ?? "-";
   renderSetChips(block, state.workout.currentSetIndex, timed);
+  $("#add-drop-btn")?.classList.toggle("hidden", timed || currentSet?.kind === "warmup" || !(Number(currentSet?.weight) > 0));
   $("#rest-time-value").textContent = `${block.restSeconds} s`;
   $("#guided-reps-input").value = currentSet?.targetReps ?? currentSet?.reps ?? 0;
   $("#guided-weight-input").value = currentSet?.weight ?? 0;
@@ -3042,7 +3064,7 @@ function renderSetChips(block, currentIndex, timed) {
   if (!list) return;
   list.classList.toggle("hidden", block.sets.length < 2);
   list.innerHTML = block.sets.map((set, index) => {
-    const n = `S${index + 1}`;
+    const n = set.kind === "drop" ? t("dropShort") : `S${index + 1}`;
     if (set.status === "done") return `<li class="set-chip is-done"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg><span>${n}</span> ${escapeHtml(setLabel(set, timed))}</li>`;
     if (set.status === "skipped") return `<li class="set-chip is-skipped"><span>${n}</span> ${escapeHtml(t("setChipSkipped"))}</li>`;
     if (index === currentIndex) return `<li class="set-chip is-now" aria-current="step"><span>${n}</span> ${escapeHtml(t("setChipNow"))}</li>`;
@@ -3102,7 +3124,11 @@ function handleNext() {
   const reps = Number($("#guided-reps-input").value);
   const weight = Number($("#guided-weight-input").value);
   const exerciseBefore = state.workout.currentExerciseIndex;
+  const setBefore = state.workout.currentSetIndex;
+  const kindBefore = getCurrentSet(state.workout)?.kind;
   completeCurrentSet(state.workout, reps, weight);
+  // pendant le repos : « + Série secondaire » repart de cette série (si elle était chargée)
+  state.dropFrom = weight > 0 && kindBefore !== "warmup" ? { block: exerciseBefore, set: setBefore } : null;
   if (state.workout.currentExerciseIndex !== exerciseBefore && !isWorkoutComplete(state.workout)) saveWorkoutToAccount();
   // une baisse de charge s'enchaîne sans repos
   if (getCurrentSet(state.workout)?.kind === "drop") stopRest();
@@ -3133,6 +3159,7 @@ function startRest(seconds) {
   document.body.classList.add("resting");
   state.restRemaining = seconds;
   $("#rest-bar").classList.remove("hidden");
+  $("#rest-drop-btn")?.classList.toggle("hidden", !state.dropFrom);
   updateRestUi();
   state.restInterval = setInterval(() => {
     state.restRemaining -= 1;
@@ -3153,6 +3180,31 @@ function stopRest() {
   clearInterval(state.restInterval);
   state.restInterval = null;
   $("#rest-bar").classList.add("hidden");
+}
+
+/** Pendant le repos : enchaîner une série secondaire après la série qu'on vient de valider */
+function dropAfterDoneSet() {
+  if (!state.workout || !state.dropFrom) return;
+  const snapshot = snapshotWorkout();
+  const set = addDropSet(state.workout, state.dropFrom.block, state.dropFrom.set);
+  state.dropFrom = null;
+  if (!set) return;
+  stopRest();
+  renderWorkout();
+  offerUndo(snapshot, t("dropAdded", { weight: String(set.weight).replace(".", ",") }));
+}
+
+/** Avant de faire la série : prévoir une série secondaire juste après (charge tirée de la saisie) */
+function dropAfterCurrentSet() {
+  if (!state.workout) return;
+  const weight = Number($("#guided-weight-input").value) || 0;
+  const reps = Number($("#guided-reps-input").value) || 0;
+  if (weight <= 0) { showToast(t("dropNeedsWeight")); return; }
+  const snapshot = snapshotWorkout();
+  const set = addDropSet(state.workout, state.workout.currentExerciseIndex, state.workout.currentSetIndex, { weight, reps });
+  if (!set) return;
+  renderWorkout();
+  offerUndo(snapshot, t("dropPlanned", { weight: String(set.weight).replace(".", ",") }));
 }
 
 function addRest(seconds) {

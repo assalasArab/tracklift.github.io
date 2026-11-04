@@ -5,11 +5,11 @@
    gardées, via opts.save (le document de l'utilisateur).
    Module chargé à la demande, depuis le menu du profil.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261102a";
-import { measureBody, measureSpan, combine, classify, toPhotoCoords, mergeRuns, anatomicalStart, measureManual, ZONES, ZONE_ORDER } from "./morpho-engine.js?v=20261102a";
-import { findVerticals, verticalFromLines, straighten, focalPx, applyH, invert3 } from "./morpho-perspective.js?v=20261102a";
-import { openAdjust } from "./morpho-adjust.js?v=20261102a";
-import { morphoText, fill } from "./morpho-text.js?v=20261102a";
+import { i18n } from "./i18n.js?v=20261104a";
+import { measureBody, measureSpan, combine, classify, toPhotoCoords, mergeRuns, anatomicalStart, measureManual, ZONES, ZONE_ORDER } from "./morpho-engine.js?v=20261104a";
+import { findVerticals, verticalFromLines, straighten, focalPx, applyH, invert3 } from "./morpho-perspective.js?v=20261104a";
+import { openAdjust } from "./morpho-adjust.js?v=20261104a";
+import { morphoText, fill } from "./morpho-text.js?v=20261104a";
 
 const MP_VERSION = "1.2.0";
 const MP_BUNDLE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}/vision_bundle.mjs`;
