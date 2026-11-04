@@ -6,15 +6,16 @@
    Cheveux et sourcils : une image par couleur (teinte, saturation et
    luminosité changées), reflets à part en blanc neutre.
 
-   Ordre de dessin : fond → arme (portée dans le dos) → corps → tenue → bouche → yeux → cheveux.
+   Ordre de dessin : fond → arme portée dans le dos → corps → tenue (un slip si rien) →
+   arme portée devant (grimoire à la ceinture) → bouche → yeux → cheveux.
    Une « skin » se pose sur l'emplacement de son équipement : elle remplace
    le dessin, les bonus restent ceux de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { ART3 } from "./avatar3-art.js?v=20261104b";
-import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261104b";
-import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261104b";
+import { ART3 } from "./avatar3-art.js?v=20261104c";
+import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261104c";
+import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261104c";
 
-const VERSION = "3";
+const VERSION = "4";
 const a3 = file => `./assets/avatar3/${file}.png?a=${VERSION}`;
 const pick = (list, id, fallback) => (list.find(item => item.id === id) || list.find(item => item.id === fallback) || list[0]);
 let serial = 0;
@@ -64,6 +65,9 @@ function wornPieces(l, gear = {}) {
   return { outfit, weapon };
 }
 
+/** Adresse du dessin d'une pièce (miniatures des icônes d'équipement) */
+export const pieceUrl = (cat, name) => (ART3[cat]?.[name] ? a3(`${cat}-${name}`) : null);
+
 /** Nom du dessin de tenue visible (pour le profil public) */
 export const visibleOutfit = (look, gear) => wornPieces(normalizeLook(look), gear).outfit;
 
@@ -74,8 +78,8 @@ function characterSvg(l, colors, id, gear) {
   const worn = wornPieces(l, gear);
   const W = worn.weapon && ART3.weapon?.[worn.weapon];
   const weapon = W ? img(`weapon-${worn.weapon}`, W.box) : "";
-  // les armes se portent dans le dos : dessinées avant le corps et la tenue
-  body += weapon;
+  // les armes se portent dans le dos (dessinées avant le corps), sauf celles portées devant
+  if (!W?.front) body += weapon;
   const B = ART3.body;
   if (B) {
     add(tinted(`${id}-skin`, "body-skin", B.box, colors.skin));
@@ -83,6 +87,7 @@ function characterSvg(l, colors, id, gear) {
   }
   const O = ART3.outfit?.[worn.outfit];
   if (O) body += img(`outfit-${worn.outfit}`, O.box);
+  if (W?.front) body += weapon;
   const M = ART3.mouth?.[l.mouth];
   if (M) body += img(`mouth-${l.mouth}`, M.box);
   const E = ART3.eyes?.[l.eyes];

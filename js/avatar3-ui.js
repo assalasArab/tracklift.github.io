@@ -7,19 +7,19 @@
    - onglet Apparence : tenue entière, skin d'arme, compagnon, fond, style
      (une skin recouvre l'équipement mais garde ses bonus)
    ═══════════════════════════════════════════════════════════ */
-import { GEAR, SLOTS, STAT_INFO, ATTR_INFO, equip, gearTag, canWear, className, gearName } from "./rpg.js?v=20261104b";
-import { emblemSvg, gearIcon } from "./rpg-art.js?v=20261104b";
-import { figureSvg, normalizeLook, FACE_OPTIONS, visibleOutfit } from "./avatar3.js?v=20261104b";
-import { Social } from "./social.js?v=20261104b";
-import { normalizeAvatar } from "./avatar.js?v=20261104b";
-import { COSMETIC_BACKGROUNDS, cosmeticsFor, cosmeticById, lookTag } from "./cosmetics.js?v=20261104b";
-import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104b";
-import { rpgState } from "./rpg-ui.js?v=20261104b";
-import { i18n } from "./i18n.js?v=20261104b";
-import { showToast } from "./utils.js?v=20261104b";
-import { DB } from "./db.js?v=20261104b";
-import { Shop } from "./shop.js?v=20261104b";
-import { openSheet, sheetHead, esc } from "./potes-ui.js?v=20261104b";
+import { GEAR, SLOTS, STAT_INFO, ATTR_INFO, equip, gearTag, canWear, className, gearName } from "./rpg.js?v=20261104c";
+import { emblemSvg, gearVisual } from "./rpg-art.js?v=20261104c";
+import { figureSvg, normalizeLook, FACE_OPTIONS, visibleOutfit } from "./avatar3.js?v=20261104c";
+import { Social } from "./social.js?v=20261104c";
+import { normalizeAvatar } from "./avatar.js?v=20261104c";
+import { COSMETIC_BACKGROUNDS, cosmeticsFor, cosmeticById, lookTag } from "./cosmetics.js?v=20261104c";
+import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104c";
+import { rpgState } from "./rpg-ui.js?v=20261104c";
+import { i18n } from "./i18n.js?v=20261104c";
+import { showToast } from "./utils.js?v=20261104c";
+import { DB } from "./db.js?v=20261104c";
+import { Shop } from "./shop.js?v=20261104c";
+import { openSheet, sheetHead, esc } from "./potes-ui.js?v=20261104c";
 
 const PS = `<svg class="rp-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const TEXT = {
@@ -165,7 +165,7 @@ export function openCharacterWindow({ onChange, tab: startTab = "gear" } = {}) {
     let off = false;
     if (SLOTS.includes(key)) {
       const g = ch.gear[key];
-      if (g) { icon = gearIcon(g.item.art, g.item.rarity, 30); sub = gearName(g.id, lang()); off = !g.active; }
+      if (g) { icon = gearVisual(g.id, g.item, 42); sub = gearName(g.id, lang()); off = !g.active; }
       const skin = key === "outfit" ? cosmeticById(look.costume) : key === "weapon" ? cosmeticById(look.weaponSkin) : null;
       if (skin) sub += ` · ${fill(t.covered, { name: skin[lang()] })}`;
     } else if (key === "bg") {
@@ -210,7 +210,7 @@ export function openCharacterWindow({ onChange, tab: startTab = "gear" } = {}) {
           : g.req.cls && !ch.cls.chain.includes(g.req.cls) ? fill(t.wrongClass, { cls: className(g.req.cls, L) })
           : wallet.balance < g.price ? `${fill(t.tooPoor, { n: g.price - wallet.balance })}` : "");
         const sub = worn ? esc(t.wearing) : owned ? esc(wearable ? bonusText(g.bonus) : t.inactive) : reason ? esc(reason) : `${PS}${num(g.price)}`;
-        return tile({ key: id, selected: worn, locked: !owned && !!reason, label: gearName(id, L), sub, visual: gearIcon(g.art, g.rarity, 34), attrs: `data-cw-gear="${id}"` });
+        return tile({ key: id, selected: worn, locked: !owned && !!reason, label: gearName(id, L), sub, visual: gearVisual(id, g, 54), attrs: `data-cw-gear="${id}"` });
       }).join("");
       const noneTile = tile({ key: "none", selected: !rpg.gear?.[slot], label: t.empty, visual: `<span class="cw-slot-empty">∅</span>`, attrs: `data-cw-gear=""` });
       return `<div class="cw-grid">${noneTile}${tiles}</div>`;

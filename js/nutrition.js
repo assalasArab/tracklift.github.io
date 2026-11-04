@@ -4,7 +4,7 @@
    Monté à la demande dans #view-nutrition. IDs et classes préfixés nx-.
    ═══════════════════════════════════════════════════════════ */
 
-import { illu as illuHtml } from "./illustrations.js?v=20261104b";
+import { illu as illuHtml } from "./illustrations.js?v=20261104c";
 
 /* ---------- catalogue MET (Compendium of Physical Activities 2024) ---------- */
 const MET = [

@@ -5,11 +5,11 @@
    - défis sur un exercice : lancer, inviter, classement.
    Données : js/perfs.js ; sécurité : firestore.rules.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261104b";
-import { i18n } from "./i18n.js?v=20261104b";
-import { Social } from "./social.js?v=20261104b";
-import { Perfs, perfsOf, challengeResult, challengeRanking } from "./perfs.js?v=20261104b";
-import { esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261104b";
+import { showToast } from "./utils.js?v=20261104c";
+import { i18n } from "./i18n.js?v=20261104c";
+import { Social } from "./social.js?v=20261104c";
+import { Perfs, perfsOf, challengeResult, challengeRanking } from "./perfs.js?v=20261104c";
+import { esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, Bridge } from "./potes-ui.js?v=20261104c";
 
 const DAY = 86400000;
 const TEXT = {

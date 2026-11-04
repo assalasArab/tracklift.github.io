@@ -3,16 +3,16 @@
    attributs, équipement, et le choix de classe obligatoire aux
    niveaux 10 et 30. Les calculs sont dans js/rpg.js.
    ═══════════════════════════════════════════════════════════ */
-import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, upcoming, allocate, chooseClass, resetClass, equip, gearTag, canWear, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261104b";
-import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS } from "./rpg-art.js?v=20261104b";
-import { i18n } from "./i18n.js?v=20261104b";
-import { showToast } from "./utils.js?v=20261104b";
-import { DB } from "./db.js?v=20261104b";
-import { Shop } from "./shop.js?v=20261104b";
-import { Social } from "./social.js?v=20261104b";
-import { avatarSvg } from "./avatar.js?v=20261104b";
-import { openSheet, sheetHead, esc, confirmSheet } from "./potes-ui.js?v=20261104b";
-import { headHtml, openCharacterWindow } from "./avatar3-ui.js?v=20261104b";
+import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, upcoming, allocate, chooseClass, resetClass, equip, gearTag, canWear, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261104c";
+import { emblemSvg, statIcon, gearVisual, BRANCH_COLORS } from "./rpg-art.js?v=20261104c";
+import { i18n } from "./i18n.js?v=20261104c";
+import { showToast } from "./utils.js?v=20261104c";
+import { DB } from "./db.js?v=20261104c";
+import { Shop } from "./shop.js?v=20261104c";
+import { Social } from "./social.js?v=20261104c";
+import { avatarSvg } from "./avatar.js?v=20261104c";
+import { openSheet, sheetHead, esc, confirmSheet } from "./potes-ui.js?v=20261104c";
+import { headHtml, openCharacterWindow } from "./avatar3-ui.js?v=20261104c";
 
 const PS = `<svg class="rp-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const CHEVRON = `<svg class="pl-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
@@ -268,7 +268,7 @@ export function openPerso({ onChange } = {}) {
     const gearHtml = SLOTS.map(slot => {
       const g = ch.gear[slot];
       return `<button type="button" class="rp-slot${g && !g.active ? " is-off" : ""}" data-rp-slot="${slot}">
-        <span class="rp-slot-icon">${g ? gearIcon(g.item.art, g.item.rarity, 34) : `<span class="rp-slot-empty" aria-hidden="true">+</span>`}</span>
+        <span class="rp-slot-icon">${g ? gearVisual(g.id, g.item, 46) : `<span class="rp-slot-empty" aria-hidden="true">+</span>`}</span>
         <span class="rp-slot-text"><small>${esc(T.slot[slot])}</small><b>${esc(g ? gearName(g.id, L) : T.empty)}</b>
           ${g ? `<small>${esc(g.active ? bonusText(g.item.bonus) : T.inactive)}</small>` : ""}</span>
         ${CHEVRON}
@@ -459,7 +459,7 @@ export function openGear(slot, { onChange } = {}) {
       }
       return `
         <li class="rp-item${worn ? " is-worn" : ""}${!wearable ? " is-locked" : ""}">
-          <span class="rp-item-icon rarity-${g.rarity}">${gearIcon(g.art, g.rarity, 34)}</span>
+          <span class="rp-item-icon">${gearVisual(id, g, 46)}</span>
           <span class="rp-item-text"><b>${esc(gearName(id, L))}</b>
             <small>${esc(bonusText(g.bonus))}</small>
             <small>${esc(req)}${owned ? ` · ${esc(worn ? T.wearing : T.owned)}` : ` · ${PS_TEXT(g.price)}`}</small></span>

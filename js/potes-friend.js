@@ -2,11 +2,11 @@
    Page d'un pote : uniquement ce qu'il partage.
    Sert aussi à « voir mon profil comme un pote » (relu depuis Firestore).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261104b";
-import { Social } from "./social.js?v=20261104b";
-import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261104b";
-import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261104b";
-import { friendPerfsHtml, friendPerfsSignature, handleFriendPerfsClick, handleFriendPerfsChange } from "./potes-perfs.js?v=20261104b";
+import { showToast } from "./utils.js?v=20261104c";
+import { Social } from "./social.js?v=20261104c";
+import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261104c";
+import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261104c";
+import { friendPerfsHtml, friendPerfsSignature, handleFriendPerfsClick, handleFriendPerfsChange } from "./potes-perfs.js?v=20261104c";
 
 const FLAME = `<svg class="pf-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const ORDER = ["streak", "sessions", "records", "curves", "program", "weight", "nutrition", "programs"];

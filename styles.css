@@ -3831,3 +3831,7 @@ body.workout-map-open.in-workout .main { padding-bottom: calc(120px + env(safe-a
 .cw-face svg { display: block; width: 100%; height: 100%; border-radius: 12px; }
 .cw-face.is-on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
 .cw-face:focus-visible { outline: 3px solid var(--p-orange); outline-offset: 2px; }
+/* icône d'équipement : miniature du dessin, cadre de la couleur du niveau requis */
+.gear-pic { display: grid; place-items: center; box-sizing: border-box; border: 2px solid var(--lv); border-radius: 12px; background: color-mix(in srgb, var(--lv) 14%, var(--surface)); overflow: hidden; }
+.gear-thumb { display: block; width: 100%; height: 100%; object-fit: contain; padding: 3px; box-sizing: border-box; }
+.rp-slot-icon:has(.gear-pic), .rp-item-icon:has(.gear-pic), .cw-slot-icon:has(.gear-pic) { background: none; }

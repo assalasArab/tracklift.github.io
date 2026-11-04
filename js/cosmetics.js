@@ -36,7 +36,10 @@ export const COSMETICS = [
   { id: "tenue-armure", slot: "costume", fr: "Armure", en: "Armour", price: 300, art: { outfit: "armor" } },
   { id: "tenue-robe", slot: "costume", fr: "Robe de mage", en: "Mage robe", price: 300, art: { outfit: "robe" } },
   { id: "skin-baton", slot: "weaponSkin", fr: "Bâton", en: "Staff", price: 150, art: { weapon: "staff" } },
-  { id: "skin-epee", slot: "weaponSkin", fr: "Épée", en: "Sword", price: 200, art: { weapon: "sword" } }
+  { id: "skin-epee", slot: "weaponSkin", fr: "Épée", en: "Sword", price: 200, art: { weapon: "sword" } },
+  { id: "skin-grimoire", slot: "weaponSkin", fr: "Grimoire", en: "Spellbook", price: 200, art: { weapon: "grimoire" } },
+  { id: "skin-sceptre", slot: "weaponSkin", fr: "Sceptre", en: "Sceptre", price: 200, art: { weapon: "scepter" } },
+  { id: "skin-cle", slot: "weaponSkin", fr: "Clé à molette", en: "Wrench", price: 200, art: { weapon: "wrench" } }
 ];
 
 /** Dessin de chaque équipement (en attendant un dessin par objet, plusieurs partagent le même) */
@@ -45,11 +48,14 @@ export const GEAR_ART = {
   cuir: { outfit: "armor" }, mailles: { outfit: "armor" }, armureCeleste: { outfit: "armor" },
   robe: { outfit: "robe" }, habit: { outfit: "robe" }, tenueArchimage: { outfit: "robe" },
   baton: { weapon: "staff" }, batonAstral: { weapon: "staff" }, batonSauvage: { weapon: "staff" }, batonComete: { weapon: "staff" }, batonChene: { weapon: "staff" },
-  epee: { weapon: "sword" }
+  epee: { weapon: "sword" },
+  grimoire: { weapon: "grimoire" },
+  sceptre: { weapon: "scepter" }, masse: { weapon: "scepter" }, relique: { weapon: "scepter" },
+  cle: { weapon: "wrench" }, tourelle: { weapon: "wrench" }, canon: { weapon: "wrench" }
 };
 
-/** Tenue portée quand rien d'autre n'est mis : le personnage n'est jamais sans vêtements */
-export const DEFAULT_OUTFIT = "casual";
+/** Quand rien d'autre n'est mis : un slip (le personnage n'est jamais tout nu) */
+export const DEFAULT_OUTFIT = "underwear";
 
 export const cosmeticById = id => (id ? COSMETICS.find(item => item.id === id) || null : null);
 export const cosmeticsFor = slot => COSMETICS.filter(item => item.slot === slot);
