@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261104g";
-import { EXERCISE_SEED } from "./exercises.js?v=20261104g";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261104g";
-import { firestore } from "./firebase-config.js?v=20261104g";
+import { uid } from "./utils.js?v=20261104h";
+import { EXERCISE_SEED } from "./exercises.js?v=20261104h";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261104h";
+import { firestore } from "./firebase-config.js?v=20261104h";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.
@@ -514,6 +514,17 @@ export const DB = {
     this.markDeleted(id);
     this.saveData(data);
     return removed;
+  },
+
+  /** Séance passée modifiée : remplace celle qui a le même identifiant */
+  updateSessionLog(log) {
+    const data = this.getData();
+    if (!data) return null;
+    const index = data.sessionLogs.findIndex(item => item.id === log.id);
+    if (index < 0) return null;
+    data.sessionLogs = data.sessionLogs.map(item => (item.id === log.id ? log : item));
+    this.saveData(data);
+    return log;
   },
 
   saveSessionLog(log) {

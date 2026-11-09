@@ -5,14 +5,14 @@
    Les pièces sont des calques PNG ; les zones de peau, de cheveux et d'iris
    sont recoloriées à l'affichage (masque SVG rempli de la couleur choisie).
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261104g";
-import { escapeHtml, showToast } from "./utils.js?v=20261104g";
+import { i18n } from "./i18n.js?v=20261104h";
+import { escapeHtml, showToast } from "./utils.js?v=20261104h";
 import {
   SKINS, HAIR_COLORS, EYE_COLORS, BACKGROUNDS,
   FACES, BODIES, HAIRS, EYES, NOSES, MOUTHS, BEARDS, ACCESSORIES,
   AVATAR_CATEGORIES, LAYER_ORDER, TINTS
-} from "./avatar-parts.js?v=20261104g";
-import { figureSvg, normalizeLook } from "./avatar3.js?v=20261104g";
+} from "./avatar-parts.js?v=20261104h";
+import { figureSvg, normalizeLook } from "./avatar3.js?v=20261104h";
 
 const LISTS = {
   skin: SKINS, face: FACES, body: BODIES, hair: HAIRS, hairColor: HAIR_COLORS, eyes: EYES, eyeColor: EYE_COLORS,

@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261104g";
-import { getExerciseById } from "./exercises.js?v=20261104g";
+import { uid } from "./utils.js?v=20261104h";
+import { getExerciseById } from "./exercises.js?v=20261104h";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -156,6 +156,20 @@ export function reopenBlock(workout, blockIndex) {
   let reopened = false;
   for (const set of block.sets) if (set.status === "skipped") { set.status = "pending"; reopened = true; }
   return reopened && goToBlock(workout, blockIndex);
+}
+/** Vue d'ensemble : ajouter une série oubliée (déjà faite, copiée sur la dernière série faite) ; renvoie sa place */
+export function addDoneSet(workout, blockIndex) {
+  const block = workout?.blocks?.[blockIndex];
+  if (!block) return -1;
+  const done = block.sets.filter(set => set.status === "done");
+  const model = done[done.length - 1] || block.sets[block.sets.length - 1] || {};
+  const reps = Math.max(0, Number(model.reps ?? model.targetReps) || 0);
+  let at = -1;
+  block.sets.forEach((set, index) => { if (set.status === "done") at = index; });
+  block.sets.splice(at + 1, 0, { targetReps: reps, reps, weight: Math.max(0, Number(model.weight) || 0), status: "done" });
+  // la série en cours glisse d'un cran si elle était après
+  if (workout.currentExerciseIndex === blockIndex && workout.currentSetIndex >= at + 1) workout.currentSetIndex += 1;
+  return at + 1;
 }
 /** Vue d'ensemble : corriger une série faite, ou valider une série passée par erreur */
 export function updateSet(workout, blockIndex, setIndex, { reps, weight, markDone = false } = {}) {

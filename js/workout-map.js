@@ -5,7 +5,7 @@
    répétitions déjà validés, on valide une série passée par erreur,
    ou on passe directement à cet exercice.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261104g";
+import { i18n } from "./i18n.js?v=20261104h";
 
 const t = (key, vars) => i18n.t(key, vars);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -21,7 +21,7 @@ export const isWorkoutMapOpen = () => Boolean(map);
 
 /**
  * opts : { container, layout, getWorkout(), exerciseOf(id) → { name, image, fallback, timed },
- *          onEdit(blockIndex, setIndex, patch), onJump(blockIndex), onReopen(blockIndex),
+ *          onEdit(blockIndex, setIndex, patch), onAddSet(blockIndex) → setIndex, onJump(blockIndex), onReopen(blockIndex),
  *          onDetails(exerciseId), onClose() }
  * Le minuteur de repos reste visible en bas de l'écran pendant la vue d'ensemble.
  */
@@ -105,6 +105,16 @@ function bind() {
       const { opts } = map;
       closeWorkoutMap();
       opts.onReopen?.(index);
+      return;
+    }
+    const addSet = event.target.closest("[data-wm-addset]");
+    if (addSet) {
+      const b = Number(addSet.dataset.wmAddset);
+      const s = map.opts.onAddSet?.(b);
+      if (s == null || s < 0) return;
+      map.open.add(b);
+      render();
+      el.querySelector(`[data-wm-edit="${b}:${s}:reps"]`)?.focus();
       return;
     }
     const details = event.target.closest("[data-wm-details]");
@@ -193,6 +203,7 @@ function card(workout, block, index) {
         ${block.sets.map((set, s) => setRow(workout, state, index, set, s, exercise.timed)).join("")}
         <div class="wm-actions">
           ${state === "now" ? `<button type="button" class="btn btn-primary btn-sm" data-wm-close>${esc(t("wmContinue"))}</button>` : ""}
+          <button type="button" class="btn btn-surface btn-sm" data-wm-addset="${index}">+ ${esc(t("wmAddSet"))}</button>
           <button type="button" class="btn btn-surface btn-sm" data-wm-details="${esc(block.exerciseId)}">${esc(t("wmDetails"))}</button>
         </div>
       </div>
