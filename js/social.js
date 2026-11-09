@@ -9,9 +9,9 @@
    users/<uid> (données de l'appli) n'est jamais lu ni modifié ici.
    La sécurité est assurée par firestore.rules, pas par ce fichier.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261104h";
-import { normalizeAvatar } from "./avatar.js?v=20261104h";
-import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261104h";
+import { firestore } from "./firebase-config.js?v=20261104i";
+import { normalizeAvatar } from "./avatar.js?v=20261104i";
+import { SHARE_KEYS, BOARD_KEYS } from "./social-stats.js?v=20261104i";
 
 const RESERVED = ["admin", "administrateur", "tracklift", "support", "moderation", "moderateur", "staff", "officiel", "equipe"];
 const ITEM_KEYS = [...SHARE_KEYS, "board", "programs"];

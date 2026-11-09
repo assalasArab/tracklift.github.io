@@ -12,17 +12,17 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261104h";
-import { DB } from "./db.js?v=20261104h";
-import { Shop } from "./shop.js?v=20261104h";
-import { i18n } from "./i18n.js?v=20261104h";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261104h";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104h";
-import { figureSvg, pieceUrl } from "./avatar3.js?v=20261104h";
-import { rarityByKey } from "./rpg-art.js?v=20261104h";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261104h";
-import { openHero } from "./hero.js?v=20261104h";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261104h";
+import { firestore } from "./firebase-config.js?v=20261104i";
+import { DB } from "./db.js?v=20261104i";
+import { Shop } from "./shop.js?v=20261104i";
+import { i18n } from "./i18n.js?v=20261104i";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261104i";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261104i";
+import { figureSvg, pieceUrl } from "./avatar3.js?v=20261104i";
+import { rarityByKey } from "./rpg-art.js?v=20261104i";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261104i";
+import { openHero } from "./hero.js?v=20261104i";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261104i";
 
 /* ─── La roue : 100 parts en tout (la taille d'une case = sa chance) ─── */
 // dup : points spé donnés à la place d'un costume (ou d'une teinture) qu'on a déjà
@@ -39,6 +39,8 @@ export const WHEEL = [
 ];
 const TOTAL = WHEEL.reduce((n, s) => n + s.weight, 0);
 const MAX_SPINS = 10;
+/** Prix d'un tour acheté avec les points spé (en plus des codes cadeaux) */
+export const SPIN_PRICE = 70;
 
 const TEXT = {
   fr: {
@@ -55,7 +57,7 @@ const TEXT = {
       closed: "Les codes cadeaux ne sont pas encore ouverts.",
       save: "Impossible d'enregistrer pour l'instant, réessaie."
     },
-    spins: "{n} tours à jouer", spinsOne: "1 tour à jouer", spinsNone: "Aucun tour : entre un code pour tourner la roue.",
+    spins: "{n} tours à jouer", spinsOne: "1 tour à jouer", spinsNone: "Aucun tour : entre un code ou achète un tour.", buySpin: "Acheter un tour", buyShort: "Il te manque {n} points spé pour un tour.",
     spin: "Tourner la roue", spinning: "La roue tourne…", again: "Tourner encore",
     win: "Tu gagnes", odds: "Chances de gain",
     seg: { ps: "+{n} points spé", coupon: "Bon de réduction −{n} %", dye: "Teinture offerte" },
@@ -84,7 +86,7 @@ const TEXT = {
       closed: "Gift codes are not open yet.",
       save: "Can't save right now, try again."
     },
-    spins: "{n} spins to play", spinsOne: "1 spin to play", spinsNone: "No spins: enter a code to spin the wheel.",
+    spins: "{n} spins to play", spinsOne: "1 spin to play", spinsNone: "No spins: enter a code or buy a spin.", buySpin: "Buy a spin", buyShort: "You need {n} more spec points for a spin.",
     spin: "Spin the wheel", spinning: "The wheel is spinning…", again: "Spin again",
     win: "You win", odds: "Odds",
     seg: { ps: "+{n} spec points", coupon: "−{n} % voucher", dye: "Free dye" },
@@ -110,7 +112,8 @@ const randomInt = n => crypto.getRandomValues(new Uint32Array(1))[0] % n;
 const codeTag = code => `code:${code}`;
 export function wheelState() {
   const list = DB.getPurchases();
-  const won = list.filter(p => String(p.id).startsWith("code:")).reduce((n, p) => n + Math.max(0, Math.min(MAX_SPINS, Math.floor(Number(p.spins) || 0))), 0);
+  // tours gagnés : codes cadeaux, et tours achetés (spin:<id>, 1 tour chacun)
+  const won = list.filter(p => String(p.id).startsWith("code:") || String(p.id).startsWith("spin:")).reduce((n, p) => n + Math.max(0, Math.min(MAX_SPINS, Math.floor(Number(p.spins) || 0))), 0);
   const played = list.filter(p => String(p.id).startsWith("wheel:"));
   const used = new Set(list.map(p => p.coupon).filter(Boolean));
   const coupons = played
@@ -291,12 +294,15 @@ export function openWheel({ onChange, onClose } = {}) {
   const renderBar = () => {
     const t = T();
     const { spins } = wheelState();
+    const balance = Shop.wallet().balance;
     $(".gw-spins").textContent = st.spinning ? t.spinning : spins === 1 ? t.spinsOne : spins ? fill(t.spins, { n: spins }) : t.spinsNone;
     $(".gw-spins").classList.toggle("is-lit", spins > 0 && !st.spinning);
     const r = st.result;
     const see = r ? (r.gift.kind === "costume" && !r.gift.dup ? "costume" : r.gift.kind === "dye" && !r.gift.dup ? "dye" : r.gift.kind === "coupon" ? "coupon" : "ps") : null;
     $(".gw-actions").innerHTML = st.spinning ? "" : `
-      ${spins > 0 ? `<button type="button" class="btn btn-primary btn-block" data-gw-spin>${esc(r ? t.again : t.spin)} · ${spins}</button>` : ""}
+      ${spins > 0 ? `<button type="button" class="btn btn-primary btn-block" data-gw-spin>${esc(r ? t.again : t.spin)} · ${spins}</button>`
+        : balance >= SPIN_PRICE ? `<button type="button" class="btn btn-primary btn-block gw-buy" data-gw-buy>${esc(t.buySpin)}<span><svg class="hx-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>${SPIN_PRICE}</span></button>`
+        : `<p class="gw-short">${esc(fill(t.buyShort, { n: SPIN_PRICE - balance }))}</p>`}
       ${see ? `<button type="button" class="btn btn-surface btn-block" data-gw-see="${see}">${esc(t.see[see])}</button>` : ""}`;
   };
 
@@ -418,6 +424,14 @@ export function openWheel({ onChange, onClose } = {}) {
 
   sheet.addEventListener("click", event => {
     if (event.target.closest("[data-gw-spin]")) { spin(); return; }
+    // acheter un tour puis le jouer tout de suite
+    if (event.target.closest("[data-gw-buy]")) {
+      if (st.spinning || wheelState().spins > 0 || Shop.wallet().balance < SPIN_PRICE) return;
+      if (!DB.addPurchase({ id: `spin:${Date.now().toString(36)}${randomInt(1e6).toString(36)}`, price: SPIN_PRICE, at: Date.now(), spins: 1 })) return;
+      changed();
+      spin();
+      return;
+    }
     const see = event.target.closest("[data-gw-see]");
     if (see) {
       const tab = { costume: "look", dye: "look", coupon: "shop", ps: "hero" }[see.dataset.gwSee] || "hero";

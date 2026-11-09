@@ -5,7 +5,7 @@
    répétitions déjà validés, on valide une série passée par erreur,
    ou on passe directement à cet exercice.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261104h";
+import { i18n } from "./i18n.js?v=20261104i";
 
 const t = (key, vars) => i18n.t(key, vars);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

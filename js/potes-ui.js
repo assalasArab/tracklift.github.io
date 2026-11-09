@@ -2,9 +2,9 @@
    Partie Potes : outils d'écran partagés (feuilles plein écran,
    confirmation, dates relatives) et pont vers les données de l'appli.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261104h";
-import { escapeHtml } from "./utils.js?v=20261104h";
-import { avatarSvg } from "./avatar.js?v=20261104h";
+import { i18n } from "./i18n.js?v=20261104i";
+import { escapeHtml } from "./utils.js?v=20261104i";
+import { avatarSvg } from "./avatar.js?v=20261104i";
 
 export const t = (key, vars) => i18n.t(key, vars);
 /** singulier / pluriel : clé « …One » pour 1 (et 0 en français) */

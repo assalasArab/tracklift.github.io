@@ -7,8 +7,8 @@
    Rien n'est partagé tant que l'utilisateur ne l'a pas choisi.
    La sécurité est assurée par firestore.rules.
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261104h";
-import { Social } from "./social.js?v=20261104h";
+import { firestore } from "./firebase-config.js?v=20261104i";
+import { Social } from "./social.js?v=20261104i";
 
 const ref = path => firestore.doc(path);
 const col = path => firestore.collection(path);

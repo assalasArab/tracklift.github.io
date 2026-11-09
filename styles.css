@@ -4169,3 +4169,6 @@ body.workout-map-open.in-workout .main { padding-bottom: calc(120px + env(safe-a
 .le-dock .btn { flex: 1; }
 .session-edit { margin: 8px 8px 0 0; }
 .similar-create { margin-top: 12px; }
+.gw-buy { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.gw-buy span { display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px 3px 7px; border-radius: 999px; background: color-mix(in srgb, var(--cream) 16%, transparent); font-family: var(--font-body); font-size: 15px; font-weight: 700; }
+.gw-short { margin: 0; padding: 12px; border-radius: var(--radius-lg); background: var(--surface); text-align: center; font-size: 14px; font-weight: 600; color: var(--text2); }
