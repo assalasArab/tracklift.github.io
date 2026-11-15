@@ -108,6 +108,14 @@ rules_version = '2';
 // giftCodes/<CODE> : codes cadeaux (Roue des cadeaux), créés à la main dans la console
 //   ✔ un utilisateur connecté vérifie UN code qu'il connaît (pas de liste)
 //   ✘ lister les codes ; créer, changer ou supprimer un code depuis l'appli
+//
+// ideas/<id> : boîte à idées
+//   ✔ un utilisateur connecté dépose une idée en son nom (3 à 1000 caractères)
+//   ✔ un administrateur lit les idées et supprime celles qui sont réglées
+//   ✘ lire, lister ou supprimer sans être administrateur ; modifier une idée ; écrire au nom d'un autre
+//
+// admins/<uid> : administrateurs, ajoutés à la main dans la console (document vide au nom de l'identifiant)
+//   ✘ rien n'est lisible ni modifiable depuis l'appli
 // ═══════════════════════════════════════════════════════════
 
 service cloud.firestore {
@@ -224,6 +232,19 @@ service cloud.firestore {
     match /giftCodes/{code} {
       allow get: if signedIn();
       allow list, create, update, delete: if false;
+    }
+
+    // ─── Boîte à idées : on dépose, on ne lit pas ─────────
+    match /ideas/{ideaId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['text', 'uid', 'createdAt', 'lang'])
+        && request.resource.data.uid == me()
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 3 && request.resource.data.text.size() <= 1000
+        && request.resource.data.createdAt is int
+        && request.resource.data.lang in ['fr', 'en'];
+      allow read, delete: if signedIn() && exists(/databases/$(database)/documents/admins/$(me()));
+      allow update: if false;
     }
 
     // ─── Réglages privés de la partie Potes ───────────────

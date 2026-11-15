@@ -5,7 +5,7 @@
    répétitions déjà validés, on valide une série passée par erreur,
    ou on passe directement à cet exercice.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261104i";
+import { i18n } from "./i18n.js?v=20261115a";
 
 const t = (key, vars) => i18n.t(key, vars);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -21,7 +21,8 @@ export const isWorkoutMapOpen = () => Boolean(map);
 
 /**
  * opts : { container, layout, getWorkout(), exerciseOf(id) → { name, image, fallback, timed },
- *          onEdit(blockIndex, setIndex, patch), onAddSet(blockIndex) → setIndex, onJump(blockIndex), onReopen(blockIndex),
+ *          onEdit(blockIndex, setIndex, patch), onAddSet(blockIndex) → setIndex, onAddExercise(), onSuperset(blockIndex),
+ *          onJump(blockIndex), onReopen(blockIndex),
  *          onDetails(exerciseId), onClose() }
  * Le minuteur de repos reste visible en bas de l'écran pendant la vue d'ensemble.
  */
@@ -107,6 +108,17 @@ function bind() {
       opts.onReopen?.(index);
       return;
     }
+    if (event.target.closest("[data-wm-addex]")) return map.opts.onAddExercise?.();
+    const superset = event.target.closest("[data-wm-superset]");
+    if (superset) {
+      const b = Number(superset.dataset.wmSuperset);
+      map.opts.onSuperset?.(b);
+      map.open.add(b);
+      map.open.add(b + 1);
+      render();
+      el.querySelector(`[data-wm-superset="${b}"]`)?.focus();
+      return;
+    }
     const addSet = event.target.closest("[data-wm-addset]");
     if (addSet) {
       const b = Number(addSet.dataset.wmAddset);
@@ -161,7 +173,8 @@ function render() {
       </div>
       <button type="button" class="btn btn-surface btn-sm wm-close" data-wm-close>${esc(t("wmBack"))}</button>
     </div>
-    <ol class="wm-list">${workout.blocks.map((block, index) => card(workout, block, index)).join("")}</ol>`;
+    <ol class="wm-list">${workout.blocks.map((block, index) => card(workout, block, index)).join("")}</ol>
+    <button type="button" class="btn btn-surface btn-block wm-addex" data-wm-addex>+ ${esc(t("wmAddExercise"))}</button>`;
   window.scrollTo(0, scroll);
 }
 
@@ -181,6 +194,9 @@ function card(workout, block, index) {
   const doneText = doneSets === 0 ? t("wmSetsDoneNone") : doneSets === 1 ? t("wmSetsDoneOne") : t("wmSetsDone", { count: doneSets });
   const meta = state === "next" || state === "now" ? `${count} · ${doneText}` : count;
   const marker = state === "done" ? CHECK : String(index + 1);
+  // enchaîné avec le suivant (superset) : même identifiant que l'exercice voisin
+  const chainedNext = Boolean(block.superset && workout.blocks[index + 1]?.superset === block.superset);
+  const chainedPrev = Boolean(block.superset && workout.blocks[index - 1]?.superset === block.superset);
   /* toujours visible, sans ouvrir la carte : faire cet exercice avant les autres */
   const skippedSets = block.sets.some(set => set.status === "skipped");
   const quick = state === "next"
@@ -188,13 +204,13 @@ function card(workout, block, index) {
     : (state === "skipped" || state === "done") && skippedSets
       ? `<div class="wm-quick"><button type="button" class="wm-now-btn is-soft" data-wm-reopen="${index}">${PLAY}${esc(t(state === "done" ? "wmDoSkipped" : "wmDoAnyway"))}<span class="sr-only"> : ${esc(exercise.name)}</span></button></div>`
       : "";
-  return `<li class="wm-item is-${state}${open ? " is-open" : ""}">
+  return `<li class="wm-item is-${state}${open ? " is-open" : ""}${chainedNext ? " is-chained" : ""}${chainedPrev ? " is-chained-prev" : ""}">
     <div class="wm-card">
       <button type="button" class="wm-card-head" data-wm-toggle="${index}" aria-expanded="${open}" aria-controls="wm-body-${index}">
         <span class="wm-marker" aria-hidden="true">${marker}</span>
         <span class="wm-card-text">
           <span class="wm-name">${esc(exercise.name)}</span>
-          <span class="wm-meta"><span class="wm-tag">${esc(tag)}</span>${esc(meta)}</span>
+          <span class="wm-meta"><span class="wm-tag">${esc(tag)}</span>${chainedNext || chainedPrev ? `<span class="wm-tag is-chain">${esc(t("wmChained"))}</span>` : ""}${esc(meta)}</span>
           <span class="wm-squares" aria-hidden="true">${squares}</span>
         </span>
       </button>
@@ -204,6 +220,7 @@ function card(workout, block, index) {
         <div class="wm-actions">
           ${state === "now" ? `<button type="button" class="btn btn-primary btn-sm" data-wm-close>${esc(t("wmContinue"))}</button>` : ""}
           <button type="button" class="btn btn-surface btn-sm" data-wm-addset="${index}">+ ${esc(t("wmAddSet"))}</button>
+          ${index < workout.blocks.length - 1 ? `<button type="button" class="btn btn-surface btn-sm" data-wm-superset="${index}">${esc(t(chainedNext ? "wmUnchain" : "wmChain"))}</button>` : ""}
           <button type="button" class="btn btn-surface btn-sm" data-wm-details="${esc(block.exerciseId)}">${esc(t("wmDetails"))}</button>
         </div>
       </div>

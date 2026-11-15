@@ -3,20 +3,22 @@
    charges, ajouter une série oubliée, retirer une série en trop.
    Rien n'est enregistré avant « Enregistrer ».
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261104i";
-import { openSheet, esc } from "./potes-ui.js?v=20261104i";
+import { i18n } from "./i18n.js?v=20261115a";
+import { openSheet, esc } from "./potes-ui.js?v=20261115a";
 
 const TEXT = {
   fr: {
     kicker: "Modifier la séance", set: "Série {n}", drop: "Sec.", reps: "rép.", seconds: "s",
     repsOf: "Répétitions de la série {n}", secondsOf: "Secondes de la série {n}", weightOf: "Charge de la série {n} en kg",
     remove: "Retirer la série {n}", add: "Ajouter une série", none: "Aucune série notée.",
+    addExercise: "Ajouter un exercice", search: "Chercher un exercice", noResult: "Aucun exercice trouvé.",
     save: "Enregistrer", cancel: "Annuler", close: "Fermer"
   },
   en: {
     kicker: "Edit workout", set: "Set {n}", drop: "Drop", reps: "reps", seconds: "s",
     repsOf: "Reps of set {n}", secondsOf: "Seconds of set {n}", weightOf: "Weight of set {n} in kg",
     remove: "Remove set {n}", add: "Add a set", none: "No set logged.",
+    addExercise: "Add an exercise", search: "Search an exercise", noResult: "No exercise found.",
     save: "Save", cancel: "Cancel", close: "Close"
   }
 };
@@ -25,10 +27,11 @@ const fill = (s, vars = {}) => String(s).replace(/\{(\w+)\}/g, (_, k) => vars[k]
 const toNum = value => { const n = Number(String(value).replace(",", ".")); return Number.isFinite(n) && n >= 0 ? n : 0; };
 
 /**
- * opts : { log, title, nameOf(exerciseId, fallback), isTimed(exerciseId), onSave(log) }
+ * opts : { log, title, nameOf(exerciseId, fallback), isTimed(exerciseId), findExercises(query) → [{ id, name, muscleFocus, type, timed }], onSave(log) }
  * Seules les séries faites sont montrées ; les séries passées ou pas faites restent telles quelles.
  */
-export function openLogEditor({ log, title, nameOf, isTimed, onSave }) {
+export function openLogEditor({ log, title, nameOf, isTimed, findExercises, onSave }) {
+  let query = "";
   const draft = JSON.parse(JSON.stringify(log));
   const { sheet, close } = openSheet();
   sheet.classList.add("le");
@@ -63,6 +66,11 @@ export function openLogEditor({ log, title, nameOf, isTimed, onSave }) {
             <button type="button" class="btn btn-ghost btn-sm le-add" data-le-add="${e}">+ ${esc(t.add)}</button>
           </section>`;
         }).join("")}
+        <section class="card le-ex le-new">
+          <h3 class="le-name">${esc(t.addExercise)}</h3>
+          <input class="input le-search" type="search" autocomplete="off" placeholder="${esc(t.search)}" value="${esc(query)}" data-le-search aria-label="${esc(t.search)}">
+          <ul class="le-results">${query.trim() ? ((findExercises?.(query) || []).map(ex => `<li><button type="button" class="le-result" data-le-pick="${esc(ex.id)}">${esc(ex.name)}</button></li>`).join("") || `<li class="le-none">${esc(t.noResult)}</li>`) : ""}</ul>
+        </section>
         <div class="le-dock">
           <button type="button" class="btn btn-surface" data-sheet-close>${esc(t.cancel)}</button>
           <button type="button" class="btn btn-primary" data-le-save>${esc(t.save)}</button>
@@ -72,6 +80,16 @@ export function openLogEditor({ log, title, nameOf, isTimed, onSave }) {
     if (focus) sheet.querySelector(focus)?.focus();
     else sheet.querySelector("#tl-sheet-title")?.focus();
   };
+
+  // recherche d'un exercice à ajouter : la liste suit la saisie
+  sheet.addEventListener("input", event => {
+    if (!event.target.closest("[data-le-search]")) return;
+    query = event.target.value;
+    const pos = event.target.selectionStart;
+    draw("[data-le-search]");
+    const field = sheet.querySelector("[data-le-search]");
+    field?.setSelectionRange?.(pos, pos);
+  });
 
   sheet.addEventListener("change", event => {
     const input = event.target.closest("[data-le]");
@@ -98,6 +116,19 @@ export function openLogEditor({ log, title, nameOf, isTimed, onSave }) {
       ex.sets.forEach((set, i) => { if (set.status === "done") at = i; });
       ex.sets.splice(at + 1, 0, { targetReps: reps, reps, weight: toNum(model.weight), status: "done" });
       draw(`[data-le="${e}:${at + 1}:reps"]`);
+      return;
+    }
+    const pickBtn = event.target.closest("[data-le-pick]");
+    if (pickBtn) {
+      const ex = (findExercises?.(query) || []).find(item => item.id === pickBtn.dataset.lePick);
+      if (!ex) return;
+      const reps = ex.timed ? 30 : 10;
+      draft.exercises = draft.exercises || [];
+      draft.exercises.push({ exerciseId: ex.id, exerciseName: ex.name, muscleFocus: ex.muscleFocus, type: ex.type, restSeconds: 90, added: true,
+        sets: [{ targetReps: reps, reps, weight: 0, status: "done" }] });
+      query = "";
+      const e = draft.exercises.length - 1;
+      draw(`[data-le="${e}:0:reps"]`);
       return;
     }
     const remove = event.target.closest("[data-le-remove]");

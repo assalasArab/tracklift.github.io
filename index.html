@@ -19,7 +19,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <link rel="stylesheet" href="./styles.css?v=20261104i">
+  <link rel="stylesheet" href="./styles.css?v=20261115a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -77,7 +77,7 @@
 
   <div id="app-screen" class="screen app-screen hidden">
     <header class="topbar">
-      <div class="topbar-logo"><img class="logo-img" src="./assets/brand/logo.webp" alt="" width="36" height="36"><span class="topbar-brand">TrackLift</span></div>
+      <button type="button" id="topbar-home" class="topbar-logo" aria-label="TrackLift : accueil"><img class="logo-img" src="./assets/brand/logo.webp" alt="" width="36" height="36"><span class="topbar-brand">TrackLift</span></button>
       <div class="topbar-right">
         <button id="streak-pill" class="streak-pill off" type="button" title="points spé" aria-label="points spé : mon perso">
           <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg><span id="streak-pill-count">0</span>
@@ -120,6 +120,7 @@
         <button id="drawer-potes-btn" class="drawer-menu-item"><span data-i18n="potesMenu">potes</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-shop-btn" class="drawer-menu-item"><span data-i18n="shopMenu">Boutique</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-perso-btn" class="drawer-menu-item"><span data-i18n="persoMenu">Mon héros</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
+        <button id="drawer-idea-btn" class="drawer-menu-item"><span data-i18n="ideaMenu">Boîte à idées</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-code-btn" class="drawer-menu-item"><span data-i18n="codeMenu">Code cadeau</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-bilan-btn" class="drawer-menu-item"><span data-i18n="bilanMenu">Bilan de la semaine</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
         <button id="drawer-morpho-btn" class="drawer-menu-item"><span data-i18n="morphoMenu">Scan morpho</span><span class="drawer-new" data-i18n="potesNew">nouveau</span></button>
@@ -619,7 +620,7 @@
     </div>
   </div>
 
-  <script type="module" src="./js/app.js?v=20261104i"></script>
+  <script type="module" src="./js/app.js?v=20261115a"></script>
   <div id="modal-manage-exercises" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head">

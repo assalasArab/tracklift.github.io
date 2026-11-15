@@ -1,0 +1,10 @@
+{
+  "name": "tracklift-ideas",
+  "private": true,
+  "type": "module",
+  "description": "Lire et vider la boîte à idées TrackLift (outil local, clé hors du dépôt)",
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "firebase-admin": "14.5.0"
+  }
+}

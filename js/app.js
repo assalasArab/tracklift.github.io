@@ -1,42 +1,44 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261104i";
-import { DB } from "./db.js?v=20261104i";
-import { Auth } from "./auth.js?v=20261104i";
-import { i18n } from "./i18n.js?v=20261104i";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261104i";
-import { muscleName } from "./muscles.js?v=20261104i";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261104i";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261104i";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261104i";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet, addDoneSet } from "./workout.js?v=20261104i";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261104i";
-import { openLogEditor } from "./log-editor.js?v=20261104i";
-import { renderWeightChart } from "./charts.js?v=20261104i";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261104i";
-import { openProgramWizard } from "./program-wizard.js?v=20261104i";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261104i";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261104i";
-import { openIntro } from "./onboarding.js?v=20261104i";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261104i";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261104i";
-import { Social } from "./social.js?v=20261104i";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261104i";
-import { avatarSvg } from "./avatar.js?v=20261104i";
-import { Bridge } from "./potes-ui.js?v=20261104i";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261104i";
-import { renderBilanLine, openBilan } from "./bilan.js?v=20261104i";
-import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261104i";
-import { headHtml, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261104i";
-import { openHero } from "./hero.js?v=20261104i";
-import { openWheel } from "./gift-wheel.js?v=20261104i";
-import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261104i";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261104i";
-import { openSettings } from "./potes-settings.js?v=20261104i";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261104i";
-import { SharedPrograms } from "./community.js?v=20261104i";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261104i";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261104i";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261104i";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261104i";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261115a";
+import { DB } from "./db.js?v=20261115a";
+import { Auth } from "./auth.js?v=20261115a";
+import { i18n } from "./i18n.js?v=20261115a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261115a";
+import { muscleName } from "./muscles.js?v=20261115a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261115a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261115a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261115a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet, addDoneSet, addExercise, toggleSuperset, supersetPartner, sessionChanges, applyChanges } from "./workout.js?v=20261115a";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261115a";
+import { openLogEditor } from "./log-editor.js?v=20261115a";
+import { openIdeaBox } from "./idea-box.js?v=20261115a";
+import { maybeShowPatchNotes } from "./patch-notes.js?v=20261115a";
+import { renderWeightChart } from "./charts.js?v=20261115a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261115a";
+import { openProgramWizard } from "./program-wizard.js?v=20261115a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261115a";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261115a";
+import { openIntro } from "./onboarding.js?v=20261115a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261115a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261115a";
+import { Social } from "./social.js?v=20261115a";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261115a";
+import { avatarSvg } from "./avatar.js?v=20261115a";
+import { Bridge, openSheet } from "./potes-ui.js?v=20261115a";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261115a";
+import { renderBilanLine, openBilan } from "./bilan.js?v=20261115a";
+import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261115a";
+import { headHtml, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261115a";
+import { openHero } from "./hero.js?v=20261115a";
+import { openWheel } from "./gift-wheel.js?v=20261115a";
+import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261115a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261115a";
+import { openSettings } from "./potes-settings.js?v=20261115a";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261115a";
+import { SharedPrograms } from "./community.js?v=20261115a";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261115a";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261115a";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261115a";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261115a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -237,6 +239,9 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#drawer-potes-btn").addEventListener("click", () => { closeProfileDrawer(); setView("potes"); });
   $("#drawer-shop-btn").addEventListener("click", () => { closeProfileDrawer(); openMyCharacterWindow("shop"); });
   $("#drawer-morpho-btn").addEventListener("click", () => { closeProfileDrawer(); openMorphoScan(); });
+  $("#drawer-idea-btn").addEventListener("click", () => { closeProfileDrawer(); if (state.user) openIdeaBox({ uid: state.user.id }); });
+  // le logo ramène à l'accueil (la séance en cours reste accessible par son bandeau)
+  $("#topbar-home").addEventListener("click", () => { closeProfileDrawer(); setView("home"); });
   // code cadeau : tours de la Roue des cadeaux (js/gift-wheel.js)
   $("#drawer-code-btn").addEventListener("click", () => { closeProfileDrawer(); openWheel({ onChange: () => { renderMyAvatar(); if (state.activeView === "home") renderHome(); } }); });
   $("#drawer-bilan-btn").addEventListener("click", () => { closeProfileDrawer(); openWeeklyBilan(); });
@@ -414,7 +419,7 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     closeModal("modal-skip");
     skipExerciseFlow();
   });
-  $("#similar-btn").addEventListener("click", openSimilarModal);
+  $("#similar-btn").addEventListener("click", () => openExercisePicker("replace"));
   $("#details-btn").addEventListener("click", openExerciseDetails);
   $("#stop-workout-btn").addEventListener("click", () => {
     const anyDone = state.workout?.blocks.some(block => block.sets.some(set => set.status === "done"));
@@ -797,10 +802,13 @@ async function loadApp(firebaseUser) {
       // une séance pas finie a été reprise (ou proposée) : rien d'autre à l'ouverture
     } else if (!state.sessionLogs.length && !state.programs.length && !state.profile?.onboardingDone) {
       // première connexion : présentation de l'appli, puis création du programme
+      maybeShowPatchNotes({ firstVisit: true });
       setTimeout(() => (state.profile?.introSeen ? openWizard() : openIntroFlow()), 450);
     } else {
       const streak = computeStreak(state.weightLog);
       if (streak.atRisk) setTimeout(() => showToast(t("streakRisk", { count: streak.current })), 900);
+      // nouveautés de la mise à jour, une seule fois
+      setTimeout(() => maybeShowPatchNotes(), 600);
     }
   } catch (error) {
     showAuthError(`${t("loadErrorPrefix")}: ${error.message}`);
@@ -868,6 +876,73 @@ function setView(view) {
   if (view === "nutrition") renderNutrition();
   if (view === "potes") mountPotes($("#view-potes"));
   else unmountPotes();
+  renderWorkoutReturn();
+}
+
+/* ─── Séance en cours pendant qu'on regarde autre chose : un bandeau pour y revenir ─── */
+function workoutInProgress() { return Boolean(state.workout && !isWorkoutComplete(state.workout)); }
+function renderWorkoutReturn() {
+  let bar = document.getElementById("workout-return");
+  const show = workoutInProgress() && state.activeView !== "workout";
+  if (!show) { bar?.remove(); return; }
+  if (!bar) {
+    bar = document.createElement("button");
+    bar.type = "button";
+    bar.id = "workout-return";
+    bar.className = "workout-return";
+    bar.addEventListener("click", () => { closeProfileDrawer(); setView("workout"); });
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = `<span class="workout-return-dot" aria-hidden="true"></span><span class="workout-return-text"><b>${escapeHtml(t("workoutRunning"))}</b><small>${escapeHtml(state.workout.sessionName)}</small></span><span class="workout-return-go">${escapeHtml(t("workoutResume"))}</span>`;
+}
+/** Démarrer une autre séance alors qu'une est en cours : on retourne à celle en cours */
+function returnToRunningWorkout() {
+  if (!workoutInProgress()) return false;
+  closeModal("modal-launcher");
+  setView("workout");
+  showToast(t("workoutAlreadyRunning"));
+  return true;
+}
+
+/* ─── Changements de la dernière fois (exercice remplacé ou ajouté, séries en plus) : proposés ─── */
+function offerLastChanges() {
+  const workout = state.workout;
+  if (!workout?.programId) return;
+  const last = state.sessionLogs
+    .filter(log => log.programId === workout.programId && log.sessionName === workout.sessionName)
+    .sort((a, b) => (b.date || 0) - (a.date || 0))[0];
+  const changes = sessionChanges(last);
+  if (!changes.length) return;
+  const nameOf = id => exerciseNameById(id) || id;
+  const label = change => change.kind === "replaced" ? t("changeReplaced", { to: nameOf(change.exerciseId), from: nameOf(change.from) })
+    : change.kind === "added" ? t("changeAdded", { name: nameOf(change.exerciseId) })
+    : t(change.sets.some(set => set.kind === "drop") ? "changeDrops" : "changeSets", { count: change.sets.length, name: nameOf(change.exerciseId) });
+  const { sheet, close } = openSheet({ small: true });
+  sheet.innerHTML = `
+    <div class="tl-sheet-inner lc-sheet">
+      <div class="tl-sheet-head">
+        <div><p class="tl-sheet-step">${escapeHtml(t("lastChangesKicker"))}</p><h2 id="tl-sheet-title" class="tl-sheet-title" tabindex="-1">${escapeHtml(t("lastChangesTitle"))}</h2></div>
+        <button type="button" class="icon-btn" data-sheet-close aria-label="${escapeHtml(t("close"))}">✕</button>
+      </div>
+      <p class="pt-text">${escapeHtml(t("lastChangesText"))}</p>
+      <ul class="lc-list">${changes.map((change, i) => `<li><label class="lc-item"><input type="checkbox" data-lc="${i}" checked><span>${escapeHtml(label(change))}</span></label></li>`).join("")}</ul>
+      <div class="pt-leave-actions">
+        <button type="button" class="btn btn-surface btn-block" data-lc-skip>${escapeHtml(t("lastChangesSkip"))}</button>
+        <button type="button" class="btn btn-primary btn-block" data-lc-keep>${escapeHtml(t("lastChangesKeep"))}</button>
+      </div>
+    </div>`;
+  sheet.querySelector("#tl-sheet-title")?.focus();
+  sheet.querySelector("[data-lc-skip]").addEventListener("click", () => close());
+  sheet.querySelector("[data-lc-keep]").addEventListener("click", () => {
+    const picked = changes.filter((_, i) => sheet.querySelector(`[data-lc="${i}"]`)?.checked);
+    if (state.workout && picked.length) {
+      applyChanges(state.workout, picked, state.exercises, state.sessionLogs);
+      persistWorkout();
+      renderWorkout();
+      showToast(t("lastChangesApplied"));
+    }
+    close();
+  });
 }
 
 /* ─── Partie Potes : branchements avec le reste de l'appli ─── */
@@ -1393,7 +1468,7 @@ function openWeeklyBilan() {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261104i");
+    const { openMorpho } = await import("./morpho.js?v=20261115a");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),
@@ -1605,6 +1680,13 @@ function renderHome() {
         title: log.sessionName,
         nameOf: (id, fallback) => exerciseNameById(id) || fallback || id,
         isTimed: id => { const exercise = getExerciseById(id, state.exercises); return exercise ? isTimed(exercise) : false; },
+        findExercises: query => {
+          const norm = text => String(text || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const q = norm(query).trim();
+          if (!q) return [];
+          return state.exercises.filter(exercise => norm(getExerciseName(exercise)).includes(q) || norm(exercise.name).includes(q)).slice(0, 12)
+            .map(exercise => ({ id: exercise.id, name: getExerciseName(exercise), muscleFocus: exercise.muscle_focus || "other", type: exercise.type || "other", timed: isTimed(exercise) }));
+        },
         onSave: edited => {
           if (!DB.updateSessionLog(edited)) return;
           state.sessionLogs = DB.getSessionLogs();
@@ -2535,6 +2617,8 @@ function toggleExerciseInSession(exerciseId) {
 }
 
 function launchSpecificProgSession(sessionId) {
+  // une séance déjà commencée n'est jamais écrasée : on y retourne
+  if (returnToRunningWorkout()) return;
   const program = state.programs.find(item => item.id === state.currentProgramId);
   const session = program?.sessions.find(item => item.id === sessionId);
   if (!session || !session.exerciseIds?.length) {
@@ -2553,6 +2637,7 @@ function launchSpecificProgSession(sessionId) {
   state.workout.programId = program.id;
 
   setView("workout");
+  offerLastChanges();
 }
 
 function renderExerciseFilters() {
@@ -2962,6 +3047,8 @@ function launcherAddSession() {
 }
 
 function launchFreeWorkout() {
+  // une séance déjà commencée n'est jamais écrasée : on y retourne
+  if (returnToRunningWorkout()) return;
   const sessionName = $("#free-session-name").value.trim() || t("freeSessionFallback");
   const type = $("#free-session-type").value;
   const exerciseIds = state.exercises.filter(item => item.type === type).slice(0, 5).map(item => item.id);
@@ -2984,6 +3071,8 @@ function launchFreeWorkout() {
 }
 
 function launchProgramWorkout() {
+  // une séance déjà commencée n'est jamais écrasée : on y retourne
+  if (returnToRunningWorkout()) return;
   const programId = $("#program-select").value;
   if (!programId) {
     showToast(t("chooseProgram"));
@@ -3009,9 +3098,12 @@ function launchProgramWorkout() {
 
   closeModal("modal-launcher");
   setView("workout");
+  offerLastChanges();
 }
 
 function repeatWorkout(logId) {
+  // une séance déjà commencée n'est jamais écrasée : on y retourne
+  if (returnToRunningWorkout()) return;
   const log = state.sessionLogs.find(item => item.id === logId);
   if (!log) return;
   state.workout = buildWorkoutFromRecentLog(log, state.exercises);
@@ -3045,6 +3137,15 @@ function renderWorkout() {
   $("#guided-type-badge").textContent = meta.type || getSessionTypeLabel("other");
   $("#guided-muscle-badge").textContent = meta.muscleFocus || t("muscle");
   $("#guided-exercise-name").textContent = exercise ? getExerciseName(exercise) : t("exerciseFallback");
+  // enchaînement avec un autre exercice : rappel sous le nom
+  const partner = supersetPartner(state.workout, state.workout.currentExerciseIndex);
+  let chainNote = $("#guided-superset");
+  if (!chainNote) {
+    $("#guided-exercise-name").insertAdjacentHTML("afterend", `<p id="guided-superset" class="guided-superset"></p>`);
+    chainNote = $("#guided-superset");
+  }
+  chainNote.textContent = partner >= 0 ? t("supersetWith", { name: exerciseNameById(state.workout.blocks[partner].exerciseId) }) : "";
+  chainNote.hidden = partner < 0;
   const illuBox = $("#guided-illu");
   if (illuBox && illuBox.dataset.exerciseId !== (exercise?.id || "")) {
     illuBox.dataset.exerciseId = exercise?.id || "";
@@ -3164,8 +3265,8 @@ function handleNext() {
   // pendant le repos : « + Série secondaire » repart de cette série (si elle était chargée)
   state.dropFrom = weight > 0 && kindBefore !== "warmup" ? { block: exerciseBefore, set: setBefore } : null;
   if (state.workout.currentExerciseIndex !== exerciseBefore && !isWorkoutComplete(state.workout)) saveWorkoutToAccount();
-  // une baisse de charge s'enchaîne sans repos
-  if (getCurrentSet(state.workout)?.kind === "drop") stopRest();
+  // une baisse de charge, ou le second exercice d'un enchaînement, se fait sans repos
+  if (state.workout.chain || getCurrentSet(state.workout)?.kind === "drop") stopRest();
   else startRest(getCurrentBlock(state.workout)?.restSeconds || 60);
   renderWorkout();
   offerUndo(snapshot, t("setDone"));
@@ -3246,12 +3347,54 @@ function addRest(seconds) {
   updateRestUi();
 }
 
+/* Changer d'exercice (similaire ou n'importe lequel) ou en ajouter un pendant la séance */
+let pickerMode = "replace";
+function openExercisePicker(mode = "replace") {
+  if (!state.workout) return;
+  pickerMode = mode;
+  const head = $("#modal-similar .modal-head h3");
+  if (head) head.textContent = t(mode === "add" ? "pickerAddTitle" : "similarExercises");
+  let search = $("#similar-search");
+  if (!search) {
+    $("#similar-list").insertAdjacentHTML("beforebegin", `<input id="similar-search" class="input similar-search" type="search" autocomplete="off">`);
+    search = $("#similar-search");
+    search.addEventListener("input", () => openSimilarModal());
+  }
+  search.placeholder = t("pickerSearch");
+  search.value = "";
+  openSimilarModal();
+}
+
+function pickExercise(exerciseId) {
+  closeModal("modal-similar");
+  if (pickerMode === "add") {
+    const index = addExercise(state.workout, exerciseId, state.exercises, state.sessionLogs);
+    if (index < 0) return;
+    persistWorkout();
+    if (isWorkoutMapOpen()) refreshWorkoutMap();
+    else renderWorkout();
+    showToast(t("exerciseAdded", { name: exerciseNameById(exerciseId) }));
+    return;
+  }
+  replaceCurrentExercise(state.workout, exerciseId, state.exercises, state.sessionLogs);
+  persistWorkout();
+  renderWorkout();
+  showToast(t("exerciseReplaced"));
+}
+
 function openSimilarModal() {
   if (!state.workout) return;
 
   const block = getCurrentBlock(state.workout);
   const currentExercise = getExerciseById(block.exerciseId, state.exercises);
-  const list = getSimilarExercises(currentExercise, state.exercises, 8);
+  const query = ($("#similar-search")?.value || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const norm = text => String(text || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // sans recherche : les similaires (pour changer) ou ceux du même type (pour ajouter) ; avec : tous les exercices
+  const list = query
+    ? state.exercises.filter(exercise => norm(getExerciseName(exercise)).includes(query) || norm(exercise.name).includes(query)).slice(0, 30)
+    : pickerMode === "add"
+      ? state.exercises.filter(exercise => exercise.type === state.workout.type && !state.workout.blocks.some(b => b.exerciseId === exercise.id)).slice(0, 8)
+      : getSimilarExercises(currentExercise, state.exercises, 8);
 
   $("#similar-list").innerHTML = list.length ? list.map(exercise => {
     const meta = getExerciseMeta(exercise);
@@ -3272,21 +3415,16 @@ function openSimilarModal() {
   $("#similar-list").insertAdjacentHTML("beforeend", `<button type="button" class="btn btn-surface btn-block similar-create" data-similar-create>${escapeHtml(t("similarCreate"))}</button>`);
   $("#similar-list [data-similar-create]").addEventListener("click", () => {
     closeModal("modal-similar");
-    openCustomExercise({ onCreated: exercise => {
+    const mode = pickerMode;
+    openCustomExercise({ name: $("#similar-search")?.value || "", onCreated: exercise => {
       if (!state.workout) return;
-      replaceCurrentExercise(state.workout, exercise.id, state.exercises, state.sessionLogs);
-      renderWorkout();
-      showToast(t("exerciseReplaced"));
+      pickerMode = mode;
+      pickExercise(exercise.id);
     } });
   });
 
   $all("[data-replace-id]").forEach(button => {
-    button.addEventListener("click", () => {
-      replaceCurrentExercise(state.workout, button.dataset.replaceId, state.exercises, state.sessionLogs);
-      closeModal("modal-similar");
-      renderWorkout();
-      showToast(t("exerciseReplaced"));
-    });
+    button.addEventListener("click", () => pickExercise(button.dataset.replaceId));
   });
 
   openModal("modal-similar");
@@ -3438,6 +3576,7 @@ function updateUILanguage() {
   if (similarModal && !similarModal.classList.contains("hidden")) {
     openSimilarModal();
   }
+  renderWorkoutReturn();
 
   const launcherModal = $("#modal-launcher");
   if (launcherModal && !launcherModal.classList.contains("hidden")) {
@@ -3615,6 +3754,13 @@ function openSessionMap() {
       if (!updateSet(state.workout, blockIndex, setIndex, patch)) return;
       persistWorkout();
       showToast(t("wmEdited", { n: setIndex + 1 }));
+    },
+    onAddExercise: () => openExercisePicker("add"),
+    onSuperset: blockIndex => {
+      if (!state.workout) return;
+      const on = toggleSuperset(state.workout, blockIndex);
+      persistWorkout();
+      showToast(t(on ? "supersetOn" : "supersetOff"));
     },
     onAddSet: blockIndex => {
       const setIndex = addDoneSet(state.workout, blockIndex);

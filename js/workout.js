@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261104i";
-import { getExerciseById } from "./exercises.js?v=20261104i";
+import { uid } from "./utils.js?v=20261115a";
+import { getExerciseById } from "./exercises.js?v=20261115a";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -48,7 +48,7 @@ export function addDropSet(workout, blockIndex, afterIndex, { weight, reps } = {
   const baseWeight = weight ?? from?.weight;
   if (!from || !(Number(baseWeight) > 0)) return null;
   const target = dropRepsFrom(reps ?? from.reps ?? from.targetReps);
-  const set = { targetReps: target, reps: target, weight: dropWeightFrom(baseWeight), status: "pending", kind: "drop" };
+  const set = { targetReps: target, reps: target, weight: dropWeightFrom(baseWeight), status: "pending", kind: "drop", added: true };
   block.sets.splice(afterIndex + 1, 0, set);
   // après une série faite, on enchaîne tout de suite ; avant, la série en cours ne change pas
   if (from.status === "done") { workout.currentExerciseIndex = blockIndex; workout.currentSetIndex = afterIndex + 1; }
@@ -62,7 +62,7 @@ function applyPlannedDrops(sets, planned, previousExerciseLog) {
   const base = sets.filter(set => set.kind !== "drop");
   const lastWork = [...base].reverse().find(set => set.kind !== "warmup");
   if (!lastWork || !(Number(lastWork.weight) > 0)) return base;
-  const previousDrops = (previousExerciseLog?.sets || []).filter(set => set.kind === "drop");
+  const previousDrops = (previousExerciseLog?.sets || []).filter(set => set.kind === "drop" && !set.added);
   const drops = [];
   let from = lastWork;
   for (let i = 0; i < Math.min(5, Math.max(0, Math.round(count))); i++) {
@@ -81,7 +81,8 @@ function buildSuggestedSets(exercise, previousExerciseLog, planned) {
 }
 
 function suggestedSets(exercise, previousExerciseLog, planned) {
-  const previousSets = previousExerciseLog?.sets || [];
+  // les séries ajoutées pendant une séance (série oubliée, série secondaire en plus) ne deviennent pas la règle
+  const previousSets = (previousExerciseLog?.sets || []).filter(item => !item.added);
   if (!previousSets.length && planned?.setList?.length) {
     // séries détaillées (import Notion) : chauffe, travail et baisses de charge
     return planned.setList.map(item => ({ targetReps: item.reps || planned.reps || 10, reps: item.reps || planned.reps || 10, weight: item.weight || 0, status: "pending", ...(item.kind && item.kind !== "work" ? { kind: item.kind } : {}) }));
@@ -134,9 +135,45 @@ function moveToNextPending(workout, fromIndex) {
   workout.currentExerciseIndex = count;
   workout.currentSetIndex = 0;
 }
+/** Exercice enchaîné avec celui-ci (deux exercices voisins qui partagent le même superset), sinon -1 */
+export function supersetPartner(workout, index) {
+  const block = workout?.blocks?.[index];
+  if (!block?.superset) return -1;
+  for (const other of [index + 1, index - 1]) if (workout.blocks[other]?.superset === block.superset) return other;
+  return -1;
+}
+/** Enchaîner un exercice avec le suivant (ou les séparer s'ils l'étaient déjà) */
+export function toggleSuperset(workout, index) {
+  const a = workout?.blocks?.[index];
+  const b = workout?.blocks?.[index + 1];
+  if (!a || !b) return false;
+  if (a.superset && a.superset === b.superset) { delete a.superset; delete b.superset; return false; }
+  // chaque exercice ne fait partie que d'un seul enchaînement
+  for (const block of [a, b]) {
+    if (!block.superset) continue;
+    const id = block.superset;
+    workout.blocks.forEach(item => { if (item.superset === id) delete item.superset; });
+  }
+  const id = uid();
+  a.superset = id;
+  b.superset = id;
+  return true;
+}
 function goNext(workout) {
   const block = getCurrentBlock(workout);
   if (!block) return;
+  delete workout.chain;
+  // enchaînement : une série de l'un, une série de l'autre ; le repos vient après le second
+  const partner = supersetPartner(workout, workout.currentExerciseIndex);
+  if (partner >= 0) {
+    const partnerSet = firstPendingSet(workout.blocks[partner]);
+    if (partnerSet >= 0) {
+      if (partner > workout.currentExerciseIndex) workout.chain = true;
+      workout.currentExerciseIndex = partner;
+      workout.currentSetIndex = partnerSet;
+      return;
+    }
+  }
   const nextSet = block.sets.findIndex((set, index) => index > workout.currentSetIndex && set.status === "pending");
   if (nextSet >= 0) { workout.currentSetIndex = nextSet; return; }
   moveToNextPending(workout, workout.currentExerciseIndex);
@@ -166,7 +203,7 @@ export function addDoneSet(workout, blockIndex) {
   const reps = Math.max(0, Number(model.reps ?? model.targetReps) || 0);
   let at = -1;
   block.sets.forEach((set, index) => { if (set.status === "done") at = index; });
-  block.sets.splice(at + 1, 0, { targetReps: reps, reps, weight: Math.max(0, Number(model.weight) || 0), status: "done" });
+  block.sets.splice(at + 1, 0, { targetReps: reps, reps, weight: Math.max(0, Number(model.weight) || 0), status: "done", added: true });
   // la série en cours glisse d'un cran si elle était après
   if (workout.currentExerciseIndex === blockIndex && workout.currentSetIndex >= at + 1) workout.currentSetIndex += 1;
   return at + 1;
@@ -184,8 +221,58 @@ export function updateSet(workout, blockIndex, setIndex, { reps, weight, markDon
 export function completeCurrentSet(workout, reps, weight) { const set = getCurrentSet(workout); if (!set) return workout; set.reps = Number(reps) || 0; set.weight = Number(weight) || 0; set.status = "done"; goNext(workout); return workout; }
 export function skipCurrentSet(workout) { const set = getCurrentSet(workout); if (!set) return workout; set.status = "skipped"; goNext(workout); return workout; }
 export function skipCurrentExercise(workout) { const block = getCurrentBlock(workout); if (!block) return workout; block.sets.forEach(set => { if (set.status === "pending") set.status = "skipped"; }); moveToNextPending(workout, workout.currentExerciseIndex); return workout; }
-export function replaceCurrentExercise(workout, newExerciseId, exercises, sessionLogs) { const nextExercise = getExerciseById(newExerciseId, exercises); const currentBlock = getCurrentBlock(workout); if (!nextExercise || !currentBlock) return workout; const previousExerciseLog = findLatestExerciseLog(nextExercise.id, sessionLogs); currentBlock.exerciseId = nextExercise.id; currentBlock.restSeconds = getRestBase(nextExercise); currentBlock.sets = buildSuggestedSets(nextExercise, previousExerciseLog); workout.currentSetIndex = 0; return workout; }
+export function replaceCurrentExercise(workout, newExerciseId, exercises, sessionLogs) { const nextExercise = getExerciseById(newExerciseId, exercises); const currentBlock = getCurrentBlock(workout); if (!nextExercise || !currentBlock) return workout; const previousExerciseLog = findLatestExerciseLog(nextExercise.id, sessionLogs); if (!currentBlock.added) { const planned = currentBlock.replacedFrom || currentBlock.exerciseId; if (planned === nextExercise.id) delete currentBlock.replacedFrom; else currentBlock.replacedFrom = planned; } currentBlock.exerciseId = nextExercise.id; currentBlock.restSeconds = getRestBase(nextExercise); currentBlock.sets = buildSuggestedSets(nextExercise, previousExerciseLog); workout.currentSetIndex = 0; return workout; }
 export function buildSessionLogFromWorkout(workout, exercises, endedAt = Date.now()) {
-  const completedExercises = workout.blocks.map(block => { const exercise = getExerciseById(block.exerciseId, exercises); return { exerciseId: block.exerciseId, exerciseName: exercise?.name || "exercice", muscleFocus: exercise?.muscle_focus || "other", type: exercise?.type || "other", sets: block.sets.map(item => ({ reps: item.reps, weight: item.weight, targetReps: item.targetReps, status: item.status, ...(item.kind ? { kind: item.kind } : {}) })), restSeconds: block.restSeconds }; });
+  const completedExercises = workout.blocks.map(block => { const exercise = getExerciseById(block.exerciseId, exercises); return { exerciseId: block.exerciseId, exerciseName: exercise?.name || "exercice", muscleFocus: exercise?.muscle_focus || "other", type: exercise?.type || "other", sets: block.sets.map(item => ({ reps: item.reps, weight: item.weight, targetReps: item.targetReps, status: item.status, ...(item.kind ? { kind: item.kind } : {}), ...(item.added ? { added: true } : {}) })), restSeconds: block.restSeconds, ...(block.added ? { added: true } : {}), ...(block.replacedFrom ? { replacedFrom: block.replacedFrom } : {}), ...(block.superset ? { superset: block.superset } : {}) }; });
   return { id: uid(), workoutId: workout.id || null, sessionName: workout.sessionName, type: workout.type, programId: workout.programId || null, date: endedAt, durationMs: Math.max(0, endedAt - workout.startedAt), exercises: completedExercises };
+}
+/** Ajouter un exercice à la séance en cours, juste après l'exercice donné ; renvoie sa place */
+export function addExercise(workout, exerciseId, exercises, sessionLogs, afterIndex = workout?.currentExerciseIndex) {
+  const exercise = getExerciseById(exerciseId, exercises);
+  if (!workout || !exercise) return -1;
+  const at = Math.min(workout.blocks.length, Math.max(0, Number(afterIndex) + 1));
+  const block = { exerciseId: exercise.id, restSeconds: getRestBase(exercise), sets: buildSuggestedSets(exercise, findLatestExerciseLog(exercise.id, sessionLogs)), added: true };
+  workout.blocks.splice(at, 0, block);
+  if (workout.currentExerciseIndex >= at && workout.currentExerciseIndex < workout.blocks.length - 1) workout.currentExerciseIndex += 1;
+  // séance qui était finie : on enchaîne sur le nouvel exercice
+  if (workout.currentExerciseIndex >= workout.blocks.length - 1 && firstPendingSet(getCurrentBlock(workout)) < 0) { workout.currentExerciseIndex = at; workout.currentSetIndex = 0; }
+  return at;
+}
+
+/** Ce qui a changé par rapport au programme lors d'une séance : exercice remplacé, ajouté, séries en plus */
+export function sessionChanges(log) {
+  const out = [];
+  (log?.exercises || []).forEach((ex, index) => {
+    if (ex.added) out.push({ kind: "added", index, exerciseId: ex.exerciseId });
+    else if (ex.replacedFrom) out.push({ kind: "replaced", index, exerciseId: ex.exerciseId, from: ex.replacedFrom });
+    const extra = (ex.sets || []).filter(set => set.added && set.status === "done");
+    if (!ex.added && extra.length) {
+      out.push({ kind: "sets", index, exerciseId: ex.exerciseId, sets: extra.map(set => ({ reps: set.reps, weight: set.weight, ...(set.kind ? { kind: set.kind } : {}) })) });
+    }
+  });
+  return out;
+}
+
+/** Reprendre des changements de la dernière fois dans la séance qui commence */
+export function applyChanges(workout, changes, exercises, sessionLogs) {
+  for (const change of changes) {
+    if (change.kind === "replaced") {
+      const index = workout.blocks.findIndex(block => block.exerciseId === change.from);
+      if (index < 0) continue;
+      const keep = workout.currentExerciseIndex;
+      workout.currentExerciseIndex = index;
+      replaceCurrentExercise(workout, change.exerciseId, exercises, sessionLogs);
+      workout.currentExerciseIndex = keep;
+      workout.currentSetIndex = 0;
+    } else if (change.kind === "added") {
+      addExercise(workout, change.exerciseId, exercises, sessionLogs, Math.min(change.index, workout.blocks.length) - 1);
+      workout.currentExerciseIndex = 0;
+      workout.currentSetIndex = 0;
+    } else if (change.kind === "sets") {
+      const block = workout.blocks.find(item => item.exerciseId === change.exerciseId);
+      if (!block) continue;
+      for (const set of change.sets) block.sets.push({ targetReps: set.reps, reps: set.reps, weight: set.weight, status: "pending", ...(set.kind ? { kind: set.kind } : {}), added: true });
+    }
+  }
+  return workout;
 }
