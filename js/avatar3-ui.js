@@ -3,13 +3,13 @@
    (users/<uid> → rpg.look), publiée dans le profil des Potes.
    La fenêtre (équipement, apparence, boutique) est dans js/hero.js.
    ═══════════════════════════════════════════════════════════ */
-import { figureSvg, normalizeLook, visibleOutfit } from "./avatar3.js?v=20261115a";
-import { Social } from "./social.js?v=20261115a";
-import { normalizeAvatar } from "./avatar.js?v=20261115a";
-import { COSMETIC_BACKGROUNDS, lookTag, cosmeticById } from "./cosmetics.js?v=20261115a";
-import { rpgState } from "./rpg-ui.js?v=20261115a";
-import { DB } from "./db.js?v=20261115a";
-import { openHero } from "./hero.js?v=20261115a";
+import { figureSvg, normalizeLook, visibleOutfit } from "./avatar3.js?v=20261115b";
+import { Social } from "./social.js?v=20261115b";
+import { normalizeAvatar } from "./avatar.js?v=20261115b";
+import { COSMETIC_BACKGROUNDS, lookTag, cosmeticById } from "./cosmetics.js?v=20261115b";
+import { rpgState } from "./rpg-ui.js?v=20261115b";
+import { DB } from "./db.js?v=20261115b";
+import { openHero } from "./hero.js?v=20261115b";
 
 /* ─── Données : apparence enregistrée avec le personnage (users/<uid> → rpg.look) ─── */
 export function currentLook() { return normalizeLook((DB.getRpg() || {}).look); }

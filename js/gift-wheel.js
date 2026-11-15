@@ -12,17 +12,17 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261115a";
-import { DB } from "./db.js?v=20261115a";
-import { Shop } from "./shop.js?v=20261115a";
-import { i18n } from "./i18n.js?v=20261115a";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261115a";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261115a";
-import { figureSvg, pieceUrl } from "./avatar3.js?v=20261115a";
-import { rarityByKey } from "./rpg-art.js?v=20261115a";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261115a";
-import { openHero } from "./hero.js?v=20261115a";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115a";
+import { firestore } from "./firebase-config.js?v=20261115b";
+import { DB } from "./db.js?v=20261115b";
+import { Shop } from "./shop.js?v=20261115b";
+import { i18n } from "./i18n.js?v=20261115b";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261115b";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261115b";
+import { figureSvg, pieceUrl } from "./avatar3.js?v=20261115b";
+import { rarityByKey } from "./rpg-art.js?v=20261115b";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261115b";
+import { openHero } from "./hero.js?v=20261115b";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115b";
 
 /* ─── La roue : 100 parts en tout (la taille d'une case = sa chance) ─── */
 // dup : points spé donnés à la place d'un costume (ou d'une teinture) qu'on a déjà

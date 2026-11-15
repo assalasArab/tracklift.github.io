@@ -2,8 +2,8 @@
    Nouveautés : à l'ouverture de l'appli, une fenêtre annonce la mise à jour
    (une seule fois par mise à jour et par téléphone). La plus récente en tête.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261115a";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115a";
+import { i18n } from "./i18n.js?v=20261115b";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115b";
 
 export const PATCHES = [
   {

@@ -250,6 +250,9 @@ select.input {
   padding: calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
 }
 .profile-drawer.open { transform: translateX(0); }
+/* menu du profil : chaque bloc garde sa taille, c'est le menu entier qui défile (iPhone compris) */
+.profile-drawer { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.profile-drawer > * { flex-shrink: 0; }
 .drawer-header { display: flex; justify-content: space-between; align-items: center; margin: 0 4px 12px; }
 .drawer-header h2 { font-family: var(--font-title); font-size: 28px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
 .drawer-profile-info { text-align: center; padding: 20px 16px; background: var(--surface); border-radius: var(--radius-lg); margin-bottom: 20px; }
