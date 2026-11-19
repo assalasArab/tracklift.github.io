@@ -10,7 +10,7 @@
    ═══════════════════════════════════════════════════════════ */
 import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261115c";
 import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261115c";
-import { openWheel, wheelState, discounted } from "./gift-wheel.js?v=20261115c";
+import { openWheel, wheelState, discounted, wheelOpen } from "./gift-wheel.js?v=20261115c";
 import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261115c";
 import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261115c";
 import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261115c";
@@ -91,6 +91,7 @@ const TEXT = {
     owned: "Possédé", worn: "Équipé",
     wheelTag: "Roue", wheelOnly: "Ne s'achète pas : à gagner à la Roue des cadeaux.", openWheel: "Ouvrir la roue",
     wheelTitle: "Roue des cadeaux", wheelSpins: "{n} tours à jouer", wheelSpinsOne: "1 tour à jouer", wheelNoSpin: "Un code cadeau ? Tente ta chance",
+    wheelUntil: "jusqu'au dim. 22 nov.", wheelGone: "Partie : nouvelle collection bientôt", wheelOver: "Collection terminée : il ne se gagne plus pour l'instant.",
     coupons: "Tes bons", couponsList: "Tes bons de réduction : {list}", couponNone: "Sans bon",
     pathNow: "Ta voie", rank: "Rang {n}", strengthens: "Renforce : {list}", style: "Style : {ref}",
     evolutions: "Évolutions", atLevel: "Niv. {n}", choiceAt: "Choix au niv. {n}",
@@ -135,6 +136,7 @@ const TEXT = {
     owned: "Owned", worn: "Equipped",
     wheelTag: "Wheel", wheelOnly: "Not for sale: win it on the Gift wheel.", openWheel: "Open the wheel",
     wheelTitle: "Gift wheel", wheelSpins: "{n} spins to play", wheelSpinsOne: "1 spin to play", wheelNoSpin: "Got a gift code? Try your luck",
+    wheelUntil: "until Sun 22 Nov", wheelGone: "Gone: new collection soon", wheelOver: "Collection over: it can't be won for now.",
     coupons: "Your vouchers", couponsList: "Your vouchers: {list}", couponNone: "No voucher",
     pathNow: "Your path", rank: "Rank {n}", strengthens: "Strengthens: {list}", style: "Style: {ref}",
     evolutions: "Evolutions", atLevel: "Lv. {n}", choiceAt: "Choice at lv. {n}",
@@ -554,10 +556,10 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     const { spins, coupons } = wheelState();
     const list = [...new Set(coupons.map(c => c.pct))].map(p => `−${p} %`).join(", ");
     return `
-      <button type="button" class="gw-banner${spins ? " is-lit" : ""}" data-hx-wheel>
+      <button type="button" class="gw-banner${spins && wheelOpen() ? " is-lit" : ""}" data-hx-wheel>
         <svg class="gw-banner-wheel" viewBox="-12 -12 24 24" aria-hidden="true" focusable="false"><circle r="10.5"/><path d="M0-10.5V10.5M-10.5 0H10.5M-7.4-7.4L7.4 7.4M7.4-7.4L-7.4 7.4"/><circle r="2.6" class="gw-banner-hub"/></svg>
-        <span><b>${esc(t.wheelTitle)}</b><small>${esc(spins === 1 ? t.wheelSpinsOne : spins ? fill(t.wheelSpins, { n: spins }) : t.wheelNoSpin)}</small></span>
-        ${spins ? `<i class="gw-banner-count" aria-hidden="true">${spins}</i>` : ""}
+        <span><b>${esc(t.wheelTitle)}</b><small>${esc(!wheelOpen() ? t.wheelGone : `${spins === 1 ? t.wheelSpinsOne : spins ? fill(t.wheelSpins, { n: spins }) : t.wheelNoSpin} · ${t.wheelUntil}`)}</small></span>
+        ${spins && wheelOpen() ? `<i class="gw-banner-count" aria-hidden="true">${spins}</i>` : ""}
       </button>
       ${list ? `<p class="hx-hint">${esc(fill(t.couponsList, { list }))}</p>` : ""}`;
   };
@@ -633,7 +635,8 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
       else if (info.worn) actions = `<button type="button" class="btn btn-surface btn-block" data-hx-act="unequip">${esc(t.unequip)}</button>`;
       else actions = info.usable ? `<button type="button" class="btn btn-primary btn-block" data-hx-act="equip">${esc(t.equip)}</button>` : `<p class="hx-state is-missing">${esc(info.reason)}</p>`;
     } else if (info.wheel) {
-      actions = `<p class="hx-state">${esc(t.wheelOnly)}</p><button type="button" class="btn btn-surface btn-block hx-wheel-btn" data-hx-wheel>${esc(t.openWheel)}</button>`;
+      actions = wheelOpen() ? `<p class="hx-state">${esc(t.wheelOnly)}</p><button type="button" class="btn btn-surface btn-block hx-wheel-btn" data-hx-wheel>${esc(t.openWheel)}</button>`
+        : `<p class="hx-state">${esc(t.wheelOver)}</p>`;
     } else if (!info.usable) {
       actions = `<p class="hx-state is-missing">${svg(ICON.lock)}${esc(info.reason)}</p>`;
     } else {

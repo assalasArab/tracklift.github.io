@@ -41,10 +41,16 @@ const TOTAL = WHEEL.reduce((n, s) => n + s.weight, 0);
 const MAX_SPINS = 10;
 /** Prix d'un tour acheté avec les points spé (en plus des codes cadeaux) */
 export const SPIN_PRICE = 70;
+/** La roue de cette collection part le dimanche 22 novembre 2026 à minuit (heure du téléphone).
+ *  Les costumes gagnés et les bons restent ; les tours non joués sont gardés pour la prochaine collection. */
+export const WHEEL_ENDS_AT = new Date(2026, 10, 23, 0, 0, 0).getTime();
+export const wheelOpen = (now = Date.now()) => now < WHEEL_ENDS_AT;
 
 const TEXT = {
   fr: {
     kicker: "Comptoir de la Fonte", title: "Roue des cadeaux", close: "Fermer",
+    until: "jusqu'au dimanche 22 novembre", closedTitle: "La roue est partie", closedText: "Cette collection est terminée : une nouvelle arrive bientôt au Comptoir. Tes costumes et tes bons restent à toi.",
+    kept: "Tes {n} tours sont gardés pour la prochaine collection.", keptOne: "Ton tour est gardé pour la prochaine collection.",
     codeLabel: "Code cadeau", codeHolder: "Ex. : FONTE-2026", validate: "Valider", checking: "Vérification…",
     ok: "Code accepté : +{n} tours de roue !", okOne: "Code accepté : +1 tour de roue !",
     days: "Ta flamme est réparée : {n} jours de pesée remis.", daysOne: "Ta flamme est réparée : 1 jour de pesée remis.",
@@ -75,6 +81,8 @@ const TEXT = {
   },
   en: {
     kicker: "The Iron Counter", title: "Gift wheel", close: "Close",
+    until: "until Sunday 22 November", closedTitle: "The wheel is gone", closedText: "This collection is over: a new one is coming soon to the Counter. Your costumes and coupons stay yours.",
+    kept: "Your {n} spins are kept for the next collection.", keptOne: "Your spin is kept for the next collection.",
     codeLabel: "Gift code", codeHolder: "E.g. IRON-2026", validate: "Confirm", checking: "Checking…",
     ok: "Code accepted: +{n} wheel spins!", okOne: "Code accepted: +1 wheel spin!",
     days: "Your streak is repaired: {n} weigh-in days restored.", daysOne: "Your streak is repaired: 1 weigh-in day restored.",
@@ -172,7 +180,7 @@ function pick() {
   return WHEEL[0];
 }
 export function spinOnce() {
-  if (wheelState().spins <= 0) return null;
+  if (!wheelOpen() || wheelState().spins <= 0) return null;
   const seg = pick();
   const at = Date.now();
   const id = `wheel:${at.toString(36)}${randomInt(1e6).toString(36)}`;
@@ -281,7 +289,8 @@ export function openWheel({ onChange, onClose } = {}) {
         </div>
         <p class="gw-msg" role="status" aria-live="polite"></p>
       </form>
-      <div class="gw-stage">
+      ${wheelOpen() ? "" : `<div class="hx-frame gw-closed"><p class="gw-closed-title">${esc(T().closedTitle)}</p><p class="hx-text">${esc(T().closedText)}</p></div>`}
+      <div class="gw-stage"${wheelOpen() ? "" : " hidden"}>
         <div class="gw-wheel-wrap">
           <svg class="gw-pointer" viewBox="0 0 40 50" aria-hidden="true" focusable="false"><path d="M20 47L5 15a15 15 0 1 1 30 0z"/><circle cx="20" cy="15" r="5.5"/></svg>
           ${wheelSvg()}
@@ -290,7 +299,7 @@ export function openWheel({ onChange, onClose } = {}) {
       <p class="gw-spins" aria-live="polite"></p>
       <div class="gw-result" aria-live="polite"></div>
       <div class="gw-actions"></div>
-      ${odds()}
+      ${wheelOpen() ? odds() : ""}
     </div>`;
 
   const $ = s => sheet.querySelector(s);
@@ -301,7 +310,12 @@ export function openWheel({ onChange, onClose } = {}) {
     const t = T();
     const { spins } = wheelState();
     const balance = Shop.wallet().balance;
-    $(".gw-spins").textContent = st.spinning ? t.spinning : spins === 1 ? t.spinsOne : spins ? fill(t.spins, { n: spins }) : t.spinsNone;
+    if (!wheelOpen()) {
+      $(".gw-spins").textContent = spins ? fill(spins === 1 ? t.keptOne : t.kept, { n: spins }) : "";
+      $(".gw-actions").innerHTML = "";
+      return;
+    }
+    $(".gw-spins").textContent = (st.spinning ? t.spinning : spins === 1 ? t.spinsOne : spins ? fill(t.spins, { n: spins }) : t.spinsNone) + (st.spinning ? "" : ` · ${t.until}`);
     $(".gw-spins").classList.toggle("is-lit", spins > 0 && !st.spinning);
     const r = st.result;
     const see = r ? (r.gift.kind === "costume" && !r.gift.dup ? "costume" : r.gift.kind === "dye" && !r.gift.dup ? "dye" : r.gift.kind === "coupon" ? "coupon" : "ps") : null;
@@ -429,6 +443,7 @@ export function openWheel({ onChange, onClose } = {}) {
   });
 
   sheet.addEventListener("click", event => {
+    if (!wheelOpen() && event.target.closest("[data-gw-spin], [data-gw-buy]")) return;
     if (event.target.closest("[data-gw-spin]")) { spin(); return; }
     // acheter un tour puis le jouer tout de suite
     if (event.target.closest("[data-gw-buy]")) {

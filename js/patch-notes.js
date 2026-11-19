@@ -14,6 +14,7 @@ export const PATCHES = [
         "Les charges proposées suivent la séance : un même exercice en Push et en Upper garde chacun ses poids.",
         "Le minuteur de repos continue de tourner même si tu changes de page ou quittes l'appli. Le bandeau « Séance en cours » l'affiche aussi.",
         "Pesées plus sûres : si l'envoi est coupé (appli fermée trop vite), ta pesée est gardée sur le téléphone et repart à la prochaine ouverture. Ta flamme ne se casse plus pour rien.",
+        "Dernière chance pour la Roue des cadeaux : elle part dimanche 22 novembre à minuit. Une nouvelle collection arrive bientôt !",
         "30 nouveaux objets pour ton héros : kettlebell, barre olympique, armes de rang 4 et armes mythiques du niveau 90, armures, ceinture, chrono, plume de phénix…"
       ]
     },
@@ -23,6 +24,7 @@ export const PATCHES = [
         "Suggested weights follow the workout: the same exercise in Push and Upper keeps its own weights.",
         "The rest timer keeps running even if you switch pages or leave the app. The “Workout in progress” banner shows it too.",
         "Safer weigh-ins: if sending is cut off (app closed too fast), your weigh-in is kept on the phone and sent the next time you open the app. Your streak no longer breaks for nothing.",
+        "Last chance for the Gift wheel: it leaves on Sunday 22 November at midnight. A new collection is coming soon!",
         "30 new items for your hero: kettlebell, Olympic bar, rank 4 weapons and level 90 mythic weapons, armour, lifting belt, stopwatch, phoenix feather…"
       ]
     }
