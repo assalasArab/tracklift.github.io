@@ -12,17 +12,17 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261115b";
-import { DB } from "./db.js?v=20261115b";
-import { Shop } from "./shop.js?v=20261115b";
-import { i18n } from "./i18n.js?v=20261115b";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261115b";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261115b";
-import { figureSvg, pieceUrl } from "./avatar3.js?v=20261115b";
-import { rarityByKey } from "./rpg-art.js?v=20261115b";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261115b";
-import { openHero } from "./hero.js?v=20261115b";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115b";
+import { firestore } from "./firebase-config.js?v=20261115c";
+import { DB } from "./db.js?v=20261115c";
+import { Shop } from "./shop.js?v=20261115c";
+import { i18n } from "./i18n.js?v=20261115c";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261115c";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261115c";
+import { figureSvg, pieceUrl } from "./avatar3.js?v=20261115c";
+import { rarityByKey } from "./rpg-art.js?v=20261115c";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261115c";
+import { openHero } from "./hero.js?v=20261115c";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115c";
 
 /* ─── La roue : 100 parts en tout (la taille d'une case = sa chance) ─── */
 // dup : points spé donnés à la place d'un costume (ou d'une teinture) qu'on a déjà
@@ -47,6 +47,7 @@ const TEXT = {
     kicker: "Comptoir de la Fonte", title: "Roue des cadeaux", close: "Fermer",
     codeLabel: "Code cadeau", codeHolder: "Ex. : FONTE-2026", validate: "Valider", checking: "Vérification…",
     ok: "Code accepté : +{n} tours de roue !", okOne: "Code accepté : +1 tour de roue !",
+    days: "Ta flamme est réparée : {n} jours de pesée remis.", daysOne: "Ta flamme est réparée : 1 jour de pesée remis.",
     errors: {
       format: "Ce code n'a pas la bonne forme : lettres, chiffres et tirets seulement.",
       used: "Tu as déjà utilisé ce code.",
@@ -76,6 +77,7 @@ const TEXT = {
     kicker: "The Iron Counter", title: "Gift wheel", close: "Close",
     codeLabel: "Gift code", codeHolder: "E.g. IRON-2026", validate: "Confirm", checking: "Checking…",
     ok: "Code accepted: +{n} wheel spins!", okOne: "Code accepted: +1 wheel spin!",
+    days: "Your streak is repaired: {n} weigh-in days restored.", daysOne: "Your streak is repaired: 1 weigh-in day restored.",
     errors: {
       format: "This code doesn't look right: letters, digits and dashes only.",
       used: "You have already used this code.",
@@ -153,10 +155,14 @@ export async function redeemCode(raw) {
   }
   if (!data) data = BUILT_IN[code] || null;
   if (!data) { fails.push(now); return { ok: false, reason: "unknown" }; }
+  // code réservé à un seul compte : pour les autres, il n'existe pas
+  if (data.uid && data.uid !== DB.currentUserId) { fails.push(now); return { ok: false, reason: "unknown" }; }
   if (data.active === false) return { ok: false, reason: "expired" };
   const spins = Math.max(1, Math.min(MAX_SPINS, Math.floor(Number(data.spins) || 1)));
   if (!DB.addPurchase({ id: codeTag(code), price: 0, at: now, spins })) return { ok: false, reason: DB.getData() ? "used" : "save" };
-  return { ok: true, spins };
+  // geste commercial : les jours de pesée perdus sont remis (une seule fois, le code est marqué utilisé)
+  const days = data.uid && data.fillFrom && data.fillTo ? DB.fillMissingDays(String(data.fillFrom), String(data.fillTo)) : 0;
+  return { ok: true, spins, days };
 }
 
 /* ─── Un tour de roue : le gain est tiré puis enregistré ─── */
@@ -410,7 +416,7 @@ export function openWheel({ onChange, onClose } = {}) {
     btn.disabled = false;
     if (res.ok) {
       msg.className = "gw-msg is-ok";
-      msg.textContent = res.spins === 1 ? t.okOne : fill(t.ok, { n: res.spins });
+      msg.textContent = (res.spins === 1 ? t.okOne : fill(t.ok, { n: res.spins })) + (res.days ? ` ${fill(res.days === 1 ? t.daysOne : t.days, { n: res.days })}` : "");
       input.value = "";
       changed();
       renderBar();

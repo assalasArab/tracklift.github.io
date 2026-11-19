@@ -164,6 +164,126 @@ export const GEAR_LORE = {
   couronne: {
     fr: "Remise une seule fois par saison à celui qui ne manque aucune pesée. Elle ne pèse rien, et pourtant tout le monde la remarque.",
     en: "Given once a season to whoever never misses a weigh-in. It weighs nothing, yet everyone notices it."
+  },
+  kettlebell: {
+    fr: "Une poignée, une boule de fonte, aucune pitié. Les anciens disent qu'un swing bien fait réveille même les fessiers endormis.",
+    en: "A handle, a ball of iron, no mercy. The elders say one clean swing wakes up even the sleepiest glutes."
+  },
+  barre: {
+    fr: "Vingt kilos d'acier strié, polis par mille mains moites. Elle ne juge pas : elle attend juste que tu la soulèves.",
+    en: "Twenty kilos of knurled steel, polished by a thousand sweaty hands. It doesn't judge: it just waits for you to lift it."
+  },
+  rempart: {
+    fr: "Levé au lever du jour sur les remparts de la Forge, il n'a jamais reculé d'un centimètre. Ton dos non plus, maintenant.",
+    en: "Raised at dawn on the Forge walls, it never gave back a single inch. Neither will your back, now."
+  },
+  briseMonts: {
+    fr: "Le Berserker qui l'a forgée voulait un deadlift à 400 kilos. Il a fendu la montagne d'à côté à la place.",
+    en: "The Berserker who forged it wanted a 400-kilo deadlift. He split the next mountain instead."
+  },
+  crocsNuit: {
+    fr: "Deux lames qui ne brillent qu'à minuit, l'heure où les vrais s'entraînent quand la salle est vide.",
+    en: "Two blades that only shine at midnight, the hour when the real ones train in an empty gym."
+  },
+  arcTempete: {
+    fr: "Sa corde est tressée d'éclairs. Chaque flèche part plus vite qu'un sprint de fin de série.",
+    en: "Its string is braided from lightning. Every arrow flies faster than an end-of-set sprint."
+  },
+  batonNova: {
+    fr: "Au bout du bâton dort une étoile naine. Elle s'allume à chaque record personnel.",
+    en: "A dwarf star sleeps at the tip of the staff. It lights up with every personal record."
+  },
+  fauxEclipse: {
+    fr: "Quand elle tourne, le soleil se cache une seconde. Les courbatures aussi, pour un temps.",
+    en: "When it spins, the sun hides for a second. So does the soreness, for a while."
+  },
+  marteauAube: {
+    fr: "Il frappe comme le premier rayon du matin : doux à l'œil, impossible à ignorer.",
+    en: "It strikes like the first ray of morning: gentle on the eye, impossible to ignore."
+  },
+  batonMonde: {
+    fr: "Taillé dans une racine de l'Arbre-Monde. Il pousse d'un anneau chaque année où tu ne lâches rien.",
+    en: "Carved from a root of the World Tree. It grows a ring every year you don't give up."
+  },
+  railgun: {
+    fr: "Une bobine, un aimant et beaucoup trop de café. L'Ingénieur qui l'a bricolé n'a toujours pas retrouvé ses sourcils.",
+    en: "A coil, a magnet and far too much coffee. The Engineer who rigged it still hasn't found his eyebrows."
+  },
+  lameTitans: {
+    fr: "Forgée avec les disques des Titans tombés. Seul un Guerrier qui a tout donné peut la soulever d'une main.",
+    en: "Forged from the plates of fallen Titans. Only a Warrior who gave everything can lift it one-handed."
+  },
+  murmure: {
+    fr: "On ne la voit pas venir, on ne l'entend pas partir. Seul reste un léger courant d'air… et un record battu.",
+    en: "You don't see it coming, you don't hear it leave. Only a light breeze remains… and a broken record."
+  },
+  codexInfini: {
+    fr: "Ses pages ne finissent jamais : chaque séance y écrit une ligne de plus. Le Sorcier qui le lit en entier devient légende.",
+    en: "Its pages never end: every workout writes one more line. The Sorcerer who reads it all becomes legend."
+  },
+  sceptreSoleil: {
+    fr: "Il garde la chaleur du premier soleil. Les alliés à côté de lui oublient la fatigue.",
+    en: "It holds the warmth of the first sun. Allies standing near it forget their fatigue."
+  },
+  cleMaitresse: {
+    fr: "Elle ouvre toutes les machines de la salle, même celle que personne n'a jamais su régler.",
+    en: "It opens every machine in the gym, even the one nobody ever figured out how to adjust."
+  },
+  debardeur: {
+    fr: "Enfilé à 6 heures du matin, quand la ville dort encore. Il sent la motivation et un peu le café.",
+    en: "Pulled on at 6 a.m., while the city still sleeps. It smells of motivation and a little of coffee."
+  },
+  kimono: {
+    fr: "Ceinture nouée, souffle posé. Les plis du tissu gardent la mémoire de chaque chute… et de chaque relevé.",
+    en: "Belt tied, breath steady. The folds of the cloth remember every fall… and every rise."
+  },
+  plates: {
+    fr: "Chaque plaque a été martelée après une séance de jambes. C'est pour ça qu'elle tient debout toute seule.",
+    en: "Each plate was hammered after a leg day. That's why it can stand up on its own."
+  },
+  manteauRodeur: {
+    fr: "Doublé de nuit, cousu de silence. Il glisse entre les bancs sans faire grincer une seule barre.",
+    en: "Lined with night, stitched with silence. It slips between benches without rattling a single bar."
+  },
+  armureTitan: {
+    fr: "Portée par le dernier Titan avant sa retraite. Elle pèse lourd, mais c'est un poids qui rend plus fort.",
+    en: "Worn by the last Titan before he retired. It's heavy, but it's the kind of weight that makes you stronger."
+  },
+  togeEtoiles: {
+    fr: "Tissée de constellations. Les nuits sans nuages, on peut y lire ton programme de la semaine.",
+    en: "Woven from constellations. On cloudless nights, you can read your weekly program in it."
+  },
+  armureLegende: {
+    fr: "Personne ne l'a forgée : elle apparaît d'elle-même autour de ceux qui ont atteint le niveau 90.",
+    en: "Nobody forged it: it simply appears around those who reached level 90."
+  },
+  ceinture: {
+    fr: "Serrée d'un cran avant le squat lourd. Elle ne porte pas la charge à ta place, mais elle te rappelle de gainer.",
+    en: "Tightened one notch before the heavy squat. It won't lift for you, but it reminds you to brace."
+  },
+  chrono: {
+    fr: "Il compte les repos à la seconde près. Même quand tu changes de page, il ne perd jamais le fil.",
+    en: "It counts rest to the second. Even when you switch pages, it never loses track."
+  },
+  amulette: {
+    fr: "Elle monte et descend comme la mer. Porte-la et ta respiration se cale sur la marée.",
+    en: "It rises and falls like the sea. Wear it and your breathing follows the tide."
+  },
+  chevaliere: {
+    fr: "Gravée du nombre de séances de son ancien porteur : mille, tout rond. À toi de faire mieux.",
+    en: "Engraved with its former owner's workout count: one thousand, exactly. Your turn to beat it."
+  },
+  monocle: {
+    fr: "À travers ce verre, on voit l'angle exact de chaque articulation. Plus aucune mauvaise exécution ne passe.",
+    en: "Through this lens you see the exact angle of every joint. No sloppy rep gets past it anymore."
+  },
+  plumePhenix: {
+    fr: "Elle s'enflamme quand tu tombes et te relève avec elle. Une seule par champion, dit-on.",
+    en: "It bursts into flame when you fall and lifts you back up. Only one per champion, they say."
+  },
+  couronneEternelle: {
+    fr: "Elle ne se gagne pas, elle se mérite : quatre-vingt-dix niveaux de sueur. Elle ne quitte plus jamais ta tête.",
+    en: "It isn't won, it's earned: ninety levels of sweat. It never leaves your head again."
   }
 };
 

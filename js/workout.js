@@ -1,5 +1,5 @@
-import { uid } from "./utils.js?v=20261115b";
-import { getExerciseById } from "./exercises.js?v=20261115b";
+import { uid } from "./utils.js?v=20261115c";
+import { getExerciseById } from "./exercises.js?v=20261115c";
 function getRestBase(exercise) {
   const focus = exercise?.muscle_focus;
   const type = exercise?.type;
@@ -103,17 +103,33 @@ function suggestedSets(exercise, previousExerciseLog, planned) {
   else if (exercise?.bodyweight) preset = { ...preset, weight: 0 };
   return Array.from({ length: preset.sets }, () => ({ targetReps: preset.reps, reps: preset.reps, weight: preset.weight, status: "pending" }));
 }
-export function findLatestExerciseLog(exerciseId, sessionLogs) {
+/**
+ * Dernière fois qu'un exercice a été fait. Avec context { sessionName, programId } :
+ * d'abord la dernière fois dans CETTE séance (ex. Pec fly en Push ≠ Pec fly en Upper),
+ * sinon la dernière fois tout court.
+ */
+export function findLatestExerciseLog(exerciseId, sessionLogs, context = null) {
+  const pick = log => (log.exercises || []).find(item => item.exerciseId === exerciseId);
+  const name = String(context?.sessionName || "").trim().toLowerCase();
+  if (name) {
+    const sameSession = log => String(log.sessionName || "").trim().toLowerCase() === name
+      && (!context.programId || !log.programId || log.programId === context.programId);
+    for (const log of sessionLogs || []) {
+      if (!sameSession(log)) continue;
+      const found = pick(log);
+      if (found) return found;
+    }
+  }
   for (const log of sessionLogs || []) {
-    const found = (log.exercises || []).find(item => item.exerciseId === exerciseId);
+    const found = pick(log);
     if (found) return found;
   }
   return null;
 }
-export function buildWorkoutFromExercises({ sessionName, type, exerciseIds, exercises, sessionLogs, plan }) {
+export function buildWorkoutFromExercises({ sessionName, type, exerciseIds, exercises, sessionLogs, plan, programId = null }) {
   const orderedExercises = exerciseIds.map(id => getExerciseById(id, exercises)).filter(Boolean);
   const blocks = orderedExercises.map(exercise => {
-    const previousExerciseLog = findLatestExerciseLog(exercise.id, sessionLogs);
+    const previousExerciseLog = findLatestExerciseLog(exercise.id, sessionLogs, { sessionName, programId });
     return { exerciseId: exercise.id, restSeconds: getRestBase(exercise), sets: buildSuggestedSets(exercise, previousExerciseLog, plan?.[exercise.id]) };
   });
   return { id: uid(), sessionName, type, mode: "guided", currentExerciseIndex: 0, currentSetIndex: 0, startedAt: Date.now(), blocks };
@@ -221,7 +237,7 @@ export function updateSet(workout, blockIndex, setIndex, { reps, weight, markDon
 export function completeCurrentSet(workout, reps, weight) { const set = getCurrentSet(workout); if (!set) return workout; set.reps = Number(reps) || 0; set.weight = Number(weight) || 0; set.status = "done"; goNext(workout); return workout; }
 export function skipCurrentSet(workout) { const set = getCurrentSet(workout); if (!set) return workout; set.status = "skipped"; goNext(workout); return workout; }
 export function skipCurrentExercise(workout) { const block = getCurrentBlock(workout); if (!block) return workout; block.sets.forEach(set => { if (set.status === "pending") set.status = "skipped"; }); moveToNextPending(workout, workout.currentExerciseIndex); return workout; }
-export function replaceCurrentExercise(workout, newExerciseId, exercises, sessionLogs) { const nextExercise = getExerciseById(newExerciseId, exercises); const currentBlock = getCurrentBlock(workout); if (!nextExercise || !currentBlock) return workout; const previousExerciseLog = findLatestExerciseLog(nextExercise.id, sessionLogs); if (!currentBlock.added) { const planned = currentBlock.replacedFrom || currentBlock.exerciseId; if (planned === nextExercise.id) delete currentBlock.replacedFrom; else currentBlock.replacedFrom = planned; } currentBlock.exerciseId = nextExercise.id; currentBlock.restSeconds = getRestBase(nextExercise); currentBlock.sets = buildSuggestedSets(nextExercise, previousExerciseLog); workout.currentSetIndex = 0; return workout; }
+export function replaceCurrentExercise(workout, newExerciseId, exercises, sessionLogs) { const nextExercise = getExerciseById(newExerciseId, exercises); const currentBlock = getCurrentBlock(workout); if (!nextExercise || !currentBlock) return workout; const previousExerciseLog = findLatestExerciseLog(nextExercise.id, sessionLogs, { sessionName: workout.sessionName, programId: workout.programId }); if (!currentBlock.added) { const planned = currentBlock.replacedFrom || currentBlock.exerciseId; if (planned === nextExercise.id) delete currentBlock.replacedFrom; else currentBlock.replacedFrom = planned; } currentBlock.exerciseId = nextExercise.id; currentBlock.restSeconds = getRestBase(nextExercise); currentBlock.sets = buildSuggestedSets(nextExercise, previousExerciseLog); workout.currentSetIndex = 0; return workout; }
 export function buildSessionLogFromWorkout(workout, exercises, endedAt = Date.now()) {
   const completedExercises = workout.blocks.map(block => { const exercise = getExerciseById(block.exerciseId, exercises); return { exerciseId: block.exerciseId, exerciseName: exercise?.name || "exercice", muscleFocus: exercise?.muscle_focus || "other", type: exercise?.type || "other", sets: block.sets.map(item => ({ reps: item.reps, weight: item.weight, targetReps: item.targetReps, status: item.status, ...(item.kind ? { kind: item.kind } : {}), ...(item.added ? { added: true } : {}) })), restSeconds: block.restSeconds, ...(block.added ? { added: true } : {}), ...(block.replacedFrom ? { replacedFrom: block.replacedFrom } : {}), ...(block.superset ? { superset: block.superset } : {}) }; });
   return { id: uid(), workoutId: workout.id || null, sessionName: workout.sessionName, type: workout.type, programId: workout.programId || null, date: endedAt, durationMs: Math.max(0, endedAt - workout.startedAt), exercises: completedExercises };
@@ -231,7 +247,7 @@ export function addExercise(workout, exerciseId, exercises, sessionLogs, afterIn
   const exercise = getExerciseById(exerciseId, exercises);
   if (!workout || !exercise) return -1;
   const at = Math.min(workout.blocks.length, Math.max(0, Number(afterIndex) + 1));
-  const block = { exerciseId: exercise.id, restSeconds: getRestBase(exercise), sets: buildSuggestedSets(exercise, findLatestExerciseLog(exercise.id, sessionLogs)), added: true };
+  const block = { exerciseId: exercise.id, restSeconds: getRestBase(exercise), sets: buildSuggestedSets(exercise, findLatestExerciseLog(exercise.id, sessionLogs, { sessionName: workout.sessionName, programId: workout.programId })), added: true };
   workout.blocks.splice(at, 0, block);
   if (workout.currentExerciseIndex >= at && workout.currentExerciseIndex < workout.blocks.length - 1) workout.currentExerciseIndex += 1;
   // séance qui était finie : on enchaîne sur le nouvel exercice

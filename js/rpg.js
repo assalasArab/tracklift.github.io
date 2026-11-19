@@ -181,6 +181,26 @@ export const GEAR = Object.fromEntries([
   W("batonChene", 65, "sage", 1600, { vol: 45, fce: 40 }, "staff", 3, "Bâton du grand chêne", "Great oak staff"),
   W("canon", 65, "ingenieur", 1600, { int: 50, agi: 35 }, "wrench", 3, "Canon mécanique", "Mech cannon"),
 
+  // pour tout le monde, dès les premiers niveaux
+  W("kettlebell", 5, null, 120, { fce: 5, vit: 4 }, "kettlebell", 1, "Kettlebell de combat", "Battle kettlebell"),
+  W("barre", 8, null, 160, { fce: 6, agi: 4 }, "barbell", 1, "Barre olympique", "Olympic bar"),
+  // rang 4 (niveau 85) : une arme par voie
+  W("rempart", 85, "paladin", 3000, { vit: 85, fce: 35 }, "shield", 3, "Rempart de l'aurore", "Dawn bulwark"),
+  W("briseMonts", 85, "berserker", 3000, { fce: 90, vit: 30 }, "axe", 3, "Brise-montagnes", "Mountain breaker"),
+  W("crocsNuit", 85, "assassin", 3000, { agi: 85, fce: 35 }, "dagger", 3, "Crocs de la nuit", "Night fangs"),
+  W("arcTempete", 85, "ranger", 3000, { agi: 85, vit: 35 }, "bow", 3, "Arc de la tempête", "Storm bow"),
+  W("batonNova", 85, "mage", 3000, { int: 90, vol: 30 }, "staff", 3, "Bâton de la nova", "Nova staff"),
+  W("fauxEclipse", 85, "necromancien", 3000, { vol: 65, int: 55 }, "scythe", 3, "Faux de l'éclipse", "Eclipse scythe"),
+  W("marteauAube", 85, "clerc", 3000, { vol: 85, vit: 35 }, "scepter", 3, "Marteau de l'aube", "Dawn hammer"),
+  W("batonMonde", 85, "sage", 3000, { vol: 65, fce: 55 }, "staff", 3, "Bâton de l'Arbre-Monde", "World-tree staff"),
+  W("railgun", 85, "ingenieur", 3000, { int: 70, agi: 50 }, "wrench", 3, "Canon à rail", "Railgun"),
+  // rang 5 (niveau 90) : les armes mythiques, une par branche
+  W("lameTitans", 90, "guerrier", 5000, { fce: 90, vit: 70 }, "sword", 3, "Lame des Titans", "Titans' blade"),
+  W("murmure", 90, "chasseur", 5000, { agi: 100, fce: 60 }, "dagger", 3, "Murmure du néant", "Void whisper"),
+  W("codexInfini", 90, "sorcier", 5000, { int: 95, vol: 65 }, "book", 3, "Codex infini", "Infinite codex"),
+  W("sceptreSoleil", 90, "pretre", 5000, { vol: 95, vit: 65 }, "scepter", 3, "Sceptre du soleil", "Sun sceptre"),
+  W("cleMaitresse", 90, "mecanicien", 5000, { int: 85, agi: 75 }, "wrench", 3, "Clé maîtresse", "Master key"),
+
   O("survet", 1, 80, { vit: 5, agi: 3 }, "shirt", 1, "Tenue de sport", "Gym outfit"),
   O("cuir", 10, 250, { vit: 10, agi: 8 }, "armor", 1, "Armure de cuir", "Leather armour"),
   O("robe", 10, 250, { int: 10, vol: 8 }, "robe", 1, "Robe d'apprenti", "Apprentice robe"),
@@ -190,13 +210,27 @@ export const GEAR = Object.fromEntries([
   O("armureCeleste", 65, 1600, { vit: 50, vol: 25 }, "armor", 3, "Armure céleste", "Celestial armour"),
   O("tenueArchimage", 65, 1600, { int: 50, vol: 25 }, "robe", 3, "Tenue de l'archimage", "Archmage attire"),
   O("combiMecha", 65, 1600, { agi: 40, int: 35 }, "cloak", 3, "Combinaison mécha", "Mecha suit"),
+  O("debardeur", 5, 150, { fce: 5, vit: 4 }, "shirt", 1, "Débardeur du lève-tôt", "Early-riser tank top"),
+  O("kimono", 20, 450, { agi: 15, vol: 8 }, "robe", 1, "Kimono de combat", "Fighting gi"),
+  O("plates", 50, 1200, { vit: 40, fce: 20 }, "armor", 3, "Armure de plates", "Plate armour"),
+  O("manteauRodeur", 50, 1200, { agi: 40, int: 20 }, "cloak", 3, "Manteau du rôdeur", "Prowler's coat"),
+  O("armureTitan", 85, 3000, { vit: 70, fce: 40, vol: 20 }, "armor", 3, "Armure du titan", "Titan armour"),
+  O("togeEtoiles", 85, 3000, { int: 70, vol: 50 }, "robe", 3, "Toge des étoiles", "Star toga"),
+  O("armureLegende", 90, 5000, { fce: 30, agi: 30, int: 30, vol: 30, vit: 30 }, "armor", 3, "Armure de légende", "Armour of legend"),
 
   A("bracelet", 5, 120, { fce: 8 }, "bracelet", 1, "Bracelet de force", "Strength bracelet"),
   A("plume", 5, 120, { agi: 8 }, "feather", 1, "Plume du vent", "Wind feather"),
   A("anneau", 5, 120, { int: 8 }, "ring", 1, "Anneau de sagesse", "Ring of wisdom"),
   A("pendentif", 5, 120, { vol: 8 }, "pendant", 1, "Pendentif d'esprit", "Spirit pendant"),
   A("talisman", 5, 120, { vit: 8 }, "talisman", 1, "Talisman de vie", "Life talisman"),
-  A("couronne", 50, 1200, { fce: 10, agi: 10, int: 10, vol: 10, vit: 10 }, "crown", 3, "Couronne du champion", "Champion's crown")
+  A("couronne", 50, 1200, { fce: 10, agi: 10, int: 10, vol: 10, vit: 10 }, "crown", 3, "Couronne du champion", "Champion's crown"),
+  A("ceinture", 20, 400, { vit: 12, fce: 6 }, "belt", 1, "Ceinture de force", "Lifting belt"),
+  A("chrono", 20, 400, { agi: 12, int: 6 }, "watch", 1, "Chrono du coach", "Coach's stopwatch"),
+  A("amulette", 30, 700, { vol: 15, int: 10 }, "pendant", 2, "Amulette des marées", "Tide amulet"),
+  A("chevaliere", 30, 700, { fce: 15, vit: 10 }, "ring", 2, "Chevalière du vétéran", "Veteran's signet"),
+  A("monocle", 65, 1600, { int: 25, agi: 20 }, "monocle", 3, "Monocle de l'inventeur", "Inventor's monocle"),
+  A("plumePhenix", 65, 1600, { vit: 25, vol: 20 }, "feather", 3, "Plume de phénix", "Phoenix feather"),
+  A("couronneEternelle", 90, 5000, { fce: 22, agi: 22, int: 22, vol: 22, vit: 22 }, "crown", 3, "Couronne éternelle", "Eternal crown")
 ]);
 
 export const SLOTS = ["weapon", "outfit", "accessory"];

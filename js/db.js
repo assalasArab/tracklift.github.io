@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261115b";
-import { EXERCISE_SEED } from "./exercises.js?v=20261115b";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261115b";
-import { firestore } from "./firebase-config.js?v=20261115b";
+import { uid } from "./utils.js?v=20261115c";
+import { EXERCISE_SEED } from "./exercises.js?v=20261115c";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261115c";
+import { firestore } from "./firebase-config.js?v=20261115c";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.
@@ -159,6 +159,7 @@ export const DB = {
     } catch (err) {
       console.warn("[TrackLift] jours (pesées, kcal) indisponibles :", err?.code || err);
     }
+    this._resendPendingDays();
     // Les exercices viennent toujours du SEED local
     this._cache.exercises = [...EXERCISE_SEED, ...EXTRA_EXERCISES];
     return this._cache;
@@ -337,10 +338,12 @@ export const DB = {
     const next = clean({ ...(this._days.get(key) || {}), ...patch, date: key, updatedAt: Date.now() });
     this._days.set(key, next);
     if (!this.currentUserId) return next;
-    this._daysCol().doc(key).set(next, { merge: true }).catch(err => {
+    this._pendingDay(key, next);
+    this._daysCol().doc(key).set(next, { merge: true }).then(() => this._pendingDone(key, next.updatedAt)).catch(err => {
       console.error("[TrackLift] jour non enregistré :", err);
       // règles pas encore mises à jour : la pesée part quand même, dans l'ancien format
       if (err?.code === "permission-denied" && patch.weight != null && this._cache) {
+        this._pendingDone(key, next.updatedAt);
         const list = (this._cache.weightLog || []).filter(item => localDayKey(item.date) !== key);
         list.push({ id: `w-${key}`, date: next.weighedAt || Date.now(), weight: Number(patch.weight) });
         this._cache.weightLog = list;
@@ -350,6 +353,64 @@ export const DB = {
       this.onSaveState?.("error", err);
     });
     return next;
+  },
+
+  /**
+   * Geste commercial (code cadeau réservé à un compte) : remet une pesée les jours sans pesée
+   * entre deux dates (AAAA-MM-JJ, incluses), avec le poids du dernier jour connu.
+   * Renvoie le nombre de jours remis.
+   */
+  fillMissingDays(from, to) {
+    const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+    if (!DAY_RE.test(from) || !DAY_RE.test(to) || from > to || !this.currentUserId) return 0;
+    const log = this.getWeightLog();
+    const weighed = new Set(log.map(item => localDayKey(item.date)));
+    let added = 0;
+    for (let at = noonOf(from), n = 0; n < 92; at += 86400000, n++) {
+      const key = localDayKey(at);
+      if (key > to) break;
+      if (weighed.has(key)) continue;
+      const before = log.filter(item => item.date < at).pop() || log[0];
+      const weight = Number(before?.weight);
+      if (!(weight >= 20 && weight <= 300)) continue;
+      this.setDay(key, { weight, weighedAt: at });
+      added++;
+    }
+    if (added) this.onRemoteChange?.("days");
+    return added;
+  },
+
+  /* Copie de secours des jours sur le téléphone : sur iPhone, fermer l'appli juste après
+     une pesée peut couper l'envoi. Tant que le serveur n'a pas confirmé, la pesée reste
+     ici et repart à la prochaine ouverture. */
+  _pendingKey() { return `tl-days-pending-${this.currentUserId}`; },
+  _readPending() {
+    try { return JSON.parse(localStorage.getItem(this._pendingKey()) || "{}") || {}; } catch { return {}; }
+  },
+  _writePending(map) {
+    try {
+      if (Object.keys(map).length) localStorage.setItem(this._pendingKey(), JSON.stringify(map));
+      else localStorage.removeItem(this._pendingKey());
+    } catch { /* stockage indisponible */ }
+  },
+  _pendingDay(key, day) { const map = this._readPending(); map[key] = day; this._writePending(map); },
+  _pendingDone(key, updatedAt) {
+    const map = this._readPending();
+    if (map[key] && map[key].updatedAt <= updatedAt) { delete map[key]; this._writePending(map); }
+  },
+  _resendPendingDays() {
+    if (!this.currentUserId) return;
+    const map = this._readPending();
+    for (const [key, day] of Object.entries(map)) {
+      const server = this._days.get(key);
+      // déjà arrivé (ou plus récent sur le serveur) : rien à renvoyer
+      if (server && (server.updatedAt || 0) >= (day.updatedAt || 0)) { this._pendingDone(key, day.updatedAt); continue; }
+      const next = { ...(server || {}), ...day };
+      this._days.set(key, next);
+      this._daysCol().doc(key).set(next, { merge: true })
+        .then(() => this._pendingDone(key, day.updatedAt))
+        .catch(err => console.warn("[TrackLift] pesée en attente :", err?.code || err));
+    }
   },
 
   /** Recopie les pesées de l'ancien format vers les documents du jour (une seule fois par jour manquant) */

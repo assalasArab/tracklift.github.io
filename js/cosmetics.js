@@ -62,7 +62,14 @@ export const GEAR_ART = {
   faux: { weapon: "scythe" }, fauxAmes: { weapon: "scythe" },
   grimoire: { weapon: "grimoire" },
   sceptre: { weapon: "scepter" }, masse: { weapon: "scepter" }, relique: { weapon: "scepter" },
-  cle: { weapon: "wrench" }, tourelle: { weapon: "wrench" }, canon: { weapon: "wrench" }
+  cle: { weapon: "wrench" }, tourelle: { weapon: "wrench" }, canon: { weapon: "wrench" },
+  // objets ajoutés en novembre 2026 (dessins existants)
+  debardeur: { outfit: "casual" }, kimono: { outfit: "robe" }, togeEtoiles: { outfit: "robe" },
+  plates: { outfit: "mail" }, manteauRodeur: { outfit: "ornate" }, armureTitan: { outfit: "seraph" }, armureLegende: { outfit: "seraph" },
+  rempart: { weapon: "shield" }, crocsNuit: { weapon: "dagger" }, murmure: { weapon: "dagger" },
+  batonNova: { weapon: "staff" }, batonMonde: { weapon: "staff" }, fauxEclipse: { weapon: "scythe" },
+  marteauAube: { weapon: "scepter" }, sceptreSoleil: { weapon: "scepter" }, codexInfini: { weapon: "grimoire" },
+  railgun: { weapon: "wrench" }, cleMaitresse: { weapon: "wrench" }, lameTitans: { weapon: "sword" }
 };
 
 /** Quand rien d'autre n'est mis : un slip (le personnage n'est jamais tout nu) */

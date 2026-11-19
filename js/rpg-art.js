@@ -5,7 +5,7 @@
      ailes, couronne dorée) ;
    - les icônes des caractéristiques et de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { CLASSES } from "./rpg.js?v=20261115b";
+import { CLASSES } from "./rpg.js?v=20261115c";
 
 export const BRANCH_COLORS = {
   novice: "#8d8e95",
@@ -117,7 +117,12 @@ const GEAR_ICONS = {
   ring: `<circle cx="12" cy="14.5" r="6"/><path d="M9.5 6.5L12 3l2.5 3.5L12 8.5z"/>`,
   pendant: `<path d="M5 3.5c1.5 4 4 6.5 7 6.5s5.5-2.5 7-6.5"/><path d="M12 10l3 4.5-3 6-3-6z"/>`,
   talisman: `<circle cx="12" cy="12" r="8.5"/>${STAT_ICONS.vit.replace("<path", '<path transform="translate(4.8 4.6) scale(.6)"')}`,
-  crown: `<path d="M3.5 18.5h17M4.5 16L3.5 7l5 4L12 4.5 15.5 11l5-4-1 9z"/>`
+  crown: `<path d="M3.5 18.5h17M4.5 16L3.5 7l5 4L12 4.5 15.5 11l5-4-1 9z"/>`,
+  kettlebell: `<path d="M8.5 9.5V8a3.5 3.5 0 0 1 7 0v1.5"/><path d="M7 20.5h10a1.5 1.5 0 0 0 1.4-2A6.5 6.5 0 0 0 12 9.5a6.5 6.5 0 0 0-6.4 9 1.5 1.5 0 0 0 1.4 2z"/>`,
+  barbell: `<path d="M6.5 12h11M2.5 12h1M20.5 12h1"/><rect x="3.5" y="7.5" width="3" height="9" rx="1"/><rect x="17.5" y="7.5" width="3" height="9" rx="1"/>`,
+  belt: `<path d="M3 9.5h18v5H3z"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><path d="M12 10.5v3"/>`,
+  watch: `<circle cx="12" cy="13.5" r="6.5"/><path d="M12 10.5v3l2 1.5M10 3.5h4M12 3.5V7"/>`,
+  monocle: `<circle cx="10" cy="10" r="6"/><circle cx="10" cy="10" r="3" opacity=".5"/><path d="M14.5 14.5c2 2 2 4.5 1 6.5"/>`
 };
 export function gearIcon(art, rarity = 1, size = 36) {
   const color = RARITY_COLORS[rarity] || RARITY_COLORS[1];

@@ -1,44 +1,44 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261115b";
-import { DB } from "./db.js?v=20261115b";
-import { Auth } from "./auth.js?v=20261115b";
-import { i18n } from "./i18n.js?v=20261115b";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261115b";
-import { muscleName } from "./muscles.js?v=20261115b";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261115b";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261115b";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261115b";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet, addDoneSet, addExercise, toggleSuperset, supersetPartner, sessionChanges, applyChanges } from "./workout.js?v=20261115b";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261115b";
-import { openLogEditor } from "./log-editor.js?v=20261115b";
-import { openIdeaBox } from "./idea-box.js?v=20261115b";
-import { maybeShowPatchNotes } from "./patch-notes.js?v=20261115b";
-import { renderWeightChart } from "./charts.js?v=20261115b";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261115b";
-import { openProgramWizard } from "./program-wizard.js?v=20261115b";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261115b";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261115b";
-import { openIntro } from "./onboarding.js?v=20261115b";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261115b";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261115b";
-import { Social } from "./social.js?v=20261115b";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261115b";
-import { avatarSvg } from "./avatar.js?v=20261115b";
-import { Bridge, openSheet } from "./potes-ui.js?v=20261115b";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261115b";
-import { renderBilanLine, openBilan } from "./bilan.js?v=20261115b";
-import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261115b";
-import { headHtml, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261115b";
-import { openHero } from "./hero.js?v=20261115b";
-import { openWheel } from "./gift-wheel.js?v=20261115b";
-import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261115b";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261115b";
-import { openSettings } from "./potes-settings.js?v=20261115b";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261115b";
-import { SharedPrograms } from "./community.js?v=20261115b";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261115b";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261115b";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261115b";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261115b";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261115c";
+import { DB } from "./db.js?v=20261115c";
+import { Auth } from "./auth.js?v=20261115c";
+import { i18n } from "./i18n.js?v=20261115c";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261115c";
+import { muscleName } from "./muscles.js?v=20261115c";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261115c";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261115c";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261115c";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet, addDoneSet, addExercise, toggleSuperset, supersetPartner, sessionChanges, applyChanges } from "./workout.js?v=20261115c";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261115c";
+import { openLogEditor } from "./log-editor.js?v=20261115c";
+import { openIdeaBox } from "./idea-box.js?v=20261115c";
+import { maybeShowPatchNotes } from "./patch-notes.js?v=20261115c";
+import { renderWeightChart } from "./charts.js?v=20261115c";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261115c";
+import { openProgramWizard } from "./program-wizard.js?v=20261115c";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261115c";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261115c";
+import { openIntro } from "./onboarding.js?v=20261115c";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261115c";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261115c";
+import { Social } from "./social.js?v=20261115c";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261115c";
+import { avatarSvg } from "./avatar.js?v=20261115c";
+import { Bridge, openSheet } from "./potes-ui.js?v=20261115c";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261115c";
+import { renderBilanLine, openBilan } from "./bilan.js?v=20261115c";
+import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261115c";
+import { headHtml, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261115c";
+import { openHero } from "./hero.js?v=20261115c";
+import { openWheel } from "./gift-wheel.js?v=20261115c";
+import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261115c";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261115c";
+import { openSettings } from "./potes-settings.js?v=20261115c";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261115c";
+import { SharedPrograms } from "./community.js?v=20261115c";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261115c";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261115c";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261115c";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261115c";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -62,6 +62,7 @@ const state = {
   activeView: "home",
   restInterval: null,
   restRemaining: 0,
+  restEndsAt: 0,
   launcherTab: "free",
   currentProgramId: null,
   currentEditSessionId: null
@@ -444,7 +445,9 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     draftTimer = setTimeout(persistWorkout, 400);
   }));
   // la page passe en arrière-plan (autre appli, écran verrouillé) : dernière copie sur le téléphone
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") persistWorkout(); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") persistWorkout(); else tickRest(); });
+  window.addEventListener("focus", tickRest);
+  window.addEventListener("pageshow", tickRest);
   document.addEventListener("click", event => {
     const go = event.target.closest("[data-view-go]");
     if (go) setView(go.dataset.viewGo);
@@ -893,7 +896,7 @@ function renderWorkoutReturn() {
     bar.addEventListener("click", () => { closeProfileDrawer(); setView("workout"); });
     document.body.appendChild(bar);
   }
-  bar.innerHTML = `<span class="workout-return-dot" aria-hidden="true"></span><span class="workout-return-text"><b>${escapeHtml(t("workoutRunning"))}</b><small>${escapeHtml(state.workout.sessionName)}</small></span><span class="workout-return-go">${escapeHtml(t("workoutResume"))}</span>`;
+  bar.innerHTML = `<span class="workout-return-dot" aria-hidden="true"></span><span class="workout-return-text"><b>${escapeHtml(t("workoutRunning"))}</b><small>${escapeHtml(state.workout.sessionName)}<span class="workout-return-rest">${state.restInterval ? escapeHtml(t("restLeft", { time: formatDuration(state.restRemaining * 1000) })) : ""}</span></small></span><span class="workout-return-go">${escapeHtml(t("workoutResume"))}</span>`;
 }
 /** Démarrer une autre séance alors qu'une est en cours : on retourne à celle en cours */
 function returnToRunningWorkout() {
@@ -1468,7 +1471,7 @@ function openWeeklyBilan() {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261115b");
+    const { openMorpho } = await import("./morpho.js?v=20261115c");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),
@@ -2632,7 +2635,8 @@ function launchSpecificProgSession(sessionId) {
     exerciseIds: session.exerciseIds,
     exercises: state.exercises,
     sessionLogs: state.sessionLogs,
-    plan: session.plan
+    plan: session.plan,
+    programId: program.id
   });
   state.workout.programId = program.id;
 
@@ -3092,7 +3096,8 @@ function launchProgramWorkout() {
     exerciseIds: session.exerciseIds,
     exercises: state.exercises,
     sessionLogs: state.sessionLogs,
-    plan: session.plan
+    plan: session.plan,
+    programId: program.id
   });
   state.workout.programId = program.id;
 
@@ -3210,7 +3215,7 @@ function renderSetChips(block, currentIndex, timed) {
 /** « la dernière fois : 4 × 8 à 80 kg » (séries faites lors de la dernière séance de cet exercice) */
 function lastTimeText(exerciseId) {
   if (!exerciseId) return "";
-  const last = findLatestExerciseLog(exerciseId, state.sessionLogs);
+  const last = findLatestExerciseLog(exerciseId, state.sessionLogs, state.workout ? { sessionName: state.workout.sessionName, programId: state.workout.programId } : null);
   const done = (last?.sets || []).filter(set => set.status === "done" && set.kind !== "warmup");
   if (!done.length) return "";
   const timed = isTimed(getExerciseById(exerciseId, state.exercises));
@@ -3289,32 +3294,44 @@ function skipExerciseFlow() {
   offerUndo(snapshot, t("exerciseSkipped"));
 }
 
+/* Le repos se calcule à partir de son heure de fin : le téléphone peut mettre
+   l'appli en pause (écran éteint, autre appli), le temps continue quand même. */
 function startRest(seconds) {
   stopRest();
   document.body.classList.add("resting");
-  state.restRemaining = seconds;
+  state.restEndsAt = Date.now() + seconds * 1000;
   $("#rest-bar").classList.remove("hidden");
   $("#rest-drop-btn")?.classList.toggle("hidden", !state.dropFrom);
+  state.restInterval = setInterval(tickRest, 500);
+  tickRest();
+}
+
+function tickRest() {
+  if (!state.restInterval) return;
+  state.restRemaining = Math.max(0, Math.ceil((state.restEndsAt - Date.now()) / 1000));
   updateRestUi();
-  state.restInterval = setInterval(() => {
-    state.restRemaining -= 1;
-    updateRestUi();
-    if (state.restRemaining <= 0) {
-      stopRest();
-      showToast(t("restFinished"));
-    }
-  }, 1000);
+  if (state.restRemaining <= 0) {
+    stopRest();
+    showToast(t("restFinished"));
+  }
 }
 
 function updateRestUi() {
-  $("#rest-countdown").textContent = formatDuration(state.restRemaining * 1000);
+  const text = formatDuration(state.restRemaining * 1000);
+  $("#rest-countdown").textContent = text;
+  // hors de l'écran de séance : le bandeau « Séance en cours » montre aussi le repos
+  const rest = document.querySelector("#workout-return .workout-return-rest");
+  if (rest) rest.textContent = state.restInterval ? t("restLeft", { time: text }) : "";
 }
 
 function stopRest() {
   document.body.classList.remove("resting");
   clearInterval(state.restInterval);
   state.restInterval = null;
+  state.restEndsAt = 0;
   $("#rest-bar").classList.add("hidden");
+  const rest = document.querySelector("#workout-return .workout-return-rest");
+  if (rest) rest.textContent = "";
 }
 
 /** Pendant le repos : enchaîner une série secondaire après la série qu'on vient de valider */
@@ -3343,8 +3360,9 @@ function dropAfterCurrentSet() {
 }
 
 function addRest(seconds) {
-  state.restRemaining += seconds;
-  updateRestUi();
+  if (!state.restInterval) return;
+  state.restEndsAt = Math.max(Date.now(), state.restEndsAt + seconds * 1000);
+  tickRest();
 }
 
 /* Changer d'exercice (similaire ou n'importe lequel) ou en ajouter un pendant la séance */
@@ -3634,7 +3652,7 @@ function workoutEntry() {
   return {
     workout: state.workout,
     savedAt: Date.now(),
-    restEndsAt: state.restInterval ? Date.now() + state.restRemaining * 1000 : null,
+    restEndsAt: state.restInterval ? state.restEndsAt : null,
     draft: {
       exercise: state.workout.currentExerciseIndex,
       set: state.workout.currentSetIndex,
@@ -3800,7 +3818,7 @@ function buildRecap(log, previousLogs) {
     sets += done.length;
     reps += done.reduce((sum, set) => sum + (Number(set.reps) || 0), 0);
     volume += done.reduce((sum, set) => sum + (Number(set.reps) || 0) * (Number(set.weight) || 0), 0);
-    const line = compareWithLastTime(ex, done, previousLogs);
+    const line = compareWithLastTime(ex, done, previousLogs, log);
     if (line) compare.push(line);
     // règle commune avec la partie Potes (records du mois, notifications) : js/social-stats.js
     const record = findRecord(ex, previousLogs);
@@ -3813,7 +3831,7 @@ function buildRecap(log, previousLogs) {
 }
 
 /** Meilleure série du jour contre la dernière fois : charge si chargé, sinon répétitions (ou secondes) */
-function compareWithLastTime(ex, done, previousLogs) {
+function compareWithLastTime(ex, done, previousLogs, log = null) {
   const work = done.filter(set => set.kind !== "warmup");
   if (!work.length) return null;
   const exercise = getExerciseById(ex.exerciseId, state.exercises);
@@ -3821,7 +3839,7 @@ function compareWithLastTime(ex, done, previousLogs) {
   const loaded = work.some(set => Number(set.weight) > 0);
   const score = set => loaded ? Number(set.weight) || 0 : Number(set.reps) || 0;
   const best = work.reduce((a, b) => (score(b) > score(a) || (score(b) === score(a) && (Number(b.reps) || 0) > (Number(a.reps) || 0)) ? b : a));
-  const last = findLatestExerciseLog(ex.exerciseId, previousLogs);
+  const last = findLatestExerciseLog(ex.exerciseId, previousLogs, log ? { sessionName: log.sessionName, programId: log.programId } : null);
   const lastWork = (last?.sets || []).filter(set => set.status === "done" && set.kind !== "warmup");
   const lastBest = lastWork.length ? Math.max(...lastWork.map(score)) : null;
   return {

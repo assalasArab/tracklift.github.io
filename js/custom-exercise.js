@@ -3,8 +3,8 @@
    L'exercice produit a le même format que ceux de la base RepDB
    (muscles, type, matériel…), sans illustration.
    ═══════════════════════════════════════════════════════════ */
-import { MUSCLE_GROUP, MUSCLE_REGIONS, muscleName } from "./muscles.js?v=20261115b";
-import { uid } from "./utils.js?v=20261115b";
+import { MUSCLE_GROUP, MUSCLE_REGIONS, muscleName } from "./muscles.js?v=20261115c";
+import { uid } from "./utils.js?v=20261115c";
 
 const GROUP_TYPE = {
   pectoraux: "push", epaules: "push", triceps: "push",
