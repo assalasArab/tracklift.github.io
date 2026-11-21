@@ -526,6 +526,69 @@ export const ART3 = {
         649,
         686
       ]
+    },
+    "hache": {
+      "box": [
+        180,
+        294,
+        534,
+        514
+      ],
+      "thumb": true
+    },
+    "fendeuse": {
+      "box": [
+        206,
+        186,
+        693,
+        640
+      ],
+      "thumb": true
+    },
+    "brise-monts": {
+      "box": [
+        195,
+        107,
+        786,
+        832
+      ],
+      "thumb": true
+    },
+    "lame-titans": {
+      "box": [
+        216,
+        302,
+        658,
+        639
+      ],
+      "thumb": true
+    },
+    "barre": {
+      "box": [
+        171,
+        235,
+        613,
+        647
+      ],
+      "thumb": true
+    },
+    "arc": {
+      "box": [
+        170,
+        148,
+        666,
+        715
+      ],
+      "thumb": true
+    },
+    "arc-faucon": {
+      "box": [
+        121,
+        223,
+        737,
+        668
+      ],
+      "thumb": true
     }
   },
   "hat": {

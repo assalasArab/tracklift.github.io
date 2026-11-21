@@ -8,21 +8,21 @@
    Un objet choisi s'essaie sur le personnage avant de l'acheter.
    Règles du jeu : js/rpg.js ; légendes : js/lore.js.
    ═══════════════════════════════════════════════════════════ */
-import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261122a";
-import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261122a";
-import { openWheel, wheelState, discounted, wheelOpen, seasonUntil, inSeason } from "./gift-wheel.js?v=20261122a";
-import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261122a";
-import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261122a";
-import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122a";
-import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122a";
-import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261122a";
-import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261122a";
-import { i18n } from "./i18n.js?v=20261122a";
-import { showToast } from "./utils.js?v=20261122a";
-import { DB } from "./db.js?v=20261122a";
-import { Shop } from "./shop.js?v=20261122a";
-import { Social } from "./social.js?v=20261122a";
-import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261122a";
+import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261122b";
+import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261122b";
+import { openWheel, wheelState, discounted, wheelOpen, seasonUntil, inSeason } from "./gift-wheel.js?v=20261122b";
+import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261122b";
+import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261122b";
+import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122b";
+import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122b";
+import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261122b";
+import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261122b";
+import { i18n } from "./i18n.js?v=20261122b";
+import { showToast } from "./utils.js?v=20261122b";
+import { DB } from "./db.js?v=20261122b";
+import { Shop } from "./shop.js?v=20261122b";
+import { Social } from "./social.js?v=20261122b";
+import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261122b";
 
 const PS = `<svg class="hx-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const ICON = {

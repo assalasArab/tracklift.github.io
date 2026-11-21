@@ -2,27 +2,31 @@
    Nouveautés : à l'ouverture de l'appli, une fenêtre annonce la mise à jour
    (une seule fois par mise à jour et par téléphone). La plus récente en tête.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261122a";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122a";
+import { i18n } from "./i18n.js?v=20261122b";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122b";
 
 export const PATCHES = [
   {
-    id: "2026-11-22", from: new Date(2026, 10, 22, 0, 0, 0).getTime(),
+    id: "2026-11-22b", from: new Date(2026, 10, 22, 0, 0, 0).getTime(),
     fr: {
       title: "Saison 2 !",
       items: [
+        "Corrigé : un costume déjà à toi ne rapporte plus de gros bonus. La roue te rend seulement le prix du tour (70 points spé) s'il était acheté, sans expérience. Les doublons d'avant sont recomptés pareil.",
         "Nouvelle Roue des cadeaux : la Tunique du Héros des Bois, la Tunique du Héros du Temps et la Tenue de la Confrérie sont à gagner.",
         "Nouveau : un emplacement Tête dans Mon héros › Apparence, pour les capuches, casques et chapeaux.",
         "8 tenues d'équipement ont enfin leur propre dessin : Habit sacré, Tenue de l'archimage, Combinaison mécha, Armure de plates, Kimono de combat, Manteau du rôdeur, Armure du titan et Armure de légende.",
+        "7 armes ont aussi leur propre dessin : Hache à deux mains, Fendeuse de titans, Brise-montagnes, Lame des Titans, Barre olympique, Arc long et Arc du faucon.",
         "Les costumes de la saison 1 restent à ceux qui les ont gagnés. Les tours non joués servent pour la saison 2."
       ]
     },
     en: {
       title: "Season 2!",
       items: [
+        "Fixed: a costume you already own no longer gives a big bonus. The wheel only gives back the spin price (70 spec points) if you bought it, with no experience. Older duplicates are recounted the same way.",
         "New Gift wheel: win the Woodland Hero tunic, the Hero of Time tunic and the Brotherhood attire.",
         "New: a Head slot in My hero › Look, for hoods, helmets and hats.",
         "8 equipment outfits finally have their own drawing: Holy vestment, Archmage attire, Mecha suit, Plate armour, Fighting gi, Prowler's coat, Titan armour and Armour of legend.",
+        "7 weapons also have their own drawing: Greataxe, Titan cleaver, Mountain breaker, Titans' blade, Olympic bar, Longbow and Hawk bow.",
         "Season 1 costumes stay with those who won them. Unplayed spins carry over to season 2."
       ]
     }

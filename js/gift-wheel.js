@@ -12,22 +12,23 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261122a";
-import { DB } from "./db.js?v=20261122a";
-import { Shop } from "./shop.js?v=20261122a";
-import { i18n } from "./i18n.js?v=20261122a";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261122a";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122a";
-import { figureSvg, pieceUrl } from "./avatar3.js?v=20261122a";
-import { rarityByKey } from "./rpg-art.js?v=20261122a";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122a";
-import { openHero } from "./hero.js?v=20261122a";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122a";
+import { firestore } from "./firebase-config.js?v=20261122b";
+import { DB } from "./db.js?v=20261122b";
+import { Shop } from "./shop.js?v=20261122b";
+import { i18n } from "./i18n.js?v=20261122b";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261122b";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122b";
+import { figureSvg, pieceUrl } from "./avatar3.js?v=20261122b";
+import { rarityByKey } from "./rpg-art.js?v=20261122b";
+import { xpForLevel, MAX_LEVEL } from "./rpg.js?v=20261122b";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122b";
+import { openHero } from "./hero.js?v=20261122b";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122b";
 
 /* ─── Les saisons : chacune a sa roue (100 parts en tout, la taille d'une case = sa chance) ───
    Dates en heure du téléphone. Une saison terminée : ses costumes ne se gagnent plus,
    ceux déjà gagnés restent ; les tours non joués servent à la saison suivante. */
-// dup : points spé donnés à la place d'un costume (ou d'une teinture) qu'on a déjà
+// un lot déjà à soi (costume, teinture) rend seulement le prix d'un tour (js/flames.js DUP_REFUND)
 const S2_START = new Date(2026, 10, 22, 0, 0, 0).getTime();
 export const SEASONS = [
   {
@@ -35,13 +36,13 @@ export const SEASONS = [
     until: { fr: "jusqu'au dimanche 22\u00a0novembre", en: "until Sunday 22 November", frShort: "jusqu'au dim. 22 nov.", enShort: "until Sun 22 Nov" },
     wheel: [
       { key: "ps50", kind: "ps", ps: 50, weight: 22, color: "#bee7b8" },
-      { key: "infini", kind: "costume", item: "costume-infini", dup: 150, weight: 13 },
+      { key: "infini", kind: "costume", item: "costume-infini", weight: 13 },
       { key: "coupon20", kind: "coupon", pct: 20, weight: 15, color: "#fbe39a" },
       { key: "ps100", kind: "ps", ps: 100, weight: 15, color: "#d3dcbc" },
-      { key: "nuages", kind: "costume", item: "costume-nuages", dup: 300, weight: 8 },
-      { key: "dye", kind: "dye", dup: 80, weight: 10, color: "#f8d0d6" },
+      { key: "nuages", kind: "costume", item: "costume-nuages", weight: 8 },
+      { key: "dye", kind: "dye", weight: 10, color: "#f8d0d6" },
       { key: "coupon40", kind: "coupon", pct: 40, weight: 8, color: "#ffd5b0" },
-      { key: "aura", kind: "costume", item: "costume-aura", dup: 600, weight: 4 },
+      { key: "aura", kind: "costume", item: "costume-aura", weight: 4 },
       { key: "ps250", kind: "ps", ps: 250, weight: 5, color: "#cde4ee" }
     ]
   },
@@ -49,14 +50,14 @@ export const SEASONS = [
     id: 2, starts: S2_START,
     wheel: [
       { key: "ps50", kind: "ps", ps: 50, weight: 16, color: "#bee7b8" },
-      { key: "bonnet", kind: "costume", item: "bonnet-heros", dup: 150, weight: 6 },
-      { key: "bois", kind: "costume", item: "costume-heros-bois", dup: 150, weight: 13 },
+      { key: "bonnet", kind: "costume", item: "bonnet-heros", weight: 6 },
+      { key: "bois", kind: "costume", item: "costume-heros-bois", weight: 13 },
       { key: "coupon20", kind: "coupon", pct: 20, weight: 15, color: "#fbe39a" },
       { key: "ps100", kind: "ps", ps: 100, weight: 15, color: "#d3dcbc" },
-      { key: "temps", kind: "costume", item: "costume-heros-temps", dup: 300, weight: 8 },
-      { key: "dye", kind: "dye", dup: 80, weight: 10, color: "#f8d0d6" },
+      { key: "temps", kind: "costume", item: "costume-heros-temps", weight: 8 },
+      { key: "dye", kind: "dye", weight: 10, color: "#f8d0d6" },
       { key: "coupon40", kind: "coupon", pct: 40, weight: 8, color: "#ffd5b0" },
-      { key: "confrerie", kind: "costume", item: "costume-confrerie", dup: 600, weight: 4 },
+      { key: "confrerie", kind: "costume", item: "costume-confrerie", weight: 4 },
       { key: "ps250", kind: "ps", ps: 250, weight: 5, color: "#cde4ee" }
     ]
   }
@@ -82,6 +83,8 @@ const TEXT = {
     kept: "Tes {n} tours sont gardés pour la prochaine collection.", keptOne: "Ton tour est gardé pour la prochaine collection.",
     codeLabel: "Code cadeau", codeHolder: "Ex. : FONTE-2026", validate: "Valider", checking: "Vérification…",
     ok: "Code accepté : +{n} tours de roue !", okOne: "Code accepté : +1 tour de roue !",
+    okAdjust: "Compte réglé : niveau {level}, {n} points spé.", okAdjustPs: "Compte réglé : {n} points spé.",
+    dupFreeName: "Déjà à toi",
     days: "Ta flamme est réparée : {n} jours de pesée remis.", daysOne: "Ta flamme est réparée : 1 jour de pesée remis.",
     errors: {
       format: "Ce code n'a pas la bonne forme : lettres, chiffres et tirets seulement.",
@@ -99,11 +102,11 @@ const TEXT = {
     seg: { ps: "+{n} points spé", coupon: "Bon de réduction −{n} %", dye: "Teinture offerte" },
     detail: {
       costume: "Nouveau costume ! Il t'attend dans Mon héros › Apparence.",
-      costumeDup: "Déjà à toi : le marchand te le reprend contre +{n} points spé.",
+      costumeDup: "Déjà à toi : le marchand te rend le prix du tour ({n} points spé).", costumeDupFree: "Déjà à toi : pas de doublon, ce tour était offert.", dyeDupFree: "Tu as déjà toutes les teintures : ce tour offert ne donne rien de plus.",
       ps: "Ajoutés à ta réserve, et ils comptent pour ton niveau.",
       coupon: "À utiliser au moment d'acheter à la Boutique.",
       dye: "À toi dans Mon héros › Apparence › Teintures.",
-      dyeDup: "Tu as déjà toutes les teintures : +{n} points spé à la place."
+      dyeDup: "Tu as déjà toutes les teintures : le prix du tour t'est rendu ({n} points spé)."
     },
     see: { costume: "Essayer mon costume", dye: "Voir ma teinture", coupon: "Aller à la Boutique", ps: "Voir mon héros" },
     costumeShare: "Costumes"
@@ -114,6 +117,8 @@ const TEXT = {
     kept: "Your {n} spins are kept for the next collection.", keptOne: "Your spin is kept for the next collection.",
     codeLabel: "Gift code", codeHolder: "E.g. IRON-2026", validate: "Confirm", checking: "Checking…",
     ok: "Code accepted: +{n} wheel spins!", okOne: "Code accepted: +1 wheel spin!",
+    okAdjust: "Account set: level {level}, {n} spec points.", okAdjustPs: "Account set: {n} spec points.",
+    dupFreeName: "Already yours",
     days: "Your streak is repaired: {n} weigh-in days restored.", daysOne: "Your streak is repaired: 1 weigh-in day restored.",
     errors: {
       format: "This code doesn't look right: letters, digits and dashes only.",
@@ -131,11 +136,11 @@ const TEXT = {
     seg: { ps: "+{n} spec points", coupon: "−{n} % voucher", dye: "Free dye" },
     detail: {
       costume: "New costume! It's waiting in My hero › Look.",
-      costumeDup: "Already yours: the merchant buys it back for +{n} spec points.",
+      costumeDup: "Already yours: the merchant gives back the spin price ({n} spec points).", costumeDupFree: "Already yours: no duplicate, this spin was free.", dyeDupFree: "You already have every dye: this free spin gives nothing more.",
       ps: "Added to your reserve, and they count for your level.",
       coupon: "Use it when buying at the Shop.",
       dye: "Yours in My hero › Look › Dyes.",
-      dyeDup: "You already have every dye: +{n} spec points instead."
+      dyeDup: "You already have every dye: the spin price is given back ({n} spec points)."
     },
     see: { costume: "Try my costume", dye: "See my dye", coupon: "Go to the Shop", ps: "See my hero" },
     costumeShare: "Costumes"
@@ -195,8 +200,21 @@ export async function redeemCode(raw) {
   // code réservé à un seul compte : pour les autres, il n'existe pas
   if (data.uid && data.uid !== DB.currentUserId) { fails.push(now); return { ok: false, reason: "unknown" }; }
   if (data.active === false) return { ok: false, reason: "expired" };
-  const spins = Math.max(1, Math.min(MAX_SPINS, Math.floor(Number(data.spins) || 1)));
-  if (!DB.addPurchase({ id: codeTag(code), price: 0, at: now, spins })) return { ok: false, reason: DB.getData() ? "used" : "save" };
+  // réglage d'un compte (réservé à un seul compte : uid) : { level, balance } → niveau et réserve de points spé visés
+  const adjusting = !!data.uid && (data.level != null || data.balance != null);
+  const spins = adjusting && !Number(data.spins) ? 0 : Math.max(1, Math.min(MAX_SPINS, Math.floor(Number(data.spins) || 1)));
+  let adjust = null;
+  let target = null;
+  if (adjusting) {
+    const w = Shop.wallet();
+    const level = data.level != null ? Math.max(1, Math.min(MAX_LEVEL, Math.floor(Number(data.level) || 1))) : null;
+    const earned = level ? xpForLevel(level) : w.earned;
+    const balance = data.balance != null ? Math.max(0, Math.floor(Number(data.balance) || 0)) : Math.max(0, w.earned - w.spent);
+    adjust = { earned: earned - w.earned, spent: earned - balance - w.spent };
+    target = { level: level || null, balance };
+  }
+  if (!DB.addPurchase({ id: codeTag(code), price: 0, at: now, spins, ...(adjust ? { adjust } : {}) })) return { ok: false, reason: DB.getData() ? "used" : "save" };
+  if (target) return { ok: true, spins, adjusted: target, days: 0 };
   // geste commercial : les jours de pesée perdus sont remis (une seule fois, le code est marqué utilisé)
   const days = data.uid && data.fillFrom && data.fillTo ? DB.fillMissingDays(String(data.fillFrom), String(data.fillTo)) : 0;
   return { ok: true, spins, days };
@@ -209,7 +227,8 @@ function pick() {
   for (const seg of wheel) { r -= seg.weight; if (r < 0) return seg; }
   return wheel[0];
 }
-export function spinOnce() {
+/** paid : ce tour vient d'être acheté (un doublon rend alors son prix) */
+export function spinOnce({ paid = false } = {}) {
   if (!wheelOpen() || wheelState().spins <= 0) return null;
   const seg = pick();
   const at = Date.now();
@@ -220,7 +239,7 @@ export function spinOnce() {
   else if (seg.kind === "coupon") gift = { kind: "coupon", seg: seg.key, pct: seg.pct };
   else if (seg.kind === "costume") {
     const item = cosmeticById(seg.item);
-    if (ownsLook(item.id, item.price)) gift = { kind: "costume", seg: seg.key, item: item.id, dup: true, ps: seg.dup };
+    if (ownsLook(item.id, item.price)) gift = { kind: "costume", seg: seg.key, item: item.id, dup: true, refund: paid ? SPIN_PRICE : 0 };
     else { gift = { kind: "costume", seg: seg.key, item: item.id }; extra.push({ id: lookTag(item.id), price: 0, at, from: "wheel" }); }
   } else {
     const dyes = [...HAIR_COLORS.map(c => ["hairColor", c.id]), ...EYE_COLORS.map(c => ["eyeColor", c.id])]
@@ -229,7 +248,7 @@ export function spinOnce() {
       const [key, color] = dyes[randomInt(dyes.length)];
       gift = { kind: "dye", seg: seg.key, item: `${key === "hairColor" ? "hair" : "eyes"}:${color}` };
       extra.push({ id: `${key}:${color}`, price: 0, at, from: "wheel" });
-    } else gift = { kind: "dye", seg: seg.key, dup: true, ps: seg.dup };
+    } else gift = { kind: "dye", seg: seg.key, dup: true, refund: paid ? SPIN_PRICE : 0 };
   }
   if (!DB.addPurchases([...extra, { id, price: 0, at, gift }])) return null;
   return { seg, gift };
@@ -370,7 +389,7 @@ export function openWheel({ onChange, onClose } = {}) {
       rarity = rarityByKey(item.rarity);
       name = item[L];
       art = `<div class="gw-prize-fig">${figureSvg({ ...currentLook(), costume: item.id }, { view: "full", size: 112, frame: true, gear: wornGear(), label: name })}</div>`;
-      detail = gift.dup ? fill(t.detail.costumeDup, { n: gift.ps }) : t.detail.costume;
+      detail = gift.dup ? (gift.refund ? fill(t.detail.costumeDup, { n: gift.refund }) : t.detail.costumeDupFree) : t.detail.costume;
     } else if (gift.kind === "ps") {
       name = fill(t.seg.ps, { n: gift.ps });
       art = `<svg class="gw-prize-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
@@ -381,9 +400,9 @@ export function openWheel({ onChange, onClose } = {}) {
       detail = t.detail.coupon;
     } else {
       if (gift.dup) {
-        name = fill(t.seg.ps, { n: gift.ps });
+        name = gift.refund ? fill(t.seg.ps, { n: gift.refund }) : t.dupFreeName;
         art = `<svg class="gw-prize-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
-        detail = fill(t.detail.dyeDup, { n: gift.ps });
+        detail = gift.refund ? fill(t.detail.dyeDup, { n: gift.refund }) : t.detail.dyeDupFree;
       } else {
         const [part, color] = gift.item.split(":");
         const key = part === "hair" ? "hairColor" : "eyeColor";
@@ -418,9 +437,9 @@ export function openWheel({ onChange, onClose } = {}) {
     try { navigator.vibrate?.([18, 40, 30]); } catch { /* sans vibreur */ }
   };
 
-  const spin = () => {
+  const spin = (paid = false) => {
     if (st.spinning) return;
-    const res = spinOnce();
+    const res = spinOnce({ paid });
     if (!res) { renderBar(); return; }
     st.result = res;
     st.spinning = true;
@@ -462,7 +481,7 @@ export function openWheel({ onChange, onClose } = {}) {
     btn.disabled = false;
     if (res.ok) {
       msg.className = "gw-msg is-ok";
-      msg.textContent = (res.spins === 1 ? t.okOne : fill(t.ok, { n: res.spins })) + (res.days ? ` ${fill(res.days === 1 ? t.daysOne : t.days, { n: res.days })}` : "");
+      msg.textContent = res.adjusted ? fill(res.adjusted.level ? t.okAdjust : t.okAdjustPs, { level: res.adjusted.level, n: res.adjusted.balance }) : (res.spins === 1 ? t.okOne : fill(t.ok, { n: res.spins })) + (res.days ? ` ${fill(res.days === 1 ? t.daysOne : t.days, { n: res.days })}` : "");
       input.value = "";
       changed();
       renderBar();
@@ -482,7 +501,7 @@ export function openWheel({ onChange, onClose } = {}) {
       if (st.spinning || wheelState().spins > 0 || Shop.wallet().balance < SPIN_PRICE) return;
       if (!DB.addPurchase({ id: `spin:${Date.now().toString(36)}${randomInt(1e6).toString(36)}`, price: SPIN_PRICE, at: Date.now(), spins: 1 })) return;
       changed();
-      spin();
+      spin(true);
       return;
     }
     const see = event.target.closest("[data-gw-see]");

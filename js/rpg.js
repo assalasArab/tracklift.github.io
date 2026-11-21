@@ -279,6 +279,13 @@ export function character({ xp = 0, rpg = null, owned = () => false } = {}) {
   const cls = classAt(rpg?.path, level);
   const alloc = cleanAlloc(rpg?.alloc);
   const total = POINTS_PER_LEVEL * (level - 1);
+  // niveau redescendu (ex. doublons de la roue recomptés) : on retire les points en trop, en commençant par la plus grosse caractéristique
+  let over = STATS.reduce((sum, s) => sum + alloc[s], 0) - total;
+  while (over > 0) {
+    const top = STATS.reduce((a, b) => (alloc[b] > alloc[a] ? b : a));
+    alloc[top] -= 1;
+    over -= 1;
+  }
   const used = STATS.reduce((sum, s) => sum + alloc[s], 0);
 
   const classBonus = Object.fromEntries(STATS.map(s => [s, 0]));

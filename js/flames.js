@@ -60,10 +60,16 @@ export function sessionDays(sessionLogs) {
   return keys;
 }
 
+/** Ce que rend un doublon de la Roue des cadeaux : le prix d'un tour (js/gift-wheel.js SPIN_PRICE) */
+export const DUP_REFUND = 70;
+
 /**
  * Le portefeuille : gagné, dépensé, réserve, et où en est le bonus.
  * purchases : [{ id, price }] (ce qui a été débloqué ; un gain de la Roue des cadeaux porte gift.ps,
- *   compté comme gagné : réserve et niveau) ; sessionLogs : séances enregistrées
+ *   compté comme gagné : réserve et niveau) ; sessionLogs : séances enregistrées.
+ * Un doublon de la roue (gift.dup : costume ou teinture déjà à soi) ne rapporte rien :
+ *   il rend seulement le prix d'un tour (DUP_REFUND), dans la limite des tours achetés,
+ *   sans compter comme gagné (pas d'expérience). Les anciens doublons sont recomptés pareil.
  */
 export function flameWallet(weightLog, purchases = [], now = new Date(), sessionLogs = []) {
   const days = flameDays(weightLog);
@@ -72,9 +78,22 @@ export function flameWallet(weightLog, purchases = [], now = new Date(), session
   const weighed = new Set(days.map(day => day.key));
   const perfect = [...trained].filter(key => weighed.has(key)).length;
   const sessionEarned = trained.size * SESSION_GAIN + perfect * PERFECT_BONUS;
-  const giftEarned = (purchases || []).reduce((sum, item) => sum + Math.max(0, Number(item?.gift?.ps) || 0), 0);
-  const earned = weighEarned + sessionEarned + giftEarned;
-  const spent = (purchases || []).reduce((sum, item) => sum + (Number(item?.price) || 0), 0);
+  const list = purchases || [];
+  const giftEarned = list.reduce((sum, item) => sum + (item?.gift?.dup ? 0 : Math.max(0, Number(item?.gift?.ps) || 0)), 0);
+  // réglage d'un compte par un code cadeau réservé (js/gift-wheel.js) : écarts d'expérience et de dépense
+  const adjusts = list.filter(item => String(item?.id).startsWith("code:") && item.adjust);
+  const adjustEarned = adjusts.reduce((sum, item) => sum + (Number(item.adjust.earned) || 0), 0);
+  const adjustSpent = adjusts.reduce((sum, item) => sum + (Number(item.adjust.spent) || 0), 0);
+  const earned = Math.max(0, weighEarned + sessionEarned + giftEarned + adjustEarned);
+  // doublon noté depuis la saison 2 : gift.refund (prix du tour s'il était acheté, 0 s'il était offert)
+  const newRefund = list.reduce((sum, item) => sum + (item?.gift?.dup && item.gift.refund != null ? Math.min(DUP_REFUND, Math.max(0, Number(item.gift.refund) || 0)) : 0), 0);
+  // anciens doublons (avant le correctif) : 70 chacun, dans la limite des tours achetés AVANT eux
+  const oldDups = list.filter(item => item?.gift?.dup && item.gift.refund == null);
+  const lastOld = oldDups.reduce((m, item) => Math.max(m, Number(item?.at) || 0), 0);
+  const paidBefore = list.filter(item => String(item?.id).startsWith("spin:") && (Number(item?.at) || 0) <= lastOld)
+    .reduce((sum, item) => sum + Math.max(0, Number(item?.price) || 0), 0);
+  const refunded = newRefund + Math.min(paidBefore, oldDups.length * DUP_REFUND);
+  const spent = list.reduce((sum, item) => sum + (Number(item?.price) || 0), 0) - refunded + adjustSpent;
   const today = localKey(now);
   const yesterdayDate = new Date(now);
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);

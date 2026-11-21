@@ -76,7 +76,10 @@ export const GEAR_ART = {
   rempart: { weapon: "shield" }, crocsNuit: { weapon: "dagger" }, murmure: { weapon: "dagger" },
   batonNova: { weapon: "staff" }, batonMonde: { weapon: "staff" }, fauxEclipse: { weapon: "scythe" },
   marteauAube: { weapon: "scepter" }, sceptreSoleil: { weapon: "scepter" }, codexInfini: { weapon: "grimoire" },
-  railgun: { weapon: "wrench" }, cleMaitresse: { weapon: "wrench" }, lameTitans: { weapon: "sword" }
+  railgun: { weapon: "wrench" }, cleMaitresse: { weapon: "wrench" }, lameTitans: { weapon: "lame-titans" },
+  // armes dessinées avec Gemini (saison 2)
+  hache: { weapon: "hache" }, fendeuse: { weapon: "fendeuse" }, briseMonts: { weapon: "brise-monts" },
+  barre: { weapon: "barre" }, arc: { weapon: "arc" }, arcFaucon: { weapon: "arc-faucon" }
 };
 
 /** Quand rien d'autre n'est mis : un slip (le personnage n'est jamais tout nu) */

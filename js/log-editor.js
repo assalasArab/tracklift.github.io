@@ -3,8 +3,8 @@
    charges, ajouter une série oubliée, retirer une série en trop.
    Rien n'est enregistré avant « Enregistrer ».
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261122a";
-import { openSheet, esc } from "./potes-ui.js?v=20261122a";
+import { i18n } from "./i18n.js?v=20261122b";
+import { openSheet, esc } from "./potes-ui.js?v=20261122b";
 
 const TEXT = {
   fr: {
