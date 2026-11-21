@@ -11,9 +11,9 @@
    Une « skin » se pose sur l'emplacement de son équipement : elle remplace
    le dessin, les bonus restent ceux de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { ART3 } from "./avatar3-art.js?v=20261115c";
-import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261115c";
-import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261115c";
+import { ART3 } from "./avatar3-art.js?v=20261122a";
+import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261122a";
+import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261122a";
 
 const VERSION = "4";
 const a3 = file => `./assets/avatar3/${file}.png?a=${VERSION}`;
@@ -41,6 +41,9 @@ export function normalizeLook(look) {
     costume: l.costume || null,
     weaponSkin: l.weaponSkin || null,
     companion: l.companion || null,
+    hat: l.hat || null,
+    // couvre-chef publié dans le profil (vu par les potes, rangé dans « accessory »)
+    hatArt: ART3.hat?.[l.hatArt || l.accessory] ? (l.hatArt || l.accessory) : null,
     // tenue visible publiée dans le profil (avatar vu par les potes)
     outfitArt: ART3.outfit?.[l.outfitArt || l.outfit] ? (l.outfitArt || l.outfit) : null
   };
@@ -62,8 +65,11 @@ function tinted(id, file, box, color) {
 function wornPieces(l, gear = {}) {
   const outfit = cosmeticById(l.costume)?.art?.outfit || GEAR_ART[gear.outfit]?.outfit || l.outfitArt || DEFAULT_OUTFIT;
   const weapon = cosmeticById(l.weaponSkin)?.art?.weapon || GEAR_ART[gear.weapon]?.weapon || null;
-  return { outfit, weapon };
+  const hat = cosmeticById(l.hat)?.art?.hat || l.hatArt || null;
+  return { outfit, weapon, hat: ART3.hat?.[hat] ? hat : null };
 }
+/** Couvre-chef visible (pour le profil public) */
+export const visibleHat = look => wornPieces(normalizeLook(look)).hat;
 
 /** Adresse du dessin d'une pièce */
 export const pieceUrl = (cat, name) => (ART3[cat]?.[name] ? a3(`${cat}-${name}`) : null);
@@ -98,8 +104,20 @@ function characterSvg(l, colors, id, gear) {
     body += img(`eyes-${l.eyes}-shade`, E.box) + img(`eyes-${l.eyes}-base`, E.box);
     if (E.brow) body += img(`eyes-${l.eyes}-brow-${l.hairColor}`, E.brow) + img(`eyes-${l.eyes}-brow-shine`, E.brow);
   }
+  const Ht = worn.hat && ART3.hat[worn.hat];
   const Hh = ART3.hair?.[l.hair];
-  if (Hh) body += img(`hair-${l.hair}-${l.hairColor}`, Hh.box) + img(`hair-${l.hair}-shine`, Hh.box) + img(`hair-${l.hair}-base`, Hh.box);
+  // casque, capuche… : les cheveux sont cachés dessous
+  // bonnet posé derrière les cheveux (back) : dessiné avant eux, les mèches passent devant
+  if (Ht?.back) body += img(`hat-${worn.hat}`, Ht.box);
+  if (Hh && !Ht?.hideHair) {
+    const hair = img(`hair-${l.hair}-${l.hairColor}`, Hh.box) + img(`hair-${l.hair}-shine`, Hh.box) + img(`hair-${l.hair}-base`, Hh.box);
+    // cheveux qui dépassent sous un bonnet : cachés seulement au-dessus de son bord
+    if (Ht?.hairMask) {
+      defs += `<mask id="${id}-hm" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">${img(`hatmask-${worn.hat}`, [0, 0, 1024, 1024])}</mask>`;
+      body += `<g mask="url(#${id}-hm)">${hair}</g>`;
+    } else body += hair;
+  }
+  if (Ht && !Ht.back) body += img(`hat-${worn.hat}`, Ht.box);
   return { defs, body };
 }
 
@@ -115,7 +133,8 @@ function backgroundSvg(bg, [x, y, w, h], round, id) {
 function viewBox(view, l) {
   const B = ART3.body;
   if (!B) return [0, 0, 1024, 1024];
-  const hairTop = Math.min(...Object.values(ART3.hair || {}).map(h => h.box[1]), B.head.top);
+  const hat = ART3.hat?.[wornPieces(l).hat];
+  const hairTop = Math.min(...Object.values(ART3.hair || {}).map(h => h.box[1]), B.head.top, hat ? hat.box[1] : Infinity);
   const eyesBox = ART3.eyes?.[l.eyes]?.box || ART3.eyes?.e4?.box || [400, 240, 220, 130];
   if (view === "face") {
     const mouth = ART3.mouth?.[l.mouth]?.box || [460, 400, 60, 40];
@@ -125,7 +144,7 @@ function viewBox(view, l) {
     return [Math.round(cx - size / 2), Math.round((y0 + y1) / 2 - size / 2), Math.round(size), Math.round(size)];
   }
   if (view === "head") {
-    const top = Math.min(ART3.hair?.[l.hair]?.box[1] ?? B.head.top, B.head.top);
+    const top = Math.min(ART3.hair?.[l.hair]?.box[1] ?? B.head.top, B.head.top, hat ? hat.box[1] : Infinity);
     const size = Math.round(B.head.chin - top + 70);
     const cx = center(eyesBox)[0];
     return [Math.round(cx - size / 2), Math.round(top - 12), size, size];

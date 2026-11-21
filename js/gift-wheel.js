@@ -12,44 +12,73 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261115c";
-import { DB } from "./db.js?v=20261115c";
-import { Shop } from "./shop.js?v=20261115c";
-import { i18n } from "./i18n.js?v=20261115c";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261115c";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261115c";
-import { figureSvg, pieceUrl } from "./avatar3.js?v=20261115c";
-import { rarityByKey } from "./rpg-art.js?v=20261115c";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261115c";
-import { openHero } from "./hero.js?v=20261115c";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115c";
+import { firestore } from "./firebase-config.js?v=20261122a";
+import { DB } from "./db.js?v=20261122a";
+import { Shop } from "./shop.js?v=20261122a";
+import { i18n } from "./i18n.js?v=20261122a";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261122a";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122a";
+import { figureSvg, pieceUrl } from "./avatar3.js?v=20261122a";
+import { rarityByKey } from "./rpg-art.js?v=20261122a";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122a";
+import { openHero } from "./hero.js?v=20261122a";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122a";
 
-/* ─── La roue : 100 parts en tout (la taille d'une case = sa chance) ─── */
+/* ─── Les saisons : chacune a sa roue (100 parts en tout, la taille d'une case = sa chance) ───
+   Dates en heure du téléphone. Une saison terminée : ses costumes ne se gagnent plus,
+   ceux déjà gagnés restent ; les tours non joués servent à la saison suivante. */
 // dup : points spé donnés à la place d'un costume (ou d'une teinture) qu'on a déjà
-export const WHEEL = [
-  { key: "ps50", kind: "ps", ps: 50, weight: 22, color: "#bee7b8" },
-  { key: "infini", kind: "costume", item: "costume-infini", dup: 150, weight: 13 },
-  { key: "coupon20", kind: "coupon", pct: 20, weight: 15, color: "#fbe39a" },
-  { key: "ps100", kind: "ps", ps: 100, weight: 15, color: "#d3dcbc" },
-  { key: "nuages", kind: "costume", item: "costume-nuages", dup: 300, weight: 8 },
-  { key: "dye", kind: "dye", dup: 80, weight: 10, color: "#f8d0d6" },
-  { key: "coupon40", kind: "coupon", pct: 40, weight: 8, color: "#ffd5b0" },
-  { key: "aura", kind: "costume", item: "costume-aura", dup: 600, weight: 4 },
-  { key: "ps250", kind: "ps", ps: 250, weight: 5, color: "#cde4ee" }
+const S2_START = new Date(2026, 10, 22, 0, 0, 0).getTime();
+export const SEASONS = [
+  {
+    id: 1, ends: S2_START,
+    until: { fr: "jusqu'au dimanche 22\u00a0novembre", en: "until Sunday 22 November", frShort: "jusqu'au dim. 22 nov.", enShort: "until Sun 22 Nov" },
+    wheel: [
+      { key: "ps50", kind: "ps", ps: 50, weight: 22, color: "#bee7b8" },
+      { key: "infini", kind: "costume", item: "costume-infini", dup: 150, weight: 13 },
+      { key: "coupon20", kind: "coupon", pct: 20, weight: 15, color: "#fbe39a" },
+      { key: "ps100", kind: "ps", ps: 100, weight: 15, color: "#d3dcbc" },
+      { key: "nuages", kind: "costume", item: "costume-nuages", dup: 300, weight: 8 },
+      { key: "dye", kind: "dye", dup: 80, weight: 10, color: "#f8d0d6" },
+      { key: "coupon40", kind: "coupon", pct: 40, weight: 8, color: "#ffd5b0" },
+      { key: "aura", kind: "costume", item: "costume-aura", dup: 600, weight: 4 },
+      { key: "ps250", kind: "ps", ps: 250, weight: 5, color: "#cde4ee" }
+    ]
+  },
+  {
+    id: 2, starts: S2_START,
+    wheel: [
+      { key: "ps50", kind: "ps", ps: 50, weight: 16, color: "#bee7b8" },
+      { key: "bonnet", kind: "costume", item: "bonnet-heros", dup: 150, weight: 6 },
+      { key: "bois", kind: "costume", item: "costume-heros-bois", dup: 150, weight: 13 },
+      { key: "coupon20", kind: "coupon", pct: 20, weight: 15, color: "#fbe39a" },
+      { key: "ps100", kind: "ps", ps: 100, weight: 15, color: "#d3dcbc" },
+      { key: "temps", kind: "costume", item: "costume-heros-temps", dup: 300, weight: 8 },
+      { key: "dye", kind: "dye", dup: 80, weight: 10, color: "#f8d0d6" },
+      { key: "coupon40", kind: "coupon", pct: 40, weight: 8, color: "#ffd5b0" },
+      { key: "confrerie", kind: "costume", item: "costume-confrerie", dup: 600, weight: 4 },
+      { key: "ps250", kind: "ps", ps: 250, weight: 5, color: "#cde4ee" }
+    ]
+  }
 ];
-const TOTAL = WHEEL.reduce((n, s) => n + s.weight, 0);
+/** La saison en cours (null entre deux saisons) */
+export const currentSeason = (now = Date.now()) => SEASONS.find(x => (!x.starts || now >= x.starts) && (!x.ends || now < x.ends)) || null;
+export const wheelOpen = (now = Date.now()) => !!currentSeason(now);
+/** Texte « jusqu'au… » de la saison en cours ("" si pas de date de fin) */
+export const seasonUntil = (short = false) => { const u = currentSeason()?.until; return u ? u[(lang() === "en" ? "en" : "fr") + (short ? "Short" : "")] : ""; };
+/** L'objet se gagne-t-il à la roue de la saison en cours ? */
+export const inSeason = id => !!currentSeason()?.wheel.some(seg => seg.item === id);
+// la roue affichée : celle de la saison en cours, sinon la dernière
+const WHEEL = () => (currentSeason() || SEASONS[SEASONS.length - 1]).wheel;
+const TOTAL = () => WHEEL().reduce((n, x) => n + x.weight, 0);
 const MAX_SPINS = 10;
 /** Prix d'un tour acheté avec les points spé (en plus des codes cadeaux) */
 export const SPIN_PRICE = 70;
-/** La roue de cette collection part le dimanche 22 novembre 2026 à minuit (heure du téléphone).
- *  Les costumes gagnés et les bons restent ; les tours non joués sont gardés pour la prochaine collection. */
-export const WHEEL_ENDS_AT = new Date(2026, 10, 23, 0, 0, 0).getTime();
-export const wheelOpen = (now = Date.now()) => now < WHEEL_ENDS_AT;
 
 const TEXT = {
   fr: {
     kicker: "Comptoir de la Fonte", title: "Roue des cadeaux", close: "Fermer",
-    until: "jusqu'au dimanche 22 novembre", closedTitle: "La roue est partie", closedText: "Cette collection est terminée : une nouvelle arrive bientôt au Comptoir. Tes costumes et tes bons restent à toi.",
+    closedTitle: "La roue est partie", closedText: "Cette collection est terminée : une nouvelle arrive bientôt au Comptoir. Tes costumes et tes bons restent à toi.",
     kept: "Tes {n} tours sont gardés pour la prochaine collection.", keptOne: "Ton tour est gardé pour la prochaine collection.",
     codeLabel: "Code cadeau", codeHolder: "Ex. : FONTE-2026", validate: "Valider", checking: "Vérification…",
     ok: "Code accepté : +{n} tours de roue !", okOne: "Code accepté : +1 tour de roue !",
@@ -81,7 +110,7 @@ const TEXT = {
   },
   en: {
     kicker: "The Iron Counter", title: "Gift wheel", close: "Close",
-    until: "until Sunday 22 November", closedTitle: "The wheel is gone", closedText: "This collection is over: a new one is coming soon to the Counter. Your costumes and coupons stay yours.",
+    closedTitle: "The wheel is gone", closedText: "This collection is over: a new one is coming soon to the Counter. Your costumes and coupons stay yours.",
     kept: "Your {n} spins are kept for the next collection.", keptOne: "Your spin is kept for the next collection.",
     codeLabel: "Gift code", codeHolder: "E.g. IRON-2026", validate: "Confirm", checking: "Checking…",
     ok: "Code accepted: +{n} wheel spins!", okOne: "Code accepted: +1 wheel spin!",
@@ -175,9 +204,10 @@ export async function redeemCode(raw) {
 
 /* ─── Un tour de roue : le gain est tiré puis enregistré ─── */
 function pick() {
-  let r = randomInt(TOTAL * 1000) / 1000;
-  for (const seg of WHEEL) { r -= seg.weight; if (r < 0) return seg; }
-  return WHEEL[0];
+  const wheel = WHEEL();
+  let r = randomInt(TOTAL() * 1000) / 1000;
+  for (const seg of wheel) { r -= seg.weight; if (r < 0) return seg; }
+  return wheel[0];
 }
 export function spinOnce() {
   if (!wheelOpen() || wheelState().spins <= 0) return null;
@@ -214,14 +244,15 @@ const costumeRarity = seg => rarityByKey(cosmeticById(seg.item)?.rarity);
 const segColor = seg => (seg.kind === "costume" ? costumeRarity(seg).color : seg.color);
 
 /** Angle de départ et de fin de chaque case (en degrés, depuis le haut, sens des aiguilles) */
-const ARCS = (() => {
+const ARCS = () => {
   let a = 0;
-  return WHEEL.map(seg => { const from = a; a += (seg.weight / TOTAL) * 360; return { seg, from, to: a, mid: (from + a) / 2 }; });
-})();
+  const total = TOTAL();
+  return WHEEL().map(seg => { const from = a; a += (seg.weight / total) * 360; return { seg, from, to: a, mid: (from + a) / 2 }; });
+};
 
 function wheelSvg() {
   const t = T();
-  const parts = ARCS.map(({ seg, from, to, mid }) => {
+  const parts = ARCS().map(({ seg, from, to, mid }) => {
     const [x0, y0] = pt(from, R);
     const [x1, y1] = pt(to, R);
     const large = to - from > 180 ? 1 : 0;
@@ -234,7 +265,8 @@ function wheelSvg() {
     else {
       const w = (36 * k + 10).toFixed(1);
       const h = (w * 1.75).toFixed(1);
-      inner = `<image href="${pieceUrl("outfit", cosmeticById(seg.item).art.outfit)}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
+      const art = cosmeticById(seg.item).art;
+      inner = `<image href="${pieceUrl(art.outfit ? "outfit" : art.hat ? "hat" : "weapon", art.outfit || art.hat || art.weapon)}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
     }
     return `<g class="gw-slice gw-${seg.kind}">
       <path class="gw-seg" d="M0 0L${x0} ${y0}A${R} ${R} 0 ${large} 1 ${x1} ${y1}Z" fill="${segColor(seg)}"/>
@@ -242,7 +274,7 @@ function wheelSvg() {
     </g>`;
   }).join("");
   const bulbs = Array.from({ length: 24 }, (_, i) => { const [x, y] = pt(i * 15, R + 7); return `<circle class="gw-bulb" cx="${x}" cy="${y}" r="3.2"/>`; }).join("");
-  const label = WHEEL.map(seg => segLabel(seg)).join(", ");
+  const label = WHEEL().map(seg => segLabel(seg)).join(", ");
   return `<svg class="gw-wheel" viewBox="-118 -118 236 236" role="img" aria-label="${esc(`${t.title} : ${label}`)}" focusable="false">
     <circle class="gw-back" r="${R + 14}"/>
     <g class="gw-bulbs">${bulbs}</g>
@@ -268,10 +300,10 @@ export function openWheel({ onChange, onClose } = {}) {
 
   const odds = () => {
     const t = T();
-    const share = WHEEL.filter(s => s.kind === "costume").reduce((n, s) => n + s.weight, 0);
+    const share = WHEEL().filter(s => s.kind === "costume").reduce((n, s) => n + s.weight, 0);
     return `<details class="gw-odds"><summary>${esc(t.odds)}</summary><ul>
-      ${WHEEL.map(seg => `<li><i style="background:${segColor(seg)}"></i><span>${esc(segLabel(seg))}${seg.kind === "costume" ? ` · ${esc(costumeRarity(seg)[lang()])}` : ""}</span><b>${num((seg.weight / TOTAL) * 100)} %</b></li>`).join("")}
-      <li class="gw-odds-sum"><span>${esc(t.costumeShare)}</span><b>${num((share / TOTAL) * 100)} %</b></li>
+      ${WHEEL().map(seg => `<li><i style="background:${segColor(seg)}"></i><span>${esc(segLabel(seg))}${seg.kind === "costume" ? ` · ${esc(costumeRarity(seg)[lang()])}` : ""}</span><b>${num((seg.weight / TOTAL()) * 100)} %</b></li>`).join("")}
+      <li class="gw-odds-sum"><span>${esc(t.costumeShare)}</span><b>${num((share / TOTAL()) * 100)} %</b></li>
     </ul></details>`;
   };
 
@@ -315,7 +347,7 @@ export function openWheel({ onChange, onClose } = {}) {
       $(".gw-actions").innerHTML = "";
       return;
     }
-    $(".gw-spins").textContent = (st.spinning ? t.spinning : spins === 1 ? t.spinsOne : spins ? fill(t.spins, { n: spins }) : t.spinsNone) + (st.spinning ? "" : ` · ${t.until}`);
+    $(".gw-spins").textContent = (st.spinning ? t.spinning : spins === 1 ? t.spinsOne : spins ? fill(t.spins, { n: spins }) : t.spinsNone) + (st.spinning || !seasonUntil() ? "" : ` · ${seasonUntil()}`);
     $(".gw-spins").classList.toggle("is-lit", spins > 0 && !st.spinning);
     const r = st.result;
     const see = r ? (r.gift.kind === "costume" && !r.gift.dup ? "costume" : r.gift.kind === "dye" && !r.gift.dup ? "dye" : r.gift.kind === "coupon" ? "coupon" : "ps") : null;
@@ -394,7 +426,7 @@ export function openWheel({ onChange, onClose } = {}) {
     st.spinning = true;
     changed();
     $(".gw-result").innerHTML = "";
-    const arc = ARCS.find(a => a.seg === res.seg);
+    const arc = ARCS().find(a => a.seg === res.seg);
     const jitter = (Math.random() - 0.5) * (arc.to - arc.from) * 0.7;
     const target = -(arc.mid + jitter);
     const current = ((st.rotation % 360) + 360) % 360;

@@ -345,6 +345,22 @@ export const LOOK_LORE = {
     fr: "Le kimono d'un guerrier venu d'ailleurs, qui criait à chaque répétition. Quand il dépassait ses limites, ses cheveux s'embrasaient d'or.",
     en: "The gi of a warrior from afar who shouted on every rep. When he broke his limits, his hair blazed gold."
   },
+  "costume-heros-bois": {
+    fr: "La tunique d'un garçon des bois qui ne parlait jamais, mais criait à chaque saut. On dit qu'il coupait l'herbe juste pour trouver des pièces.",
+    en: "The tunic of a forest boy who never spoke, yet yelled on every jump. They say he cut the grass just to find coins."
+  },
+  "costume-heros-temps": {
+    fr: "La même tunique, sept ans plus tard. Son porteur a dormi tout ce temps et s'est réveillé plus fort : la preuve que le repos fait partie de l'entraînement.",
+    en: "The same tunic, seven years later. Its wearer slept all that time and woke up stronger: proof that rest is part of training."
+  },
+  "bonnet-heros": {
+    fr: "Long, vert, pointu : impossible de le perdre de vue. Celui qui le porte a toujours l'air prêt à partir à l'aventure, même pour aller aux toilettes de la salle.",
+    en: "Long, green, pointy: impossible to lose sight of. Whoever wears it always looks ready for an adventure, even on the way to the gym toilets."
+  },
+  "costume-confrerie": {
+    fr: "Rien n'est vrai, tout est permis… sauf sauter l'échauffement. Les membres de la Confrérie font leur saut de la foi seulement après dix minutes de mobilité.",
+    en: "Nothing is true, everything is permitted… except skipping the warm-up. Brotherhood members take their leap of faith only after ten minutes of mobility."
+  },
   menthe: { fr: "La salle de la Guilde, au petit matin, avant que la musique ne démarre.", en: "The Guild hall at dawn, before the music starts." },
   sauge: { fr: "Les jardins du Temple de la Récupération, où l'on vient étirer ses mollets.", en: "The gardens of the Temple of Recovery, where people come to stretch their calves." },
   creme: { fr: "Une page blanche de ton carnet. Tout reste à écrire.", en: "A blank page of your log. Everything is still to be written." },

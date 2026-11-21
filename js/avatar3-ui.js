@@ -3,13 +3,13 @@
    (users/<uid> → rpg.look), publiée dans le profil des Potes.
    La fenêtre (équipement, apparence, boutique) est dans js/hero.js.
    ═══════════════════════════════════════════════════════════ */
-import { figureSvg, normalizeLook, visibleOutfit } from "./avatar3.js?v=20261115c";
-import { Social } from "./social.js?v=20261115c";
-import { normalizeAvatar } from "./avatar.js?v=20261115c";
-import { COSMETIC_BACKGROUNDS, lookTag, cosmeticById } from "./cosmetics.js?v=20261115c";
-import { rpgState } from "./rpg-ui.js?v=20261115c";
-import { DB } from "./db.js?v=20261115c";
-import { openHero } from "./hero.js?v=20261115c";
+import { figureSvg, normalizeLook, visibleOutfit, visibleHat } from "./avatar3.js?v=20261122a";
+import { Social } from "./social.js?v=20261122a";
+import { normalizeAvatar } from "./avatar.js?v=20261122a";
+import { COSMETIC_BACKGROUNDS, lookTag, cosmeticById } from "./cosmetics.js?v=20261122a";
+import { rpgState } from "./rpg-ui.js?v=20261122a";
+import { DB } from "./db.js?v=20261122a";
+import { openHero } from "./hero.js?v=20261122a";
 
 /* ─── Données : apparence enregistrée avec le personnage (users/<uid> → rpg.look) ─── */
 export function currentLook() { return normalizeLook((DB.getRpg() || {}).look); }
@@ -23,7 +23,7 @@ export const ownsLook = (id, price) => (!price && !cosmeticById(id)?.wheel) || D
 /** L'avatar publié dans le profil (vu par les potes) : visage, couleurs, fond et tenue visible */
 export function profileAvatar() {
   const look = currentLook();
-  return normalizeAvatar({ v: 3, ...look, outfit: visibleOutfit(look, wornGear()) });
+  return normalizeAvatar({ v: 3, ...look, outfit: visibleOutfit(look, wornGear()), hatArt: visibleHat(look) });
 }
 
 /** Met à jour le profil public si le personnage a changé (seulement dans la partie Potes) */

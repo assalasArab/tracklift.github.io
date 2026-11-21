@@ -4,8 +4,8 @@
    matériel, durée, charges de référence) puis construit un
    programme complet avec séries, répétitions et charges de départ.
    ═══════════════════════════════════════════════════════════ */
-import { illu } from "./illustrations.js?v=20261115c";
-import { showToast } from "./utils.js?v=20261115c";
+import { illu } from "./illustrations.js?v=20261122a";
+import { showToast } from "./utils.js?v=20261122a";
 
 /* ---------- bibliothèque de mouvements ----------
    gym / db / bw : exercice pour salle complète, haltères seuls, poids du corps (null = pas d'équivalent)

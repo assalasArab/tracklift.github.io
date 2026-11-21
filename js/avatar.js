@@ -5,14 +5,14 @@
    Les pièces sont des calques PNG ; les zones de peau, de cheveux et d'iris
    sont recoloriées à l'affichage (masque SVG rempli de la couleur choisie).
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261115c";
-import { escapeHtml, showToast } from "./utils.js?v=20261115c";
+import { i18n } from "./i18n.js?v=20261122a";
+import { escapeHtml, showToast } from "./utils.js?v=20261122a";
 import {
   SKINS, HAIR_COLORS, EYE_COLORS, BACKGROUNDS,
   FACES, BODIES, HAIRS, EYES, NOSES, MOUTHS, BEARDS, ACCESSORIES,
   AVATAR_CATEGORIES, LAYER_ORDER, TINTS
-} from "./avatar-parts.js?v=20261115c";
-import { figureSvg, normalizeLook } from "./avatar3.js?v=20261115c";
+} from "./avatar-parts.js?v=20261122a";
+import { figureSvg, normalizeLook } from "./avatar3.js?v=20261122a";
 
 const LISTS = {
   skin: SKINS, face: FACES, body: BODIES, hair: HAIRS, hairColor: HAIR_COLORS, eyes: EYES, eyeColor: EYE_COLORS,
@@ -36,7 +36,9 @@ const LEGACY = {
 /** Nouveau personnage (v3) : seulement des clés déjà prévues par les règles du profil public */
 function normalizeAvatar3(config) {
   const l = normalizeLook(config);
-  return { v: 3, skin: l.skin, hairColor: l.hairColor, eyeColor: l.eyeColor, bg: l.bg, eyes: l.eyes, mouth: l.mouth, hair: l.hair, outfit: l.outfitArt || "underwear" };
+  const out = { v: 3, skin: l.skin, hairColor: l.hairColor, eyeColor: l.eyeColor, bg: l.bg, eyes: l.eyes, mouth: l.mouth, hair: l.hair, outfit: l.outfitArt || "underwear" };
+  if (l.hatArt) out.accessory = l.hatArt;
+  return out;
 }
 
 /** Toujours une config complète et valide (valeurs inconnues → première pièce) */

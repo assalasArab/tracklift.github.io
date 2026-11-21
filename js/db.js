@@ -1,7 +1,7 @@
-import { uid } from "./utils.js?v=20261115c";
-import { EXERCISE_SEED } from "./exercises.js?v=20261115c";
-import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261115c";
-import { firestore } from "./firebase-config.js?v=20261115c";
+import { uid } from "./utils.js?v=20261122a";
+import { EXERCISE_SEED } from "./exercises.js?v=20261122a";
+import { EXTRA_EXERCISES } from "./exercises-extra.js?v=20261122a";
+import { firestore } from "./firebase-config.js?v=20261122a";
 
 /* ═══════════════════════════════════════════════════════════
    Données de l'utilisateur.

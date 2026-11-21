@@ -2,6 +2,7 @@
    Apparence du personnage (préprod) : ce qui se voit, sans bonus.
    - costume    : tenue entière, posée sur l'emplacement « Tenue »
    - weaponSkin : skin d'arme, posée sur l'emplacement « Arme »
+   - hat        : couvre-chef (chapeau, capuche, casque…), sans bonus
    - companion  : compagnon à côté du personnage
    - bg         : fond derrière le personnage
    Une skin garde les bonus de l'équipement qu'elle recouvre.
@@ -13,6 +14,7 @@
 export const LOOK_SLOTS = [
   { key: "costume", covers: "outfit" },
   { key: "weaponSkin", covers: "weapon" },
+  { key: "hat", covers: null },
   { key: "companion", covers: null },
   { key: "bg", covers: null }
 ];
@@ -47,14 +49,19 @@ export const COSMETICS = [
   // costumes de la Roue des cadeaux (du moins rare au plus rare)
   { id: "costume-infini", slot: "costume", fr: "Tenue de l'Infini", en: "Infinity outfit", price: 0, wheel: true, rarity: "epic", art: { outfit: "gojo" } },
   { id: "costume-nuages", slot: "costume", fr: "Manteau des Nuages rouges", en: "Red Cloud cloak", price: 0, wheel: true, rarity: "legendary", art: { outfit: "akatsuki" } },
-  { id: "costume-aura", slot: "costume", fr: "Kimono de l'Aura dorée", en: "Golden Aura gi", price: 0, wheel: true, rarity: "mythic", art: { outfit: "dbz" } }
+  { id: "costume-aura", slot: "costume", fr: "Kimono de l'Aura dorée", en: "Golden Aura gi", price: 0, wheel: true, rarity: "mythic", art: { outfit: "dbz" } },
+  // saison 2 (dessins faits avec Gemini, installés par _bench/gemini-import.py)
+  { id: "costume-heros-bois", slot: "costume", fr: "Tunique du Héros des Bois", en: "Woodland Hero tunic", price: 0, wheel: true, rarity: "epic", art: { outfit: "heros-bois" } },
+  { id: "costume-heros-temps", slot: "costume", fr: "Tunique du Héros du Temps", en: "Hero of Time tunic", price: 0, wheel: true, rarity: "legendary", art: { outfit: "heros-temps" } },
+  { id: "bonnet-heros", slot: "hat", fr: "Bonnet du Héros", en: "Hero's cap", price: 0, wheel: true, rarity: "epic", art: { hat: "bonnet-heros" } },
+  { id: "costume-confrerie", slot: "costume", fr: "Tenue de la Confrérie", en: "Brotherhood attire", price: 0, wheel: true, rarity: "mythic", art: { outfit: "confrerie" } }
 ];
 
 /** Dessin de chaque équipement (en attendant un dessin par objet, plusieurs partagent le même) */
 export const GEAR_ART = {
   survet: { outfit: "casual" },
   cuir: { outfit: "armor" }, mailles: { outfit: "mail" }, cape: { outfit: "ornate" }, armureCeleste: { outfit: "seraph" },
-  robe: { outfit: "robe" }, habit: { outfit: "robe" }, tenueArchimage: { outfit: "robe" },
+  robe: { outfit: "robe" }, habit: { outfit: "habit" }, tenueArchimage: { outfit: "archimage" }, combiMecha: { outfit: "mecha" },
   baton: { weapon: "staff" }, batonAstral: { weapon: "staff" }, batonSauvage: { weapon: "staff" }, batonComete: { weapon: "staff" }, batonChene: { weapon: "staff" },
   epee: { weapon: "sword" },
   dague: { weapon: "dagger" }, lames: { weapon: "dagger" }, lameOmbre: { weapon: "dagger" },
@@ -64,8 +71,8 @@ export const GEAR_ART = {
   sceptre: { weapon: "scepter" }, masse: { weapon: "scepter" }, relique: { weapon: "scepter" },
   cle: { weapon: "wrench" }, tourelle: { weapon: "wrench" }, canon: { weapon: "wrench" },
   // objets ajoutés en novembre 2026 (dessins existants)
-  debardeur: { outfit: "casual" }, kimono: { outfit: "robe" }, togeEtoiles: { outfit: "robe" },
-  plates: { outfit: "mail" }, manteauRodeur: { outfit: "ornate" }, armureTitan: { outfit: "seraph" }, armureLegende: { outfit: "seraph" },
+  debardeur: { outfit: "casual" }, kimono: { outfit: "kimono" }, togeEtoiles: { outfit: "robe" },
+  plates: { outfit: "plates" }, manteauRodeur: { outfit: "rodeur" }, armureTitan: { outfit: "titan" }, armureLegende: { outfit: "legende" },
   rempart: { weapon: "shield" }, crocsNuit: { weapon: "dagger" }, murmure: { weapon: "dagger" },
   batonNova: { weapon: "staff" }, batonMonde: { weapon: "staff" }, fauxEclipse: { weapon: "scythe" },
   marteauAube: { weapon: "scepter" }, sceptreSoleil: { weapon: "scepter" }, codexInfini: { weapon: "grimoire" },

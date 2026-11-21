@@ -8,21 +8,21 @@
    Un objet choisi s'essaie sur le personnage avant de l'acheter.
    Règles du jeu : js/rpg.js ; légendes : js/lore.js.
    ═══════════════════════════════════════════════════════════ */
-import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261115c";
-import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261115c";
-import { openWheel, wheelState, discounted, wheelOpen } from "./gift-wheel.js?v=20261115c";
-import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261115c";
-import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261115c";
-import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261115c";
-import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261115c";
-import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261115c";
-import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261115c";
-import { i18n } from "./i18n.js?v=20261115c";
-import { showToast } from "./utils.js?v=20261115c";
-import { DB } from "./db.js?v=20261115c";
-import { Shop } from "./shop.js?v=20261115c";
-import { Social } from "./social.js?v=20261115c";
-import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261115c";
+import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261122a";
+import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261122a";
+import { openWheel, wheelState, discounted, wheelOpen, seasonUntil, inSeason } from "./gift-wheel.js?v=20261122a";
+import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261122a";
+import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261122a";
+import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122a";
+import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122a";
+import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261122a";
+import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261122a";
+import { i18n } from "./i18n.js?v=20261122a";
+import { showToast } from "./utils.js?v=20261122a";
+import { DB } from "./db.js?v=20261122a";
+import { Shop } from "./shop.js?v=20261122a";
+import { Social } from "./social.js?v=20261122a";
+import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261122a";
 
 const PS = `<svg class="hx-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const ICON = {
@@ -41,6 +41,7 @@ const ICON = {
     accessory: `<circle cx="12" cy="14.5" r="6"/><path d="M9.5 6.5L12 3l2.5 3.5L12 8.5z"/>`,
     costume: `<path d="M12 3c-3 0-4.5 2-4.5 4.5L4 20.5h16L16.5 7.5C16.5 5 15 3 12 3z"/>`,
     weaponSkin: `<path d="M12 2.5l2.2 4V15H9.8V6.5z"/><path d="M7.5 15h9M12 15v4.5"/>`,
+    hat: `<path d="M4 17.5h16"/><path d="M6.5 17.5c0-6 2.5-10 5.5-10s5.5 4 5.5 10"/><path d="M9 11.5h6"/>`,
     companion: `<path d="M5 18c0-4 3-7 7-7s7 3 7 7"/><circle cx="8.5" cy="6.5" r="2"/><circle cx="15.5" cy="6.5" r="2"/>`,
     bg: `<rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M3.5 15l5-4 4 3 3-2 5 4"/>`
   }
@@ -61,14 +62,14 @@ const TEXT = {
     tabs: { hero: "Héros", stats: "Stats", look: "Apparence", shop: "Boutique", path: "Voie" },
     purse: "points spé", level: "Niv. {n}", power: "Puissance",
     xpNext: "{have} / {need} avant le niveau {n}", xpMax: "Niveau maximum atteint",
-    slot: { weapon: "Arme", outfit: "Tenue", accessory: "Accessoire", costume: "Tenue entière", weaponSkin: "Skin d'arme", companion: "Compagnon", bg: "Fond" },
+    slot: { weapon: "Arme", outfit: "Tenue", accessory: "Accessoire", costume: "Tenue entière", weaponSkin: "Skin d'arme", hat: "Tête", companion: "Compagnon", bg: "Fond" },
     empty: "Vide", hint: "Touche un emplacement pour ouvrir ton sac.", lookHint: "Apparence seule : les bonus restent ceux de ton équipement.",
     gearBonus: "Bonus de l'équipement", noGear: "Rien sur le dos pour l'instant : touche un emplacement.",
     toPlace: "points à placer", toPlaceOne: "point à placer", place: "Les placer",
     chooseCta: "Niveau {n} : choisis ta voie", choose: "Choisir",
     levelUp: "Niveau {n} !", levelUpSub: "+{pts} points de caractéristique à placer", levelUpChoose: "Une nouvelle voie s'ouvre à toi.",
     inBag: "Dans ton sac", atMerchant: "Chez le marchand", bagEmpty: "Rien dans ton sac pour cet emplacement.",
-    type: { weapon: "Arme", outfit: "Tenue", accessory: "Accessoire", costume: "Skin · tenue entière", weaponSkin: "Skin d'arme", bg: "Fond", dye: "Teinture", companion: "Compagnon" },
+    type: { weapon: "Arme", outfit: "Tenue", accessory: "Accessoire", costume: "Skin · tenue entière", weaponSkin: "Skin d'arme", hat: "Skin · tête", bg: "Fond", dye: "Teinture", companion: "Compagnon" },
     reqLevel: "Niveau {n}", reqClass: "Voie : {cls}", vs: "Comparé à : {name}",
     coveredBy: "Ta skin « {name} » recouvre cet objet : il garde ses bonus.", skinNote: "Apparence seule : les bonus restent ceux de ton équipement.",
     equip: "Équiper", unequip: "Retirer", apply: "Utiliser", inUse: "Utilisé",
@@ -91,7 +92,7 @@ const TEXT = {
     owned: "Possédé", worn: "Équipé",
     wheelTag: "Roue", wheelOnly: "Ne s'achète pas : à gagner à la Roue des cadeaux.", openWheel: "Ouvrir la roue",
     wheelTitle: "Roue des cadeaux", wheelSpins: "{n} tours à jouer", wheelSpinsOne: "1 tour à jouer", wheelNoSpin: "Un code cadeau ? Tente ta chance",
-    wheelUntil: "jusqu'au dim. 22 nov.", wheelGone: "Partie : nouvelle collection bientôt", wheelOver: "Collection terminée : il ne se gagne plus pour l'instant.",
+    wheelGone: "Partie : nouvelle collection bientôt", wheelOver: "Saison terminée : il ne se gagne plus pour l'instant.",
     coupons: "Tes bons", couponsList: "Tes bons de réduction : {list}", couponNone: "Sans bon",
     pathNow: "Ta voie", rank: "Rang {n}", strengthens: "Renforce : {list}", style: "Style : {ref}",
     evolutions: "Évolutions", atLevel: "Niv. {n}", choiceAt: "Choix au niv. {n}",
@@ -106,14 +107,14 @@ const TEXT = {
     tabs: { hero: "Hero", stats: "Stats", look: "Look", shop: "Shop", path: "Path" },
     purse: "spec points", level: "Lv. {n}", power: "Power",
     xpNext: "{have} / {need} before level {n}", xpMax: "Max level reached",
-    slot: { weapon: "Weapon", outfit: "Outfit", accessory: "Accessory", costume: "Full outfit", weaponSkin: "Weapon skin", companion: "Companion", bg: "Background" },
+    slot: { weapon: "Weapon", outfit: "Outfit", accessory: "Accessory", costume: "Full outfit", weaponSkin: "Weapon skin", hat: "Head", companion: "Companion", bg: "Background" },
     empty: "Empty", hint: "Tap a slot to open your bag.", lookHint: "Look only: bonuses stay those of your gear.",
     gearBonus: "Gear bonuses", noGear: "Nothing on your back yet: tap a slot.",
     toPlace: "points to assign", toPlaceOne: "point to assign", place: "Assign",
     chooseCta: "Level {n}: choose your path", choose: "Choose",
     levelUp: "Level {n}!", levelUpSub: "+{pts} attribute points to assign", levelUpChoose: "A new path opens before you.",
     inBag: "In your bag", atMerchant: "At the merchant", bagEmpty: "Nothing in your bag for this slot.",
-    type: { weapon: "Weapon", outfit: "Outfit", accessory: "Accessory", costume: "Skin · full outfit", weaponSkin: "Weapon skin", bg: "Background", dye: "Dye", companion: "Companion" },
+    type: { weapon: "Weapon", outfit: "Outfit", accessory: "Accessory", costume: "Skin · full outfit", weaponSkin: "Weapon skin", hat: "Skin · head", bg: "Background", dye: "Dye", companion: "Companion" },
     reqLevel: "Level {n}", reqClass: "Path: {cls}", vs: "Compared to: {name}",
     coveredBy: "Your “{name}” skin covers this item: it keeps its bonuses.", skinNote: "Look only: bonuses stay those of your gear.",
     equip: "Equip", unequip: "Take off", apply: "Use", inUse: "In use",
@@ -136,7 +137,7 @@ const TEXT = {
     owned: "Owned", worn: "Equipped",
     wheelTag: "Wheel", wheelOnly: "Not for sale: win it on the Gift wheel.", openWheel: "Open the wheel",
     wheelTitle: "Gift wheel", wheelSpins: "{n} spins to play", wheelSpinsOne: "1 spin to play", wheelNoSpin: "Got a gift code? Try your luck",
-    wheelUntil: "until Sun 22 Nov", wheelGone: "Gone: new collection soon", wheelOver: "Collection over: it can't be won for now.",
+    wheelGone: "Gone: new collection soon", wheelOver: "Season over: it can't be won for now.",
     coupons: "Your vouchers", couponsList: "Your vouchers: {list}", couponNone: "No voucher",
     pathNow: "Your path", rank: "Rank {n}", strengthens: "Strengthens: {list}", style: "Style: {ref}",
     evolutions: "Evolutions", atLevel: "Lv. {n}", choiceAt: "Choice at lv. {n}",
@@ -209,7 +210,7 @@ function itemInfo(kind, id) {
     const art = item.art || {};
     return {
       kind, id, slot: item.slot, name: item[L], type: t.type[item.slot], rarity: item.rarity ? rarityByKey(item.rarity) : rarityOfPrice(item.price), wheel: !!item.wheel,
-      thumb: { img: thumbUrl(art.outfit ? "outfit" : "weapon", art.outfit || art.weapon) },
+      thumb: { img: thumbUrl(art.outfit ? "outfit" : art.hat ? "hat" : "weapon", art.outfit || art.hat || art.weapon) },
       lore: loreText(LOOK_LORE[id], L), note: t.skinNote, price: item.price, owned: ownsLook(id, item.price),
       worn: look[item.slot] === id, usable: true, afford: wallet.balance >= item.price, reason: ""
     };
@@ -409,7 +410,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     const info = st.sel ? itemInfo(st.sel.kind, st.sel.id) : null;
     const trial = info && !info.worn ? tryOn(info) : null;
     const look = trial ? trial.look : currentLook();
-    const sides = mode === "gear" ? [["weapon"], ["outfit", "accessory"]] : [["weaponSkin", "companion"], ["costume", "bg"]];
+    const sides = mode === "gear" ? [["weapon"], ["outfit", "accessory"]] : [["hat", "weaponSkin", "companion"], ["costume", "bg"]];
     const slotFn = mode === "gear" ? gearSlot : lookSlot;
     return `
       <section class="hx-stage" style="--hx-class:${classColor(ch)}">
@@ -523,7 +524,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     let body;
     if (["hair", "eyes", "mouth"].includes(st.styleCat)) {
       const key = st.styleCat;
-      body = `<div class="hx-faces">${FACE_OPTIONS[key].map((opt, i) => `<button type="button" class="hx-face${look[key] === opt ? " is-on" : ""}" data-hx-face="${key}|${opt}" aria-pressed="${look[key] === opt}" aria-label="${esc(`${t.styleCats[key]} ${i + 1}`)}">${figureSvg({ ...look, [key]: opt }, { view: key === "hair" ? "head" : "face", size: 72 })}</button>`).join("")}</div>`;
+      body = `<div class="hx-faces">${FACE_OPTIONS[key].map((opt, i) => `<button type="button" class="hx-face${look[key] === opt ? " is-on" : ""}" data-hx-face="${key}|${opt}" aria-pressed="${look[key] === opt}" aria-label="${esc(`${t.styleCats[key]} ${i + 1}`)}">${figureSvg({ ...look, [key]: opt, ...(key === "hair" ? { hat: null, hatArt: null } : {}) }, { view: key === "hair" ? "head" : "face", size: 72 })}</button>`).join("")}</div>`;
     } else if (st.styleCat === "skin") {
       body = `<div class="hx-colors">${SKINS.map(c => `<button type="button" class="hx-color${look.skin === c.id ? " is-on" : ""}" style="--c:${c.color}" data-hx-skin="${c.id}" aria-pressed="${look.skin === c.id}" aria-label="${esc(cap(i18n.t(`avatarParts.skin.${c.id}`)))}"></button>`).join("")}</div>`;
     } else {
@@ -558,7 +559,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     return `
       <button type="button" class="gw-banner${spins && wheelOpen() ? " is-lit" : ""}" data-hx-wheel>
         <svg class="gw-banner-wheel" viewBox="-12 -12 24 24" aria-hidden="true" focusable="false"><circle r="10.5"/><path d="M0-10.5V10.5M-10.5 0H10.5M-7.4-7.4L7.4 7.4M7.4-7.4L-7.4 7.4"/><circle r="2.6" class="gw-banner-hub"/></svg>
-        <span><b>${esc(t.wheelTitle)}</b><small>${esc(!wheelOpen() ? t.wheelGone : `${spins === 1 ? t.wheelSpinsOne : spins ? fill(t.wheelSpins, { n: spins }) : t.wheelNoSpin} · ${t.wheelUntil}`)}</small></span>
+        <span><b>${esc(t.wheelTitle)}</b><small>${esc(!wheelOpen() ? t.wheelGone : `${spins === 1 ? t.wheelSpinsOne : spins ? fill(t.wheelSpins, { n: spins }) : t.wheelNoSpin}${seasonUntil(true) ? ` · ${seasonUntil(true)}` : ""}`)}</small></span>
         ${spins && wheelOpen() ? `<i class="gw-banner-count" aria-hidden="true">${spins}</i>` : ""}
       </button>
       ${list ? `<p class="hx-hint">${esc(fill(t.couponsList, { list }))}</p>` : ""}`;
@@ -635,7 +636,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
       else if (info.worn) actions = `<button type="button" class="btn btn-surface btn-block" data-hx-act="unequip">${esc(t.unequip)}</button>`;
       else actions = info.usable ? `<button type="button" class="btn btn-primary btn-block" data-hx-act="equip">${esc(t.equip)}</button>` : `<p class="hx-state is-missing">${esc(info.reason)}</p>`;
     } else if (info.wheel) {
-      actions = wheelOpen() ? `<p class="hx-state">${esc(t.wheelOnly)}</p><button type="button" class="btn btn-surface btn-block hx-wheel-btn" data-hx-wheel>${esc(t.openWheel)}</button>`
+      actions = inSeason(info.id) ? `<p class="hx-state">${esc(t.wheelOnly)}</p><button type="button" class="btn btn-surface btn-block hx-wheel-btn" data-hx-wheel>${esc(t.openWheel)}</button>`
         : `<p class="hx-state">${esc(t.wheelOver)}</p>`;
     } else if (!info.usable) {
       actions = `<p class="hx-state is-missing">${svg(ICON.lock)}${esc(info.reason)}</p>`;
@@ -686,7 +687,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     const mine = list.filter(i => i.owned);
     const others = list.filter(i => !i.owned);
     const grid = items => `<ul class="hx-grid is-bag">${items.map(info => itemHtml(info, st.sel)).join("")}</ul>`;
-    const canClear = (SLOTS.includes(key) && ch.gear[key]) || (["costume", "weaponSkin", "companion"].includes(key) && look[key]);
+    const canClear = (SLOTS.includes(key) && ch.gear[key]) || (["costume", "weaponSkin", "hat", "companion"].includes(key) && look[key]);
     return `
       <div class="hx-bag-head"><h3 class="hx-h">${esc(t.slot[key])}</h3>${canClear ? `<button type="button" class="hero-other" data-hx-act="clear">${esc(t.unequip)}</button>` : ""}</div>
       ${key === "companion" ? `<p class="hx-hint">${esc(t.companionSoon)}</p>` : ""}

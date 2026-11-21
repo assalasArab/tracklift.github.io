@@ -2,10 +2,31 @@
    Nouveautés : à l'ouverture de l'appli, une fenêtre annonce la mise à jour
    (une seule fois par mise à jour et par téléphone). La plus récente en tête.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261115c";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261115c";
+import { i18n } from "./i18n.js?v=20261122a";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122a";
 
 export const PATCHES = [
+  {
+    id: "2026-11-22", from: new Date(2026, 10, 22, 0, 0, 0).getTime(),
+    fr: {
+      title: "Saison 2 !",
+      items: [
+        "Nouvelle Roue des cadeaux : la Tunique du Héros des Bois, la Tunique du Héros du Temps et la Tenue de la Confrérie sont à gagner.",
+        "Nouveau : un emplacement Tête dans Mon héros › Apparence, pour les capuches, casques et chapeaux.",
+        "8 tenues d'équipement ont enfin leur propre dessin : Habit sacré, Tenue de l'archimage, Combinaison mécha, Armure de plates, Kimono de combat, Manteau du rôdeur, Armure du titan et Armure de légende.",
+        "Les costumes de la saison 1 restent à ceux qui les ont gagnés. Les tours non joués servent pour la saison 2."
+      ]
+    },
+    en: {
+      title: "Season 2!",
+      items: [
+        "New Gift wheel: win the Woodland Hero tunic, the Hero of Time tunic and the Brotherhood attire.",
+        "New: a Head slot in My hero › Look, for hoods, helmets and hats.",
+        "8 equipment outfits finally have their own drawing: Holy vestment, Archmage attire, Mecha suit, Plate armour, Fighting gi, Prowler's coat, Titan armour and Armour of legend.",
+        "Season 1 costumes stay with those who won them. Unplayed spins carry over to season 2."
+      ]
+    }
+  },
   {
     id: "2026-11-19",
     fr: {
@@ -63,7 +84,8 @@ const TEXT = { fr: { kicker: "Mise à jour", ok: "C'est noté", close: "Fermer" 
 
 /** À l'ouverture : montre la dernière mise à jour si elle n'a pas encore été vue sur ce téléphone */
 export function maybeShowPatchNotes({ firstVisit = false } = {}) {
-  const latest = PATCHES[0];
+  const latest = PATCHES.find(p => !p.from || Date.now() >= p.from);
+  if (!latest) return false;
   let seen = null;
   try { seen = localStorage.getItem(SEEN_KEY); } catch { /* stockage indisponible */ }
   if (seen === latest.id) return false;
