@@ -1,5 +1,5 @@
-import { i18n } from "./i18n.js?v=20261122b";
-import { isDark } from "./theme.js?v=20261122b";
+import { i18n } from "./i18n.js?v=20261122c";
+import { isDark } from "./theme.js?v=20261122c";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];

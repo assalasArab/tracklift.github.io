@@ -53,6 +53,7 @@ export const COSMETICS = [
   // saison 2 (dessins faits avec Gemini, installés par _bench/gemini-import.py)
   { id: "costume-heros-bois", slot: "costume", fr: "Tunique du Héros des Bois", en: "Woodland Hero tunic", price: 0, wheel: true, rarity: "epic", art: { outfit: "heros-bois" } },
   { id: "costume-heros-temps", slot: "costume", fr: "Tunique du Héros du Temps", en: "Hero of Time tunic", price: 0, wheel: true, rarity: "legendary", art: { outfit: "heros-temps" } },
+  { id: "skin-lame-legende", slot: "weaponSkin", fr: "Épée de légende et Bouclier du Royaume", en: "Legend sword and Kingdom shield", price: 0, wheel: true, rarity: "legendary", art: { weapon: "lame-legende" } },
   { id: "bonnet-heros", slot: "hat", fr: "Bonnet du Héros", en: "Hero's cap", price: 0, wheel: true, rarity: "epic", art: { hat: "bonnet-heros" } },
   { id: "costume-confrerie", slot: "costume", fr: "Tenue de la Confrérie", en: "Brotherhood attire", price: 0, wheel: true, rarity: "mythic", art: { outfit: "confrerie" } }
 ];

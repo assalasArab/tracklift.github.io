@@ -9,7 +9,7 @@
    Ajouter un dessin : une page de plus dans le PDF, relancer le script,
    puis ajouter son nom dans js/i18n.js (clé avatarParts).
    ═══════════════════════════════════════════════════════════ */
-import { ART } from "./avatar-art.js?v=20261122b";
+import { ART } from "./avatar-art.js?v=20261122c";
 
 /* ─── Couleurs ─────────────────────────────────────────── */
 export const SKINS = [

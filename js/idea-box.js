@@ -3,9 +3,9 @@
    Firestore ideas/<id> { text, uid, createdAt, lang } : écrit par l'appli,
    lu et vidé seulement par l'administrateur (tools/ideas/ideas.mjs).
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261122b";
-import { i18n } from "./i18n.js?v=20261122b";
-import { openSheet, esc } from "./potes-ui.js?v=20261122b";
+import { firestore } from "./firebase-config.js?v=20261122c";
+import { i18n } from "./i18n.js?v=20261122c";
+import { openSheet, esc } from "./potes-ui.js?v=20261122c";
 
 const TEXT = {
   fr: {

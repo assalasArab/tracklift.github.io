@@ -2,16 +2,18 @@
    Nouveautés : à l'ouverture de l'appli, une fenêtre annonce la mise à jour
    (une seule fois par mise à jour et par téléphone). La plus récente en tête.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261122b";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122b";
+import { i18n } from "./i18n.js?v=20261122c";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122c";
 
 export const PATCHES = [
   {
-    id: "2026-11-22b", from: new Date(2026, 10, 22, 0, 0, 0).getTime(),
+    id: "2026-11-22c", from: new Date(2026, 10, 22, 0, 0, 0).getTime(),
     fr: {
       title: "Saison 2 !",
       items: [
         "Corrigé : un costume déjà à toi ne rapporte plus de gros bonus. La roue te rend seulement le prix du tour (70 points spé) s'il était acheté, sans expérience. Les doublons d'avant sont recomptés pareil.",
+        "Nouvelle boutique : une liste claire, et touche un objet pour l'essayer tout de suite sur ton personnage (« Voir la fiche » pour son histoire et ses bonus).",
+        "Nouveau lot dans la roue : l'Épée de légende et le Bouclier du Royaume (légendaire). La boutique montre aussi toutes les armes, même celles des autres classes.",
         "Nouvelle Roue des cadeaux : la Tunique du Héros des Bois, la Tunique du Héros du Temps et la Tenue de la Confrérie sont à gagner.",
         "Nouveau : un emplacement Tête dans Mon héros › Apparence, pour les capuches, casques et chapeaux.",
         "8 tenues d'équipement ont enfin leur propre dessin : Habit sacré, Tenue de l'archimage, Combinaison mécha, Armure de plates, Kimono de combat, Manteau du rôdeur, Armure du titan et Armure de légende.",
@@ -23,6 +25,8 @@ export const PATCHES = [
       title: "Season 2!",
       items: [
         "Fixed: a costume you already own no longer gives a big bonus. The wheel only gives back the spin price (70 spec points) if you bought it, with no experience. Older duplicates are recounted the same way.",
+        "New shop: a clear list, tap an item to try it on your character right away (« See details » for its story and bonuses).",
+        "New wheel prize: the Legend sword and Kingdom shield (legendary). The shop now also shows every weapon, even other classes' ones.",
         "New Gift wheel: win the Woodland Hero tunic, the Hero of Time tunic and the Brotherhood attire.",
         "New: a Head slot in My hero › Look, for hoods, helmets and hats.",
         "8 equipment outfits finally have their own drawing: Holy vestment, Archmage attire, Mecha suit, Plate armour, Fighting gi, Prowler's coat, Titan armour and Armour of legend.",

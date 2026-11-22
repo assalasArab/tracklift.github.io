@@ -12,18 +12,18 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261122b";
-import { DB } from "./db.js?v=20261122b";
-import { Shop } from "./shop.js?v=20261122b";
-import { i18n } from "./i18n.js?v=20261122b";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261122b";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122b";
-import { figureSvg, pieceUrl } from "./avatar3.js?v=20261122b";
-import { rarityByKey } from "./rpg-art.js?v=20261122b";
-import { xpForLevel, MAX_LEVEL } from "./rpg.js?v=20261122b";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122b";
-import { openHero } from "./hero.js?v=20261122b";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122b";
+import { firestore } from "./firebase-config.js?v=20261122c";
+import { DB } from "./db.js?v=20261122c";
+import { Shop } from "./shop.js?v=20261122c";
+import { i18n } from "./i18n.js?v=20261122c";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261122c";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122c";
+import { figureSvg, pieceUrl, thumbUrl } from "./avatar3.js?v=20261122c";
+import { rarityByKey } from "./rpg-art.js?v=20261122c";
+import { xpForLevel, MAX_LEVEL } from "./rpg.js?v=20261122c";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122c";
+import { openHero } from "./hero.js?v=20261122c";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122c";
 
 /* ─── Les saisons : chacune a sa roue (100 parts en tout, la taille d'une case = sa chance) ───
    Dates en heure du téléphone. Une saison terminée : ses costumes ne se gagnent plus,
@@ -53,7 +53,8 @@ export const SEASONS = [
       { key: "bonnet", kind: "costume", item: "bonnet-heros", weight: 6 },
       { key: "bois", kind: "costume", item: "costume-heros-bois", weight: 13 },
       { key: "coupon20", kind: "coupon", pct: 20, weight: 15, color: "#fbe39a" },
-      { key: "ps100", kind: "ps", ps: 100, weight: 15, color: "#d3dcbc" },
+      { key: "ps100", kind: "ps", ps: 100, weight: 10, color: "#d3dcbc" },
+      { key: "lame", kind: "costume", item: "skin-lame-legende", weight: 5 },
       { key: "temps", kind: "costume", item: "costume-heros-temps", weight: 8 },
       { key: "dye", kind: "dye", weight: 10, color: "#f8d0d6" },
       { key: "coupon40", kind: "coupon", pct: 40, weight: 8, color: "#ffd5b0" },
@@ -285,7 +286,7 @@ function wheelSvg() {
       const w = (36 * k + 10).toFixed(1);
       const h = (w * 1.75).toFixed(1);
       const art = cosmeticById(seg.item).art;
-      inner = `<image href="${pieceUrl(art.outfit ? "outfit" : art.hat ? "hat" : "weapon", art.outfit || art.hat || art.weapon)}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
+      inner = `<image href="${art.outfit ? pieceUrl("outfit", art.outfit) : art.hat ? pieceUrl("hat", art.hat) : thumbUrl("weapon", art.weapon)}" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet"/>`;
     }
     return `<g class="gw-slice gw-${seg.kind}">
       <path class="gw-seg" d="M0 0L${x0} ${y0}A${R} ${R} 0 ${large} 1 ${x1} ${y1}Z" fill="${segColor(seg)}"/>
@@ -388,7 +389,7 @@ export function openWheel({ onChange, onClose } = {}) {
       const item = cosmeticById(gift.item);
       rarity = rarityByKey(item.rarity);
       name = item[L];
-      art = `<div class="gw-prize-fig">${figureSvg({ ...currentLook(), costume: item.id }, { view: "full", size: 112, frame: true, gear: wornGear(), label: name })}</div>`;
+      art = `<div class="gw-prize-fig">${figureSvg({ ...currentLook(), [item.slot]: item.id }, { view: "full", size: 112, frame: true, gear: wornGear(), label: name })}</div>`;
       detail = gift.dup ? (gift.refund ? fill(t.detail.costumeDup, { n: gift.refund }) : t.detail.costumeDupFree) : t.detail.costume;
     } else if (gift.kind === "ps") {
       name = fill(t.seg.ps, { n: gift.ps });

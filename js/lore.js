@@ -353,6 +353,10 @@ export const LOOK_LORE = {
     fr: "La même tunique, sept ans plus tard. Son porteur a dormi tout ce temps et s'est réveillé plus fort : la preuve que le repos fait partie de l'entraînement.",
     en: "The same tunic, seven years later. Its wearer slept all that time and woke up stronger: proof that rest is part of training."
   },
+  "skin-lame-legende": {
+    fr: "Elle dormait dans un piédestal au fond des bois sacrés, à côté d'un bouclier frappé d'un oiseau rouge. Elle ne se laisse soulever que par ceux qui n'ont jamais sauté le jour des jambes.",
+    en: "It slept in a pedestal deep in the sacred woods, next to a shield bearing a red bird. It only lets itself be lifted by those who never skipped leg day."
+  },
   "bonnet-heros": {
     fr: "Long, vert, pointu : impossible de le perdre de vue. Celui qui le porte a toujours l'air prêt à partir à l'aventure, même pour aller aux toilettes de la salle.",
     en: "Long, green, pointy: impossible to lose sight of. Whoever wears it always looks ready for an adventure, even on the way to the gym toilets."

@@ -4,18 +4,18 @@
    - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages),
      « Classement » et « Programmes » (programmes en commun, invitations), réglages, quitter.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261122b";
-import { Perfs } from "./perfs.js?v=20261122b";
-import { Social, checkUsername } from "./social.js?v=20261122b";
-import { SharedPrograms, Community } from "./community.js?v=20261122b";
-import { streakAlive, weekKey } from "./social-stats.js?v=20261122b";
-import { avatarSvg } from "./avatar.js?v=20261122b";
-import { openCharacterWindow, profileAvatar } from "./avatar3-ui.js?v=20261122b";
-import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261122b";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261122b";
-import { openSettings } from "./potes-settings.js?v=20261122b";
-import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261122b";
-import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261122b";
+import { showToast } from "./utils.js?v=20261122c";
+import { Perfs } from "./perfs.js?v=20261122c";
+import { Social, checkUsername } from "./social.js?v=20261122c";
+import { SharedPrograms, Community } from "./community.js?v=20261122c";
+import { streakAlive, weekKey } from "./social-stats.js?v=20261122c";
+import { avatarSvg } from "./avatar.js?v=20261122c";
+import { openCharacterWindow, profileAvatar } from "./avatar3-ui.js?v=20261122c";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261122c";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261122c";
+import { openSettings } from "./potes-settings.js?v=20261122c";
+import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261122c";
+import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261122c";
 
 const TABS = ["friends", "board", "programs"];
 

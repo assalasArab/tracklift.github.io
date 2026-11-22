@@ -589,6 +589,15 @@ export const ART3 = {
         668
       ],
       "thumb": true
+    },
+    "lame-legende": {
+      "box": [
+        345,
+        375,
+        363,
+        423
+      ],
+      "thumb": true
     }
   },
   "hat": {

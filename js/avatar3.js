@@ -11,9 +11,9 @@
    Une « skin » se pose sur l'emplacement de son équipement : elle remplace
    le dessin, les bonus restent ceux de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { ART3 } from "./avatar3-art.js?v=20261122b";
-import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261122b";
-import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261122b";
+import { ART3 } from "./avatar3-art.js?v=20261122c";
+import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261122c";
+import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261122c";
 
 const VERSION = "4";
 const a3 = file => `./assets/avatar3/${file}.png?a=${VERSION}`;

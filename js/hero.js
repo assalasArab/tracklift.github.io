@@ -8,21 +8,21 @@
    Un objet choisi s'essaie sur le personnage avant de l'acheter.
    Règles du jeu : js/rpg.js ; légendes : js/lore.js.
    ═══════════════════════════════════════════════════════════ */
-import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261122b";
-import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261122b";
-import { openWheel, wheelState, discounted, wheelOpen, seasonUntil, inSeason } from "./gift-wheel.js?v=20261122b";
-import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261122b";
-import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261122b";
-import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122b";
-import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122b";
-import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261122b";
-import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261122b";
-import { i18n } from "./i18n.js?v=20261122b";
-import { showToast } from "./utils.js?v=20261122b";
-import { DB } from "./db.js?v=20261122b";
-import { Shop } from "./shop.js?v=20261122b";
-import { Social } from "./social.js?v=20261122b";
-import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261122b";
+import { character, CLASSES, GEAR, SLOTS, STATS, STAT_INFO, ATTR_INFO, GATES, upcoming, allocate, resetClass, equip, gearTag, className, gearName, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261122c";
+import { emblemSvg, statIcon, gearIcon, BRANCH_COLORS, rarityOf, rarityOfPrice, rarityByKey } from "./rpg-art.js?v=20261122c";
+import { openWheel, wheelState, discounted, wheelOpen, seasonUntil, inSeason } from "./gift-wheel.js?v=20261122c";
+import { figureSvg, FACE_OPTIONS, thumbUrl } from "./avatar3.js?v=20261122c";
+import { COSMETIC_BACKGROUNDS, COSMETICS, cosmeticById, lookTag, GEAR_ART } from "./cosmetics.js?v=20261122c";
+import { SKINS, HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122c";
+import { currentLook, saveLook, ownsLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122c";
+import { rpgState, saveRpg, openClassChoice } from "./rpg-ui.js?v=20261122c";
+import { GEAR_LORE, LOOK_LORE, DYE_LORE, BRANCH_LORE, MERCHANT, loreText, pickLine } from "./lore.js?v=20261122c";
+import { i18n } from "./i18n.js?v=20261122c";
+import { showToast } from "./utils.js?v=20261122c";
+import { DB } from "./db.js?v=20261122c";
+import { Shop } from "./shop.js?v=20261122c";
+import { Social } from "./social.js?v=20261122c";
+import { openSheet, esc, cap, confirmSheet, reducedMotion, MASCOT } from "./potes-ui.js?v=20261122c";
 
 const PS = `<svg class="hx-ps" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
 const ICON = {
@@ -76,6 +76,7 @@ const TEXT = {
     buy: "Acheter", missing: "Il te manque {n} points spé", tooLow: "Niveau {n} requis", wrongClass: "Réservé : {cls}",
     obtained: "Obtenu !", bought: "{name} est dans ton sac.", equipped: "Équipé : {name}",
     preview: "Aperçu", tryOn: "Essayage",
+    shopPick: "Touche un objet pour l'essayer sur toi.", details: "Voir la fiche", wheelWin: "À gagner à la roue",
     attrs: "Attributs", buildLabel: "Ton build : {list}",
     noPoints: "Chaque niveau te donne 5 points à placer.", blocked: "Choisis d'abord ta voie pour placer tes points.",
     over: "{n} points en trop (des séances ont été supprimées) : redistribue-les.",
@@ -121,6 +122,7 @@ const TEXT = {
     buy: "Buy", missing: "You need {n} more spec points", tooLow: "Level {n} required", wrongClass: "Reserved: {cls}",
     obtained: "Got it!", bought: "{name} is in your bag.", equipped: "Equipped: {name}",
     preview: "Preview", tryOn: "Try-on",
+    shopPick: "Tap an item to try it on.", details: "See details", wheelWin: "Win it on the wheel",
     attrs: "Stats", buildLabel: "Your build: {list}",
     noPoints: "Each level gives you 5 points to assign.", blocked: "Choose your path first to assign your points.",
     over: "{n} points too many (workouts were deleted): reassign them.",
@@ -284,6 +286,20 @@ function cellHtml(info, { selected = false, tag = false } = {}) {
       ${locked ? `<span class="hx-lock" aria-hidden="true">${svg(ICON.lock)}</span>` : ""}
       ${tagHtml}
     </button>`;
+}
+/** Une ligne de la boutique : nom et prix (ou « Possédé », « Roue », cadenas) */
+function rowHtml(info, sel) {
+  const t = T();
+  const selected = sel?.kind === info.kind && sel?.id === info.id;
+  const locked = !info.owned && !info.usable;
+  const state = info.worn ? t.worn : info.owned ? t.owned : locked ? info.reason : info.wheel ? t.wheelOnly : `${num(info.price)} ${t.purse}`;
+  const tag = info.owned ? `<span class="hx-row-tag is-owned" aria-hidden="true">${esc(info.worn ? t.worn : t.owned)}</span>`
+    : info.wheel ? `<span class="hx-row-tag is-wheel" aria-hidden="true">${esc(t.wheelTag)}</span>`
+    : locked ? `<span class="hx-row-tag is-locked" aria-hidden="true">${svg(ICON.lock)}${esc(info.reason)}</span>`
+    : info.price ? `<span class="hx-row-tag${info.afford ? "" : " is-short"}" aria-hidden="true">${PS}${num(info.price)}</span>` : "";
+  return `<li><button type="button" class="hx-row r-${info.rarity.key}${selected ? " is-selected" : ""}${locked ? " is-locked" : ""}"
+      data-hx-pick="${info.kind}|${esc(info.id)}" aria-pressed="${selected}" aria-label="${esc(`${info.name}, ${rarityName(info.rarity)}, ${state}`)}">
+      <span class="hx-row-text"><span class="hx-row-name">${esc(info.name)}</span>${tag}</span></button></li>`;
 }
 const itemHtml = (info, sel) => `<li class="hx-item">${cellHtml(info, { tag: true, selected: sel?.kind === info.kind && sel?.id === info.id })}<span class="hx-item-name r-${info.rarity.key}">${esc(info.name)}</span></li>`;
 
@@ -546,7 +562,13 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
   /* ─── onglet Boutique : le Comptoir de la Fonte ─── */
   const shopItems = cat => {
     const { ch } = rpgState();
-    if (SLOTS.includes(cat)) return gearFor(cat, ch.cls).map(id => itemInfo("gear", id));
+    if (SLOTS.includes(cat)) {
+      // toutes les armes et tenues : celles de ma voie d'abord, puis celles des autres classes (grisées, « Classe requise »)
+      const mine = gearFor(cat, ch.cls);
+      const others = Object.entries(GEAR).filter(([id, g]) => g.slot === cat && !mine.includes(id))
+        .sort((a, b) => a[1].req.level - b[1].req.level || a[1].price - b[1].price).map(([id]) => id);
+      return [...mine, ...others].map(id => itemInfo("gear", id));
+    }
     if (cat === "skins") return COSMETICS.map(c => itemInfo("look", c.id));
     if (cat === "bg") return COSMETIC_BACKGROUNDS.map(b => itemInfo("bg", b.id));
     return [...HAIR_COLORS.map(c => itemInfo("dye", `hair:${c.id}`)), ...EYE_COLORS.map(c => itemInfo("dye", `eyes:${c.id}`))].filter(i => i.price);
@@ -574,7 +596,46 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
       </section>
       ${wheelBanner()}
       <div class="hx-chips hx-cats" role="radiogroup" aria-label="${esc(t.shopName)}">${cats.map(c => `<button type="button" role="radio" class="hx-chip" aria-checked="${st.shopCat === c}" data-hx-cat="${c}">${esc(t.cats[c])}</button>`).join("")}</div>
-      <ul class="hx-grid">${shopItems(st.shopCat).map(info => itemHtml(info, st.sel)).join("")}</ul>`;
+      <div class="hx-shop">
+        <ul class="hx-shop-list">${shopItems(st.shopCat).map(info => rowHtml(info, st.sel)).join("")}</ul>
+        <aside class="hx-shop-view" aria-live="polite">${shopViewHtml()}</aside>
+      </div>`;
+  };
+  /** À droite de la liste : ton personnage qui porte l'objet touché */
+  const shopViewHtml = () => {
+    const t = T();
+    const { wallet } = rpgState();
+    const info = st.sel ? itemInfo(st.sel.kind, st.sel.id) : null;
+    const trial = info ? tryOn(info) : null;
+    const look = trial ? trial.look : currentLook();
+    const scene = `
+      <div class="hx-scene hx-shop-scene" style="background:${bgCss(bgOf(look.bg))}">
+        <span class="hx-floor" aria-hidden="true"></span>
+        <div class="hx-doll">${figureSvg(look, { view: trial?.view || "full", size: 150, frame: false, gear: trial ? trial.gear : wornGear(), label: info ? `${t.tryOn} : ${info.name}` : t.preview })}</div>
+        ${info && !trial ? `<span class="hx-shop-icon r-${info.rarity.key}" aria-hidden="true">${thumbHtml(info)}</span>` : ""}
+      </div>`;
+    if (!info) return `${scene}<p class="hx-hint">${esc(t.shopPick)}</p>`;
+    let action;
+    if (info.owned) {
+      if (info.worn) action = `<p class="hx-state">${svg(ICON.check)}${esc(info.kind === "dye" || info.kind === "bg" ? t.inUse : t.worn)}</p>`;
+      else if (!info.usable) action = `<p class="hx-state is-missing">${esc(info.reason)}</p>`;
+      else action = `<button type="button" class="btn btn-primary btn-sm" data-hx-act="${info.kind === "dye" || info.kind === "bg" ? "use" : "equip"}">${esc(info.kind === "dye" || info.kind === "bg" ? t.apply : t.equip)}</button>`;
+    } else if (info.wheel) {
+      action = inSeason(info.id) ? `<button type="button" class="btn btn-surface btn-sm" data-hx-wheel>${esc(t.wheelWin)}</button>` : `<p class="hx-state">${esc(t.wheelOver)}</p>`;
+    } else if (!info.usable) {
+      action = `<p class="hx-state is-missing">${svg(ICON.lock)}${esc(info.reason)}</p>`;
+    } else if (wallet.balance < info.price) {
+      action = `<p class="hx-state is-missing">${esc(fill(t.missing, { n: num(info.price - wallet.balance) }))}</p>`;
+    } else {
+      action = `<button type="button" class="btn btn-primary btn-sm hx-buy" data-hx-act="buy">${esc(t.buy)}<span>${PS}${num(info.price)}</span></button>`;
+    }
+    return `${scene}
+      <div class="hx-shop-info">
+        <span class="hx-rchip r-${info.rarity.key}">${esc(rarityName(info.rarity))}</span>
+        <p class="hx-shop-name r-${info.rarity.key}">${esc(info.name)}</p>
+        ${action}
+        <button type="button" class="hero-other hx-shop-more" data-hx-detail>${esc(t.details)}</button>
+      </div>`;
   };
 
   /* ─── onglet Voie ─── */
@@ -697,6 +758,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
 
   const drawerHtml = () => {
     if (!st.drawer && !st.sel) return "";
+    if (st.tab === "shop" && !st.detail) return "";
     const t = T();
     const info = st.sel ? itemInfo(st.sel.kind, st.sel.id) : null;
     return `
@@ -739,12 +801,21 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
   };
   const switchTab = key => {
     st.tab = key;
+    st.detail = false;
     st.drawer = null;
     st.sel = null;
     st.fx.panel = true;
     draw({ focus: `[data-hx-tab="${key}"]`, scroll: "top" });
   };
   const closeDrawer = () => {
+    // boutique : fermer la fiche garde l'objet essayé ; sans fiche, on lâche l'objet
+    if (st.tab === "shop" && st.sel) {
+      if (st.detail) { st.detail = false; draw({ focus: "[data-hx-detail]" }); return; }
+      const was = st.sel;
+      st.sel = null;
+      draw({ focus: `[data-hx-pick="${was.kind}|${was.id}"]` });
+      return;
+    }
     const back = st.back;
     st.drawer = null;
     st.sel = null;
@@ -834,10 +905,18 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
       st.coupon = null;
       st.fx.drawer = !wasOpen;
       if (!st.drawer) st.back = `[data-hx-pick="${kind}|${id}"]`;
-      if (st.tab === "shop") merchantReacts(itemInfo(kind, id));
+      if (st.tab === "shop") {
+        // boutique : l'objet s'essaie sur le personnage à droite, la fiche reste fermée
+        merchantReacts(itemInfo(kind, id));
+        st.detail = false;
+        st.fx.drawer = false;
+        draw({ focus: `[data-hx-pick="${kind}|${id}"]` });
+        return;
+      }
       draw({ focus: "card" });
       return;
     }
+    if (el("[data-hx-detail]")) { st.detail = true; st.fx.drawer = true; draw({ focus: "card" }); return; }
     const actBtn = el("[data-hx-act]");
     if (actBtn) { act(actBtn.dataset.hxAct); return; }
     const couponBtn = el("[data-hx-coupon]");
@@ -851,6 +930,7 @@ export function openHero({ tab = "hero", slot = null, onChange } = {}) {
     if (cat) {
       st.shopCat = cat.dataset.hxCat;
       st.sel = null;
+      st.detail = false;
       const { wallet } = rpgState();
       const prices = shopItems(st.shopCat).filter(i => !i.owned && i.usable && i.price).map(i => i.price);
       if (prices.length && wallet.balance < Math.min(...prices)) st.greet = pickLine(MERCHANT.poor, lang());

@@ -4222,3 +4222,36 @@ body.workout-map-open.in-workout .main { padding-bottom: calc(120px + env(safe-a
 /* Roue des cadeaux : collection terminee */
 .gw-closed { text-align: center; }
 .gw-closed-title { margin: 0 0 6px; font-weight: 800; font-size: 1.15rem; }
+
+/* Boutique : la liste des objets à gauche, ton personnage qui les essaie à droite */
+.hx-shop { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 10px; align-items: start; margin-top: 14px; }
+.hx-shop-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.hx-row { width: 100%; min-height: 48px; display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 9px; padding: 8px 10px 8px 13px; border: 0; border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; box-shadow: inset 3px 0 0 var(--r, var(--border)); transition: transform 120ms ease-out, background-color 120ms ease-out; }
+.hx-row:active { transform: scale(0.98); }
+.hx-row:focus-visible { outline: 3px solid var(--p-orange); outline-offset: 2px; }
+.hx-row.is-selected { background: color-mix(in srgb, var(--r, var(--accent)) 16%, var(--surface)); box-shadow: inset 3px 0 0 var(--r, var(--border)), inset 0 0 0 2px var(--p-brown); }
+.hx-row-art { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; overflow: hidden; background: linear-gradient(180deg, var(--surface2) 38%, color-mix(in srgb, var(--r, #8a8f86) 28%, var(--surface2))); }
+.hx-row-art img { width: 88%; height: 88%; object-fit: contain; }
+.hx-row-art .rpg-gear-icon { width: 78%; height: 78%; stroke: var(--rt); }
+.hx-row-art .hx-swatch { display: block; width: 100%; height: 100%; }
+.hx-row-art .hx-potion { width: 80%; height: 80%; }
+.hx-row.is-locked .hx-row-art { opacity: 0.5; filter: grayscale(0.7); }
+.hx-row-text { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.hx-row-name { font-size: 13px; font-weight: 600; line-height: 1.25; color: var(--rt, var(--text)); overflow-wrap: break-word; hyphens: auto; }
+.hx-row-tag { align-self: flex-start; display: inline-flex; align-items: center; gap: 2px; padding: 2px 7px 2px 5px; border-radius: 999px; background: var(--p-brown); color: var(--cream); font-size: 11.5px; font-weight: 700; line-height: 1.35; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hx-row-tag .hx-ps { width: 12px; height: 12px; }
+.hx-row-tag.is-short { background: var(--surface3); color: var(--text2); }
+.hx-row-tag.is-owned { padding: 2px 8px; background: var(--accent-tint); color: var(--accent-ink); }
+.hx-row-tag.is-wheel { padding: 2px 8px; background: linear-gradient(90deg, #6a3fb5, #b0245a); color: #fff; }
+.hx-row-tag.is-locked { max-width: 100%; padding: 2px 6px; background: var(--surface3); color: var(--text2); white-space: normal; line-height: 1.25; }
+.hx-row-tag.is-locked .hx-ico { width: 13px; height: 13px; }
+.hx-shop-view { position: sticky; top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.hx-shop-scene { aspect-ratio: 3 / 4.4; border-radius: 22px; }
+.hx-shop-scene .hx-doll { width: 88%; }
+.hx-shop-icon { position: absolute; top: 12px; left: 12px; z-index: 4; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--surface); box-shadow: inset 0 0 0 2px var(--r, var(--border)); }
+.hx-shop-icon img, .hx-shop-icon svg { width: 80%; height: 80%; object-fit: contain; }
+.hx-shop-info { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.hx-shop-name { margin: 2px 0 0; font-size: 14px; font-weight: 700; line-height: 1.25; color: var(--rt, var(--text)); overflow-wrap: anywhere; }
+.hx-shop-info .btn { width: 100%; }
+.hx-shop-info .hx-state { margin: 0; font-size: 12.5px; }
+.hx-shop-view .hx-hint { margin: 0; text-align: center; }
