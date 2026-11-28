@@ -3,13 +3,13 @@
    (users/<uid> → rpg.look), publiée dans le profil des Potes.
    La fenêtre (équipement, apparence, boutique) est dans js/hero.js.
    ═══════════════════════════════════════════════════════════ */
-import { figureSvg, normalizeLook, visibleOutfit, visibleHat } from "./avatar3.js?v=20261122c";
-import { Social } from "./social.js?v=20261122c";
-import { normalizeAvatar } from "./avatar.js?v=20261122c";
-import { COSMETIC_BACKGROUNDS, lookTag, cosmeticById } from "./cosmetics.js?v=20261122c";
-import { rpgState } from "./rpg-ui.js?v=20261122c";
-import { DB } from "./db.js?v=20261122c";
-import { openHero } from "./hero.js?v=20261122c";
+import { figureSvg, normalizeLook, visibleOutfit, visibleHat, visibleWeapon } from "./avatar3.js?v=20261128a";
+import { Social } from "./social.js?v=20261128a";
+import { normalizeAvatar } from "./avatar.js?v=20261128a";
+import { COSMETIC_BACKGROUNDS, lookTag, cosmeticById } from "./cosmetics.js?v=20261128a";
+import { rpgState } from "./rpg-ui.js?v=20261128a";
+import { DB } from "./db.js?v=20261128a";
+import { openHero } from "./hero.js?v=20261128a";
 
 /* ─── Données : apparence enregistrée avec le personnage (users/<uid> → rpg.look) ─── */
 export function currentLook() { return normalizeLook((DB.getRpg() || {}).look); }
@@ -26,9 +26,18 @@ export function profileAvatar() {
   return normalizeAvatar({ v: 3, ...look, outfit: visibleOutfit(look, wornGear()), hatArt: visibleHat(look) });
 }
 
+/** Le héros partagé avec les potes (si l'interrupteur « Mon héros » est allumé) : niveau, classe et dessins portés */
+export function heroSummary() {
+  const { ch } = rpgState();
+  const look = currentLook();
+  const gear = wornGear();
+  return { level: ch.level, cls: ch.cls.id, outfit: visibleOutfit(look, gear), weapon: visibleWeapon(look, gear) || null, hat: visibleHat(look) || null };
+}
+
 /** Met à jour le profil public si le personnage a changé (seulement dans la partie Potes) */
 export async function syncProfileAvatar() {
   if (!Social.joined) return;
+  Social.queuePublish();
   const next = profileAvatar();
   if (JSON.stringify(next) === JSON.stringify(normalizeAvatar(Social.avatar))) return;
   try { await Social.saveAvatar(next); } catch (err) { console.warn("[TrackLift] personnage :", err?.code || err); }

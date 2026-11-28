@@ -4255,3 +4255,41 @@ body.workout-map-open.in-workout .main { padding-bottom: calc(120px + env(safe-a
 .hx-shop-info .btn { width: 100%; }
 .hx-shop-info .hx-state { margin: 0; font-size: 12.5px; }
 .hx-shop-view .hx-hint { margin: 0; text-align: center; }
+
+/* Progression : période du graphique du poids */
+.weight-periods { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.weight-chip { padding: 7px 14px; border-radius: 999px; border: 0; background: var(--surface2); color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s, color 0.2s; }
+.weight-chip.active { background: var(--grad); color: #fff; }
+.weight-chip:focus-visible { outline: 3px solid var(--p-orange); outline-offset: 2px; }
+.weight-avg { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; color: var(--text2); }
+
+/* Page d'un pote : son héros en entier */
+.pf-hero-body { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.pf-hero-fig { flex: none; width: 120px; }
+.pf-hero-fig svg { display: block; width: 100%; height: auto; border-radius: 18px; }
+.pf-hero-id { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.pf-hero-id .pf-big { margin: 4px 0 0; }
+
+/* Potes : séances de groupe */
+.gs-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gs-head .pt-card-title { margin: 0; }
+.gs-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.gs-item { padding: 12px; border-radius: var(--radius); background: var(--surface2); }
+.gs-item.is-today { box-shadow: inset 0 0 0 2px var(--accent); }
+.gs-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.gs-name { font-weight: 700; overflow-wrap: anywhere; }
+.gs-day { flex: none; font-size: 12.5px; font-weight: 600; color: var(--text2); }
+.gs-members { list-style: none; margin: 10px 0 6px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.gs-member { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 56px; font-size: 11.5px; text-align: center; color: var(--text2); }
+.gs-member span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-member.is-done { color: var(--text); font-weight: 600; }
+.gs-check { position: absolute; top: -4px; right: 6px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--cream); font-size: 11px; font-style: normal; box-shadow: 0 0 0 2px var(--surface2); }
+.gs-state { margin: 0 0 4px; font-size: 13px; color: var(--text2); }
+.gs-state.is-ok { color: var(--accent-ink); font-weight: 600; }
+.gs-action { font-size: 13px; }
+.gs-label { margin-top: 14px; }
+.gs-days { display: flex; flex-wrap: wrap; gap: 8px; }
+.gs-pick { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.gs-friend { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius); background: var(--surface2); cursor: pointer; }
+.gs-friend input { width: 20px; height: 20px; accent-color: var(--accent); }
+.gs-new .ib-msg { min-height: 1.2em; }

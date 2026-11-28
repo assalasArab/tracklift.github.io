@@ -190,7 +190,7 @@ service cloud.firestore {
     function itemOn(s, item) {
       return (item == 'board' && anyBoardOn(s))
         || item == 'programs'
-        || (item in ['streak', 'sessions', 'records', 'curves', 'program', 'weight', 'nutrition'] && shareOn(s, item));
+        || (item in ['hero', 'streak', 'sessions', 'records', 'curves', 'program', 'weight', 'nutrition'] && shareOn(s, item));
     }
 
     function validBoard(b, s) {
@@ -232,6 +232,44 @@ service cloud.firestore {
     match /giftCodes/{code} {
       allow get: if signedIn();
       allow list, create, update, delete: if false;
+    }
+
+    // ─── Séances de groupe : entre potes, le même jour ─────
+    // groupSessions/<id> { owner, name, day, members (le créateur en premier, 2 à 6), done { uid: date }, createdAt }
+    function validGroupSession(d) {
+      return d.keys().hasOnly(['owner', 'name', 'day', 'members', 'done', 'createdAt'])
+        && d.owner == me()
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 60
+        && d.day is string && d.day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.members is list && d.members.size() >= 2 && d.members.size() <= 6
+        && d.members[0] == me()
+        && d.done is map && d.done.size() == 0
+        && d.createdAt is int;
+    }
+    // chaque invité est un pote du créateur (au plus 5 invités)
+    function groupMembersAreFriends(m) {
+      return (m.size() < 2 || (m[1] != me() && areFriends(me(), m[1])))
+        && (m.size() < 3 || (m[2] != me() && areFriends(me(), m[2])))
+        && (m.size() < 4 || (m[3] != me() && areFriends(me(), m[3])))
+        && (m.size() < 5 || (m[4] != me() && areFriends(me(), m[4])))
+        && (m.size() < 6 || (m[5] != me() && areFriends(me(), m[5])));
+    }
+    match /groupSessions/{groupId} {
+      allow get, list: if signedIn() && me() in resource.data.members;
+      allow create: if signedIn() && validGroupSession(request.resource.data)
+        && request.resource.data.members.toSet().size() == request.resource.data.members.size()
+        && groupMembersAreFriends(request.resource.data.members);
+      allow update: if signedIn() && me() in resource.data.members && (
+        // je valide ma séance du jour (seulement ma ligne)
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done'])
+          && request.resource.data.done.diff(resource.data.done).affectedKeys().hasOnly([me()])
+          && request.resource.data.done[me()] is int)
+        // un invité quitte la séance (il se retire, rien d'autre)
+        || (me() != resource.data.owner
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+          && request.resource.data.members == resource.data.members.removeAll([me()]))
+      );
+      allow delete: if signedIn() && resource.data.owner == me();
     }
 
     // ─── Boîte à idées : on dépose, on ne lit pas ─────────

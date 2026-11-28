@@ -60,6 +60,9 @@ export function sessionDays(sessionLogs) {
   return keys;
 }
 
+/** Fin du jour du recalcul des doublons : la dette d'avant est effacée (voir flameWallet) */
+export const DEBT_CUTOFF = new Date(2026, 10, 23, 0, 0, 0).getTime();
+
 /** Ce que rend un doublon de la Roue des cadeaux : le prix d'un tour (js/gift-wheel.js SPIN_PRICE) */
 export const DUP_REFUND = 70;
 
@@ -93,7 +96,24 @@ export function flameWallet(weightLog, purchases = [], now = new Date(), session
   const paidBefore = list.filter(item => String(item?.id).startsWith("spin:") && (Number(item?.at) || 0) <= lastOld)
     .reduce((sum, item) => sum + Math.max(0, Number(item?.price) || 0), 0);
   const refunded = newRefund + Math.min(paidBefore, oldDups.length * DUP_REFUND);
-  const spent = list.reduce((sum, item) => sum + (Number(item?.price) || 0), 0) - refunded + adjustSpent;
+  // Dette effacée : le recalcul des doublons (22 novembre 2026) a fait passer certains comptes sous ce qu'ils
+  // avaient déjà dépensé ; sans ça, les nouveaux points rempliraient d'abord ce trou et la réserve resterait à 0.
+  const before = item => (Number(item?.at) || 0) < DEBT_CUTOFF;
+  const cutKey = localKey(DEBT_CUTOFF);
+  const days0 = days.filter(day => day.key < cutKey);
+  const weighed0 = new Set(days0.map(day => day.key));
+  const trained0 = [...trained].filter(key => key < cutKey);
+  const earned0 = days0.reduce((sum, day) => sum + day.gain, 0)
+    + trained0.length * SESSION_GAIN + trained0.filter(key => weighed0.has(key)).length * PERFECT_BONUS
+    + list.filter(before).reduce((sum, item) => sum + (item?.gift?.dup ? 0 : Math.max(0, Number(item?.gift?.ps) || 0)), 0)
+    + adjusts.filter(before).reduce((sum, item) => sum + (Number(item.adjust.earned) || 0), 0);
+  const refunded0 = list.filter(item => before(item) && item?.gift?.dup && item.gift.refund != null)
+    .reduce((sum, item) => sum + Math.min(DUP_REFUND, Math.max(0, Number(item.gift.refund) || 0)), 0)
+    + Math.min(paidBefore, oldDups.length * DUP_REFUND);
+  const spent0 = list.filter(before).reduce((sum, item) => sum + (Number(item?.price) || 0), 0) - refunded0
+    + adjusts.filter(before).reduce((sum, item) => sum + (Number(item.adjust.spent) || 0), 0);
+  const debt = Math.max(0, spent0 - Math.max(0, earned0));
+  const spent = list.reduce((sum, item) => sum + (Number(item?.price) || 0), 0) - refunded + adjustSpent - debt;
   const today = localKey(now);
   const yesterdayDate = new Date(now);
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);

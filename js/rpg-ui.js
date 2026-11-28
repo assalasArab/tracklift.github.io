@@ -4,15 +4,15 @@
    10 et 30. La fenêtre du héros est dans js/hero.js ;
    les calculs sont dans js/rpg.js.
    ═══════════════════════════════════════════════════════════ */
-import { character, CLASSES, STAT_INFO, chooseClass, gearTag, className, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261122c";
-import { emblemSvg, BRANCH_COLORS } from "./rpg-art.js?v=20261122c";
-import { BRANCH_LORE, loreText } from "./lore.js?v=20261122c";
-import { i18n } from "./i18n.js?v=20261122c";
-import { showToast } from "./utils.js?v=20261122c";
-import { DB } from "./db.js?v=20261122c";
-import { Shop } from "./shop.js?v=20261122c";
-import { openSheet, esc, confirmSheet } from "./potes-ui.js?v=20261122c";
-import { openHero } from "./hero.js?v=20261122c";
+import { character, CLASSES, STAT_INFO, chooseClass, gearTag, className, CLASS_CHANGE_PRICE } from "./rpg.js?v=20261128a";
+import { emblemSvg, BRANCH_COLORS } from "./rpg-art.js?v=20261128a";
+import { BRANCH_LORE, loreText } from "./lore.js?v=20261128a";
+import { i18n } from "./i18n.js?v=20261128a";
+import { showToast } from "./utils.js?v=20261128a";
+import { DB } from "./db.js?v=20261128a";
+import { Shop } from "./shop.js?v=20261128a";
+import { openSheet, esc, confirmSheet } from "./potes-ui.js?v=20261128a";
+import { openHero } from "./hero.js?v=20261128a";
 
 const CHEVRON = `<svg class="pl-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`;
 

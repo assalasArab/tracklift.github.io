@@ -1,44 +1,45 @@
-import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261122c";
-import { DB } from "./db.js?v=20261122c";
-import { Auth } from "./auth.js?v=20261122c";
-import { i18n } from "./i18n.js?v=20261122c";
-import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261122c";
-import { muscleName } from "./muscles.js?v=20261122c";
-import { openCustomExerciseForm } from "./custom-exercise.js?v=20261122c";
-import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261122c";
-import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261122c";
-import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet, addDoneSet, addExercise, toggleSuperset, supersetPartner, sessionChanges, applyChanges } from "./workout.js?v=20261122c";
-import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261122c";
-import { openLogEditor } from "./log-editor.js?v=20261122c";
-import { openIdeaBox } from "./idea-box.js?v=20261122c";
-import { maybeShowPatchNotes } from "./patch-notes.js?v=20261122c";
-import { renderWeightChart } from "./charts.js?v=20261122c";
-import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261122c";
-import { openProgramWizard } from "./program-wizard.js?v=20261122c";
-import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261122c";
-import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261122c";
-import { openIntro } from "./onboarding.js?v=20261122c";
-import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261122c";
-import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261122c";
-import { Social } from "./social.js?v=20261122c";
-import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261122c";
-import { avatarSvg } from "./avatar.js?v=20261122c";
-import { Bridge, openSheet } from "./potes-ui.js?v=20261122c";
-import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261122c";
-import { renderBilanLine, openBilan } from "./bilan.js?v=20261122c";
-import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261122c";
-import { headHtml, syncProfileAvatar, migrateLook } from "./avatar3-ui.js?v=20261122c";
-import { openHero } from "./hero.js?v=20261122c";
-import { openWheel } from "./gift-wheel.js?v=20261122c";
-import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261122c";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261122c";
-import { openSettings } from "./potes-settings.js?v=20261122c";
-import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261122c";
-import { SharedPrograms } from "./community.js?v=20261122c";
-import { applyTheme, onThemeChange } from "./theme.js?v=20261122c";
-import { Shop, openShop, formatMult } from "./shop.js?v=20261122c";
-import { nextTier as nextBonusTier } from "./flames.js?v=20261122c";
-import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261122c";
+import { $, $all, formatDate, formatDuration, showToast, showLoading, openModal, closeModal, loadExerciseImage, applyImageFallback, illustrationHtml, uid } from "./utils.js?v=20261128a";
+import { DB, localDayKey } from "./db.js?v=20261128a";
+import { Auth } from "./auth.js?v=20261128a";
+import { i18n } from "./i18n.js?v=20261128a";
+import { EXERCISE_ALIASES } from "./exercise-aliases.js?v=20261128a";
+import { muscleName } from "./muscles.js?v=20261128a";
+import { openCustomExerciseForm } from "./custom-exercise.js?v=20261128a";
+import { getAllMuscleFocus, getAllMusclePortion, getAllContractionTypes, getExerciseById, getSimilarExercises } from "./exercises.js?v=20261128a";
+import { ExerciseDBAPI } from "./exercisedb-api.js?v=20261128a";
+import { buildWorkoutFromExercises, buildWorkoutFromRecentLog, completeCurrentSet, skipCurrentSet, skipCurrentExercise, replaceCurrentExercise, buildSessionLogFromWorkout, getCurrentBlock, getCurrentSet, isWorkoutComplete, findLatestExerciseLog, goToBlock, reopenBlock, updateSet, addDropSet, addDoneSet, addExercise, toggleSuperset, supersetPartner, sessionChanges, applyChanges } from "./workout.js?v=20261128a";
+import { openWorkoutMap, closeWorkoutMap, refreshWorkoutMap, isWorkoutMapOpen } from "./workout-map.js?v=20261128a";
+import { openLogEditor } from "./log-editor.js?v=20261128a";
+import { openIdeaBox } from "./idea-box.js?v=20261128a";
+import { maybeShowPatchNotes } from "./patch-notes.js?v=20261128a";
+import { renderWeightChart, weightPeriods } from "./charts.js?v=20261128a";
+import { mountNutrition, unmountNutrition } from "./nutrition.js?v=20261128a";
+import { openProgramWizard } from "./program-wizard.js?v=20261128a";
+import { muscleMapHtml, muscleChipsHtml, primaryMusclesLabel } from "./muscle-map.js?v=20261128a";
+import { bodyMapHtml, exerciseInZone, zoneName, zoneRank } from "./body-map.js?v=20261128a";
+import { openIntro } from "./onboarding.js?v=20261128a";
+import { openNotionImport, captureNotionRedirect } from "./notion-import.js?v=20261128a";
+import { computeStreak, STREAK_MILESTONES } from "./streak.js?v=20261128a";
+import { Social } from "./social.js?v=20261128a";
+import { mountPotes, unmountPotes, resetPotesView, bindPotes, editMyAvatar, setInvite, showPotesTab } from "./potes.js?v=20261128a";
+import { avatarSvg } from "./avatar.js?v=20261128a";
+import { Bridge, openSheet } from "./potes-ui.js?v=20261128a";
+import { mountBell, watchLive, renderHomeLine, bindHomeLine } from "./potes-notifs.js?v=20261128a";
+import { renderBilanLine, openBilan } from "./bilan.js?v=20261128a";
+import { renderPersoLine, announceLevel, currentLevel } from "./rpg-ui.js?v=20261128a";
+import { Groups } from "./group-sessions.js?v=20261128a";
+import { headHtml, syncProfileAvatar, migrateLook, heroSummary } from "./avatar3-ui.js?v=20261128a";
+import { openHero } from "./hero.js?v=20261128a";
+import { openWheel } from "./gift-wheel.js?v=20261128a";
+import { pushAllPerfs, publishMyPerfs } from "./potes-perfs.js?v=20261128a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261128a";
+import { openSettings } from "./potes-settings.js?v=20261128a";
+import { openProgramShare, openProgramPreview, openProgramCompetition, openCommunity } from "./potes-programs.js?v=20261128a";
+import { SharedPrograms } from "./community.js?v=20261128a";
+import { applyTheme, onThemeChange } from "./theme.js?v=20261128a";
+import { Shop, openShop, formatMult } from "./shop.js?v=20261128a";
+import { nextTier as nextBonusTier } from "./flames.js?v=20261128a";
+import { buildSharedItems, findRecord, weekSessions, recordHistory, monthKey, programStats } from "./social-stats.js?v=20261128a";
 
 // Retour de la page d'autorisation Notion (#notion_auth=…) : lu avant tout, puis l'URL est nettoyée
 let notionReturn = captureNotionRedirect();
@@ -268,6 +269,8 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
     if (update) { event.stopPropagation(); openProgramPreview(update.dataset.programUpdate); }
   }, true);
   Social.onChange(onSocialChange);
+  // bonus d'une séance de groupe : la réserve de points de l'accueil suit
+  Groups.onBonus = () => { if (state.activeView === "home") renderHome(); };
   $("#drawer-about-btn").addEventListener("click", toggleDrawerAbout);
   $("#drawer-exercisedb-btn").addEventListener("click", toggleDrawerExerciseDB);
   $("#progress-back-btn").addEventListener("click", () => setView("home"));
@@ -465,6 +468,12 @@ $("#email-signin-btn").addEventListener("click", handleEmailSignIn);
   $("#rest-drop-btn")?.addEventListener("click", dropAfterDoneSet);
   $("#add-drop-btn")?.addEventListener("click", dropAfterCurrentSet);
   $("#rest-add-btn").addEventListener("click", () => addRest(30));
+  document.addEventListener("click", event => {
+    const btn = event.target.closest("[data-weight-period]");
+    if (!btn) return;
+    try { localStorage.setItem("tl-weight-period", btn.dataset.weightPeriod); } catch { /* stockage indisponible */ }
+    renderWeightProgress();
+  });
 
   $all("[data-view]").forEach(button => {
     button.addEventListener("click", () => setView(button.dataset.view));
@@ -1077,13 +1086,16 @@ function setupPotesBridge() {
     program: getNextSession()?.program || state.programs[0] || null,
     nutrition: DB.getNutrition(),
     sharedPrograms: SharedPrograms.publishedList(state.programs),
-    nameOf: id => exerciseNameById(id) || id
+    nameOf: id => exerciseNameById(id) || id,
+    hero: Social.share.hero ? heroSummary() : null
   });
 }
 
 let socialSignature = "";
 function onSocialChange() {
   renderMyAvatar();
+  // séances de groupe : écoutées dès qu'on est dans la partie Potes (bonus notés même hors de la page)
+  if (Social.loaded && Social.joined) Groups.start(); else if (Social.loaded) Groups.stop();
   if (Social.loaded && !Social.error && Social.avatar && !DB.getProfile()?.shopGranted) Shop.grantWorn(Social.avatar);
   $("#community-btn").classList.toggle("hidden", !Social.joined);
   if (state.activeView === "home") renderHomeLine($("#potes-line"));
@@ -1471,7 +1483,7 @@ function openWeeklyBilan() {
 /* Scan morpho : module chargé seulement quand on l'ouvre (il ne ralentit pas le démarrage) */
 async function openMorphoScan() {
   try {
-    const { openMorpho } = await import("./morpho.js?v=20261122c");
+    const { openMorpho } = await import("./morpho.js?v=20261128a");
     openMorpho({
       load: () => DB.getMorpho(),
       save: result => DB.saveMorpho(result),
@@ -2789,8 +2801,45 @@ function getUsedExerciseIds() {
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
 }
 
+/** Graphique du poids : chaque pesée, ou la moyenne par semaine ou par mois (choix gardé sur le téléphone) */
+function weightPeriod() {
+  try { const p = localStorage.getItem("tl-weight-period"); return ["day", "week", "month"].includes(p) ? p : "day"; } catch { return "day"; }
+}
+function renderWeightProgress() {
+  const period = weightPeriod();
+  $all("[data-weight-period]").forEach(btn => {
+    const on = btn.dataset.weightPeriod === period;
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-checked", String(on));
+  });
+  renderWeightChart(state.weightLog, "chart-weight", period);
+  const kg = n => String(n).replace(".", i18n.getLanguage() === "en" ? "." : ",");
+  const out = $("#weight-avg");
+  if (!out) return;
+  let text = "";
+  if (period === "day") {
+    // moyenne des 7 derniers jours
+    const since = Date.now() - 7 * 86400000;
+    const recent = state.weightLog.filter(item => item.date >= since && Number(item.weight));
+    if (recent.length) text = t("weightAvg7", { avg: kg(Math.round(recent.reduce((s, i) => s + Number(i.weight), 0) / recent.length * 10) / 10) });
+  } else {
+    const points = weightPeriods(state.weightLog, period);
+    const last = points[points.length - 1];
+    const prev = points[points.length - 2];
+    if (last) {
+      text = t(period === "week" ? "weightAvgWeek" : "weightAvgMonth", { avg: kg(last.avg) });
+      if (prev) {
+        const diff = Math.round((last.avg - prev.avg) * 10) / 10;
+        text += ` · ${t(period === "week" ? "weightVsWeek" : "weightVsMonth", { diff: `${diff > 0 ? "+" : diff < 0 ? "−" : "±"}${kg(Math.abs(diff))}` })}`;
+      }
+    }
+  }
+  out.textContent = text;
+  out.classList.toggle("hidden", !text);
+}
+
 function renderProgress() {
-  renderWeightChart(state.weightLog);
+  renderWeightProgress();
 
   const usedIds = getUsedExerciseIds();
 
@@ -3632,6 +3681,9 @@ function finishWorkout({ endedAt } = {}) {
   const levelBefore = currentLevel();
   DB.saveSessionLog(log);
   state.sessionLogs = DB.getSessionLogs();
+  // vraie séance (3 séries ou plus) : les séances de groupe de ce jour sont validées
+  const doneSets = (log.exercises || []).reduce((n, ex) => n + (ex.sets || []).filter(set => set.status === "done").length, 0);
+  if (doneSets >= 3) Groups.markDone(localDayKey(log.date));
   shareSessionWithPotes(recap);
   state.workout = null;
   stopRest();

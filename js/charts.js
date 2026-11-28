@@ -1,5 +1,5 @@
-import { i18n } from "./i18n.js?v=20261122c";
-import { isDark } from "./theme.js?v=20261122c";
+import { i18n } from "./i18n.js?v=20261128a";
+import { isDark } from "./theme.js?v=20261128a";
 
 export function buildProgressSummary(sessionLogs, weightLog) {
   const sessions = sessionLogs || [];
@@ -51,18 +51,53 @@ function getExerciseLabel(exercise) {
   return (i18n.getLanguage() === "fr" && exercise.name_fr) || exercise.name;
 }
 
-export function renderWeightChart(weightLogArray, canvasId = "chart-weight") {
+/** Lundi (heure locale) de la semaine d'une date */
+function mondayOf(date) {
+  const d = new Date(date);
+  d.setHours(12, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d;
+}
+
+/**
+ * Pesées regroupées : period "day" (chaque pesée), "week" (moyenne de chaque semaine, du lundi au dimanche)
+ * ou "month" (moyenne de chaque mois). → [{ key, label, avg, count, date }] du plus ancien au plus récent
+ */
+export function weightPeriods(weightLog, period = "day") {
+  const list = (weightLog || []).filter(item => Number(item?.weight)).sort((a, b) => a.date - b.date);
+  if (period === "day") return list.map(item => ({ key: String(item.date), label: formatChartDate(item.date), avg: Number(item.weight), count: 1, date: item.date }));
+  const groups = new Map();
+  for (const item of list) {
+    const d = new Date(item.date);
+    const start = period === "week" ? mondayOf(d) : new Date(d.getFullYear(), d.getMonth(), 1, 12);
+    const key = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}`;
+    const g = groups.get(key) || { key, date: start.getTime(), sum: 0, count: 0 };
+    g.sum += Number(item.weight);
+    g.count += 1;
+    groups.set(key, g);
+  }
+  const locale = i18n.getLocale();
+  return [...groups.values()].sort((a, b) => a.date - b.date).map(g => ({
+    key: g.key, date: g.date, count: g.count, avg: Math.round((g.sum / g.count) * 10) / 10,
+    label: period === "week"
+      ? `${i18n.getLanguage() === "en" ? "Wk" : "Sem."} ${new Date(g.date).toLocaleDateString(locale, { day: "2-digit", month: "short" })}`
+      : new Date(g.date).toLocaleDateString(locale, { month: "short", year: "2-digit" })
+  }));
+}
+
+export function renderWeightChart(weightLogArray, canvasId = "chart-weight", period = "day") {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
 
   destroyChart(canvasId);
+  const points = weightPeriods(weightLogArray, period);
 
   charts[canvasId] = new Chart(canvas.getContext("2d"), {
     type: "line",
     data: {
-      labels: weightLogArray.map(item => formatChartDate(item.date)),
+      labels: points.map(item => item.label),
       datasets: [{
-        data: weightLogArray.map(item => item.weight),
+        data: points.map(item => item.avg),
         borderColor: "#7a8450",
         backgroundColor: "rgba(122,132,80,0.2)",
         fill: true,

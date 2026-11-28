@@ -11,9 +11,9 @@
    Une « skin » se pose sur l'emplacement de son équipement : elle remplace
    le dessin, les bonus restent ceux de l'équipement.
    ═══════════════════════════════════════════════════════════ */
-import { ART3 } from "./avatar3-art.js?v=20261122c";
-import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261122c";
-import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261122c";
+import { ART3 } from "./avatar3-art.js?v=20261128a";
+import { SKINS, HAIR_COLORS, EYE_COLORS } from "./avatar-parts.js?v=20261128a";
+import { COSMETIC_BACKGROUNDS, cosmeticById, GEAR_ART, DEFAULT_OUTFIT } from "./cosmetics.js?v=20261128a";
 
 const VERSION = "4";
 const a3 = file => `./assets/avatar3/${file}.png?a=${VERSION}`;
@@ -44,6 +44,8 @@ export function normalizeLook(look) {
     hat: l.hat || null,
     // couvre-chef publié dans le profil (vu par les potes, rangé dans « accessory »)
     hatArt: ART3.hat?.[l.hatArt || l.accessory] ? (l.hatArt || l.accessory) : null,
+    // arme vue par les potes (héros partagé)
+    weaponArt: ART3.weapon?.[l.weaponArt] ? l.weaponArt : null,
     // tenue visible publiée dans le profil (avatar vu par les potes)
     outfitArt: ART3.outfit?.[l.outfitArt || l.outfit] ? (l.outfitArt || l.outfit) : null
   };
@@ -64,12 +66,14 @@ function tinted(id, file, box, color) {
 /** Dessin de la tenue et de l'arme : la skin d'abord, puis l'équipement porté, puis la tenue de base */
 function wornPieces(l, gear = {}) {
   const outfit = cosmeticById(l.costume)?.art?.outfit || GEAR_ART[gear.outfit]?.outfit || l.outfitArt || DEFAULT_OUTFIT;
-  const weapon = cosmeticById(l.weaponSkin)?.art?.weapon || GEAR_ART[gear.weapon]?.weapon || null;
+  const weapon = cosmeticById(l.weaponSkin)?.art?.weapon || GEAR_ART[gear.weapon]?.weapon || l.weaponArt || null;
   const hat = cosmeticById(l.hat)?.art?.hat || l.hatArt || null;
   return { outfit, weapon, hat: ART3.hat?.[hat] ? hat : null };
 }
 /** Couvre-chef visible (pour le profil public) */
 export const visibleHat = look => wornPieces(normalizeLook(look)).hat;
+/** Arme visible (dessin), pour le héros partagé avec les potes */
+export const visibleWeapon = (look, gear) => wornPieces(normalizeLook(look), gear).weapon;
 
 /** Adresse du dessin d'une pièce */
 export const pieceUrl = (cat, name) => (ART3[cat]?.[name] ? a3(`${cat}-${name}`) : null);

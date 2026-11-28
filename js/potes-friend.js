@@ -2,25 +2,38 @@
    Page d'un pote : uniquement ce qu'il partage.
    Sert aussi à « voir mon profil comme un pote » (relu depuis Firestore).
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261122c";
-import { Social } from "./social.js?v=20261122c";
-import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261122c";
-import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261122c";
-import { friendPerfsHtml, friendPerfsSignature, handleFriendPerfsClick, handleFriendPerfsChange } from "./potes-perfs.js?v=20261122c";
+import { showToast } from "./utils.js?v=20261128a";
+import { Social } from "./social.js?v=20261128a";
+import { streakAlive, weekKey, monthKey } from "./social-stats.js?v=20261128a";
+import { t, esc, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, kg, sparkline, shortDate, MASCOT, Bridge } from "./potes-ui.js?v=20261128a";
+import { figureSvg } from "./avatar3.js?v=20261128a";
+import { CLASSES, className } from "./rpg.js?v=20261128a";
+import { emblemSvg } from "./rpg-art.js?v=20261128a";
+import { i18n } from "./i18n.js?v=20261128a";
+import { friendPerfsHtml, friendPerfsSignature, handleFriendPerfsClick, handleFriendPerfsChange } from "./potes-perfs.js?v=20261128a";
 
 const FLAME = `<svg class="pf-flame" viewBox="0 0 24 24" aria-hidden="true"><use href="#ps-icon"/></svg>`;
-const ORDER = ["streak", "sessions", "records", "curves", "program", "weight", "nutrition", "programs"];
+const ORDER = ["hero", "streak", "sessions", "records", "curves", "program", "weight", "nutrition", "programs"];
 
 function section(key, title, body, extra = "") {
   return `<section class="pf-card pf-${key}"><h3 class="pf-title">${esc(title)}</h3>${body}${extra}</section>`;
 }
 
 /** Les blocs d'un résumé partagé, dans l'ordre ; vide si rien n'est partagé */
-export function sharedSectionsHtml(items, now = Date.now()) {
+export function sharedSectionsHtml(items, now = Date.now(), profile = null) {
   const out = [];
   for (const key of ORDER) {
     const v = items?.[key];
     if (!v) continue;
+    if (key === "hero") {
+      // son personnage en entier : visage du profil + tenue, arme et couvre-chef partagés
+      const L = i18n.getLanguage() === "en" ? "en" : "fr";
+      const look = { ...(profile?.avatar || {}), outfitArt: v.outfit || null, hatArt: v.hat || null, weaponArt: v.weapon || null };
+      const cls = CLASSES[v.cls] ? className(v.cls, L) : "";
+      out.push(section(key, t("pfHero"), `<div class="pf-hero-body"><div class="pf-hero-fig">${figureSvg(look, { view: "full", size: 150, frame: true, gear: {}, label: t("pfHero") })}</div>
+        <div class="pf-hero-id">${CLASSES[v.cls] ? emblemSvg(v.cls, { size: 44 }) : ""}<p class="pf-big">${esc(t("pfHeroLevel", { n: Number(v.level) || 1 }))}</p>${cls ? `<p class="pf-meta">${esc(cls)}</p>` : ""}</div></div>`));
+      continue;
+    }
     if (key === "streak") {
       const alive = streakAlive(v, now);
       out.push(section(key, t("pfStreak"), `<p class="pf-big">${FLAME}${alive}<small>${esc(alive > 1 ? t("streakDaysMany") : t("streakDaysOne"))}</small></p><p class="pf-meta">${esc(t("streakBest", { count: v.best || 0 }))}</p>`));
@@ -90,7 +103,7 @@ export function openFriendPage(uid) {
     }
     const name = nameOf(friend.profile);
     const body = !friend.itemsLoaded ? `<p class="pt-loading" role="status">${esc(t("potesLoading"))}</p>`
-      : sharedSectionsHtml(friend.items) || emptyHtml(name, false);
+      : sharedSectionsHtml(friend.items, Date.now(), friend.profile) || emptyHtml(name, false);
     const focusInside = sheet.contains(document.activeElement) && document.activeElement !== sheet;
     sheet.innerHTML = `
       <div class="tl-sheet-inner">
@@ -150,7 +163,7 @@ export async function openMyProfileAsFriend() {
   sheet.querySelector("#tl-sheet-title").focus();
   try {
     const items = await Social.readMyShared();
-    frame(sharedSectionsHtml(items) || emptyHtml("", true));
+    frame(sharedSectionsHtml(items, Date.now(), Social.profile) || emptyHtml("", true));
   } catch {
     frame(`<p class="pt-text">${esc(t("potesErrorText"))}</p>`);
   }

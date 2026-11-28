@@ -4,18 +4,19 @@
    - rejoint : ton profil public, onglets « Potes » (ajouter, demandes, liste, blocages),
      « Classement » et « Programmes » (programmes en commun, invitations), réglages, quitter.
    ═══════════════════════════════════════════════════════════ */
-import { showToast } from "./utils.js?v=20261122c";
-import { Perfs } from "./perfs.js?v=20261122c";
-import { Social, checkUsername } from "./social.js?v=20261122c";
-import { SharedPrograms, Community } from "./community.js?v=20261122c";
-import { streakAlive, weekKey } from "./social-stats.js?v=20261122c";
-import { avatarSvg } from "./avatar.js?v=20261122c";
-import { openCharacterWindow, profileAvatar } from "./avatar3-ui.js?v=20261122c";
-import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261122c";
-import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261122c";
-import { openSettings } from "./potes-settings.js?v=20261122c";
-import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261122c";
-import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261122c";
+import { showToast } from "./utils.js?v=20261128a";
+import { Perfs } from "./perfs.js?v=20261128a";
+import { Social, checkUsername } from "./social.js?v=20261128a";
+import { SharedPrograms, Community } from "./community.js?v=20261128a";
+import { streakAlive, weekKey } from "./social-stats.js?v=20261128a";
+import { avatarSvg } from "./avatar.js?v=20261128a";
+import { openCharacterWindow, profileAvatar } from "./avatar3-ui.js?v=20261128a";
+import { t, tn, esc, cap, openSheet, sheetHead, confirmSheet, personAvatar, nameOf, MASCOT, reducedMotion, shareLink, Bridge } from "./potes-ui.js?v=20261128a";
+import { openFriendPage, openMyProfileAsFriend } from "./potes-friend.js?v=20261128a";
+import { openSettings } from "./potes-settings.js?v=20261128a";
+import { boardHtml, celebrateRank, joinBoard, CRITERIA } from "./potes-board.js?v=20261128a";
+import { groupsPanelHtml, handleGroupsClick } from "./potes-programs.js?v=20261128a";
+import { groupsCardHtml, handleGroupsClick as handleGroupSessionsClick, Groups } from "./group-sessions.js?v=20261128a";
 
 const TABS = ["friends", "board", "programs"];
 
@@ -27,7 +28,9 @@ const view = { tab: "friends", crit: "sessions", query: "", search: null, invite
 export function mountPotes(container) {
   root = container;
   unsubscribe?.();
-  unsubscribe = Social.onChange(render);
+  const offSocial = Social.onChange(render);
+  const offGroups = Groups.onChange(render);
+  unsubscribe = () => { offSocial(); offGroups(); };
   if (!Social.loaded && !Social.loading && Social.uid) Social.load(Social.uid);
   lastHtml = "";
   render();
@@ -224,7 +227,7 @@ function friendsPanelHtml() {
       <ul class="pq-list">${Social.blocks.map(b => requestRow(b.target, `<button type="button" class="btn btn-surface btn-sm" data-pq-unblock="${esc(b.target)}" data-k="unb-${esc(b.target)}">${esc(t("pqUnblock"))}</button>`)).join("")}</ul>
     </details>` : "";
   return `<div class="pt-panel" role="tabpanel" id="pt-panel" aria-labelledby="pt-tab-friends">
-    ${add}${incoming}${outgoing}
+    ${groupsCardHtml()}${add}${incoming}${outgoing}
     <h2 class="section-title pt-section">${esc(t("potesFriendsTitle"))}${friends.length ? ` <small class="pt-count">${friends.length}</small>` : ""}</h2>
     ${list}${blocked}
   </div>`;
@@ -277,6 +280,7 @@ export function bindPotes(container) {
   container.addEventListener("click", async event => {
     const el = selector => event.target.closest(selector);
     if (handleGroupsClick(event)) return;
+    if (await handleGroupSessionsClick(event, confirmSheet)) return;
     if (el("[data-pt-join]")) return openJoinFlow();
     if (el("[data-pt-avatar]")) return editMyAvatar();
     if (el("[data-pt-rename]")) return openRename();

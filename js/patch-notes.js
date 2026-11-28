@@ -2,10 +2,31 @@
    Nouveautés : à l'ouverture de l'appli, une fenêtre annonce la mise à jour
    (une seule fois par mise à jour et par téléphone). La plus récente en tête.
    ═══════════════════════════════════════════════════════════ */
-import { i18n } from "./i18n.js?v=20261122c";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122c";
+import { i18n } from "./i18n.js?v=20261128a";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261128a";
 
 export const PATCHES = [
+  {
+    id: "2026-11-28",
+    fr: {
+      title: "On s'entraîne ensemble",
+      items: [
+        "Nouveau : les séances de groupe (Potes). Choisis un jour et tes potes : chaque pote qui fait aussi sa séance ce jour-là te rapporte +15 points spé (jusqu'à +45).",
+        "Nouveau : vois le héros de tes potes en entier, avec son niveau et sa classe. Pour montrer le tien, allume « Ton héros » dans les réglages Potes.",
+        "Progression : le graphique du poids montre aussi la moyenne par semaine ou par mois.",
+        "Corrigé : les points spé s'accumulent de nouveau pour ceux qui étaient bloqués à 0 après le correctif de la roue."
+      ]
+    },
+    en: {
+      title: "Training together",
+      items: [
+        "New: group workouts (Friends). Pick a day and your friends: each friend who also works out that day gives you +15 spec points (up to +45).",
+        "New: see your friends' whole hero, with level and class. To show yours, switch on « Your hero » in the Friends settings.",
+        "Progress: the body weight chart can also show the average per week or per month.",
+        "Fixed: spec points add up again for those stuck at 0 after the wheel fix."
+      ]
+    }
+  },
   {
     id: "2026-11-22c", from: new Date(2026, 10, 22, 0, 0, 0).getTime(),
     fr: {

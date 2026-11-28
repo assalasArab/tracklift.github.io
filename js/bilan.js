@@ -4,11 +4,11 @@
    « Par e-mail ». Les calculs sont dans bilan-engine.js (partagés
    avec l'envoi des e-mails).
    ═══════════════════════════════════════════════════════════ */
-import { buildBilan, bilanContent, bilanWeek, dayOf, formatters, shiftDay } from "./bilan-engine.js?v=20261122c";
-import { BILAN_EMAIL_READY } from "./bilan-config.js?v=20261122c";
-import { i18n } from "./i18n.js?v=20261122c";
-import { showToast } from "./utils.js?v=20261122c";
-import { openSheet, sheetHead, esc } from "./potes-ui.js?v=20261122c";
+import { buildBilan, bilanContent, bilanWeek, dayOf, formatters, shiftDay } from "./bilan-engine.js?v=20261128a";
+import { BILAN_EMAIL_READY } from "./bilan-config.js?v=20261128a";
+import { i18n } from "./i18n.js?v=20261128a";
+import { showToast } from "./utils.js?v=20261128a";
+import { openSheet, sheetHead, esc } from "./potes-ui.js?v=20261128a";
 
 const UI = {
   fr: {

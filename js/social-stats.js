@@ -4,7 +4,7 @@
    gonfler ses chiffres. C'est accepté entre potes.
    Semaines du lundi au dimanche et mois à l'heure de Paris.
    ═══════════════════════════════════════════════════════════ */
-import { computeStreak } from "./streak.js?v=20261122c";
+import { computeStreak } from "./streak.js?v=20261128a";
 
 const WEEKDAYS = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6 };
 const PARIS = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", year: "numeric", month: "numeric", day: "numeric", weekday: "short" });
@@ -120,14 +120,14 @@ function maxWeightSeries(logs, exerciseId, count) {
     .filter(Boolean).slice(-count);
 }
 
-export const SHARE_KEYS = ["streak", "sessions", "records", "curves", "program", "weight", "nutrition"];
+export const SHARE_KEYS = ["hero", "streak", "sessions", "records", "curves", "program", "weight", "nutrition"];
 export const BOARD_KEYS = ["sessions", "streak", "records"];
 
 /**
  * Le résumé partagé : un objet par élément, et SEULEMENT les éléments partagés.
  * share / board : interrupteurs ; nameOf(id) : nom d'exercice ; program : programme en cours.
  */
-export function buildSharedItems({ share = {}, board = {}, weeklyGoal = 3, logs = [], weightLog = [], program = null, nutrition = null, sharedPrograms = [], nameOf = id => id, now = Date.now() }) {
+export function buildSharedItems({ share = {}, board = {}, weeklyGoal = 3, logs = [], weightLog = [], program = null, nutrition = null, sharedPrograms = [], nameOf = id => id, hero = null, now = Date.now() }) {
   const items = {};
   const sortedWeights = [...(weightLog || [])].sort((a, b) => a.date - b.date);
   const last = sortedWeights[sortedWeights.length - 1] || null;
@@ -140,6 +140,7 @@ export function buildSharedItems({ share = {}, board = {}, weeklyGoal = 3, logs 
   const monthRecords = records.filter(r => monthKey(r.date) === month);
   const clip = (text, n) => String(text || "").slice(0, n);
 
+  if (share.hero && hero) items.hero = { level: hero.level, cls: hero.cls, outfit: hero.outfit || null, weapon: hero.weapon || null, hat: hero.hat || null };
   if (share.streak) items.streak = streak;
   if (share.sessions) items.sessions = {
     weekKey: weekKey(now), count: week.length, goal: weeklyGoal,

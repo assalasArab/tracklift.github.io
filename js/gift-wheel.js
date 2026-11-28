@@ -12,18 +12,18 @@
      wheel:<id>   { gift }    un tour joué et son gain (gift.ps compte dans js/flames.js)
      un achat payé avec un bon porte coupon: <id du tour>
    ═══════════════════════════════════════════════════════════ */
-import { firestore } from "./firebase-config.js?v=20261122c";
-import { DB } from "./db.js?v=20261122c";
-import { Shop } from "./shop.js?v=20261122c";
-import { i18n } from "./i18n.js?v=20261122c";
-import { cosmeticById, lookTag } from "./cosmetics.js?v=20261122c";
-import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261122c";
-import { figureSvg, pieceUrl, thumbUrl } from "./avatar3.js?v=20261122c";
-import { rarityByKey } from "./rpg-art.js?v=20261122c";
-import { xpForLevel, MAX_LEVEL } from "./rpg.js?v=20261122c";
-import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261122c";
-import { openHero } from "./hero.js?v=20261122c";
-import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261122c";
+import { firestore } from "./firebase-config.js?v=20261128a";
+import { DB } from "./db.js?v=20261128a";
+import { Shop } from "./shop.js?v=20261128a";
+import { i18n } from "./i18n.js?v=20261128a";
+import { cosmeticById, lookTag } from "./cosmetics.js?v=20261128a";
+import { HAIR_COLORS, EYE_COLORS, priceOf } from "./avatar-parts.js?v=20261128a";
+import { figureSvg, pieceUrl, thumbUrl } from "./avatar3.js?v=20261128a";
+import { rarityByKey } from "./rpg-art.js?v=20261128a";
+import { xpForLevel, MAX_LEVEL } from "./rpg.js?v=20261128a";
+import { ownsLook, currentLook, wornGear, syncProfileAvatar } from "./avatar3-ui.js?v=20261128a";
+import { openHero } from "./hero.js?v=20261128a";
+import { openSheet, esc, reducedMotion } from "./potes-ui.js?v=20261128a";
 
 /* ─── Les saisons : chacune a sa roue (100 parts en tout, la taille d'une case = sa chance) ───
    Dates en heure du téléphone. Une saison terminée : ses costumes ne se gagnent plus,
